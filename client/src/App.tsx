@@ -1,10 +1,7 @@
+import Login from "./views/Login";
+
 function App() {
-  return (
-    <div>
-      {" "}
-      <h1> Project Delphi </h1> <br /> <h2> A Training Unit Website </h2>{" "}
-    </div>
-  );
+  return <Login />;
 }
 
 export default App;
