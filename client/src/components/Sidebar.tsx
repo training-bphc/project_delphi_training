@@ -1,81 +1,42 @@
-import type { CSSProperties } from "react";
+import SidebarButton from "./layout/SidebarButton";
+import styles from "./layout/sidebar.module.css"
+
+// Temporary, until routing comes
+//TODO: setup routing and dynamic functionality
+const sidebarTitle = "Training Points";
+const activeItemId = "overview";
+
+const SIDEBAR_ITEMS = [
+  {
+    id: "overview", label: "Overview"
+  },
+  {
+    id: "addhackathon", label: "Add Record for Verification"
+  },
+  {
+    id: "verify", label: "Verification Requests"
+  }
+];
 
 function Sidebar() {
   return (
-    <div style={sidebarStyle}>
-
-      <div style={profileCardStyle}> 
-        <span style={profileNameStyle}> Username </span>
+    <aside className={styles.sidebar}>
+      <div className={styles.sidebarHeader}>
+        <span className={styles.sidebarTitle}>
+          {sidebarTitle}
+        </span>
       </div>
 
-      <nav style={navStyle}>
-
-        <div style={{...navItemStyle, ...activeNavItemStyle}}>
-          Dashboard
-        </div>
-
-        <div style={navItemStyle}> Resources </div>
-        <div style={navItemStyle}> Assessments </div>
-        <div style={navItemStyle}> Interviews </div>
-        <div style={navItemStyle}> Training Points </div>
-        <div style={navItemStyle}> Analytics </div>
-        <div style={navItemStyle}> Events </div>
+      <nav className={styles.nav}> 
+        {SIDEBAR_ITEMS.map((item) => (
+          <SidebarButton key={item.id} label={item.label} active={item.id === activeItemId} onClick={() => {
+            //Routing later
+          }}
+          />
+        ))}
       </nav>
-    </div>
-  );
+    </aside>
+  )
 }
 
-const sidebarStyle : CSSProperties = {
-  height: "100%",
-  // width: "220px",
-  padding: "24px 10px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "32px",
-  color: "#f5f5f5",
-  boxSizing: "border-box" as const,
-};
-
-const navItemStyle : CSSProperties = {
-  marginBottom: "20px",
-  cursor: "pointer",
-  fontSize: "14px",
-  opacity: 0.9,
-  textAlign: "center" as const,
-  padding: "8px 10px"
-};
-
-const activeNavItemStyle : CSSProperties = {
-  backgroundColor: "rgba(255, 255, 255, 0.08)",
-  opacity: 1,
-}
-
-const profileCardStyle : CSSProperties = {
-  backgroundColor: "rgba(255, 255, 255, 0.06)",
-  borderRadius: "10px",
-  padding: "20px",
-  textAlign: "center" as const
-}
-
-const profileNameStyle : CSSProperties = {
-  fontSize: "15px",
-  fontWeight: 600,
-}
-
-/* const headerStyle : CSSProperties = {
-  marginTop: 0,
-  marginBottom: "32px",
-  fontSize: "16px",
-  fontWeight: 600
-} */
-
-const navStyle : CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "12px",
-}
-
-
-
-export default Sidebar;
-
+export default Sidebar
