@@ -1,4 +1,4 @@
-// Entry Point
+// Server Entry Point
 
 import express, { Application, Request, Response } from 'express';
 import cors    from 'cors';
