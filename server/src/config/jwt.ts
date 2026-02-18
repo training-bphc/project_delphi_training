@@ -21,7 +21,7 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES_IN || '7d';
  * @param role - User's role ('student' or 'admin')
  * @returns Signed JWT token string
  */
-export const signToken = (id: number, email: string, role: UserRole): string => {
+export const signToken = (id: string, email: string, role: UserRole): string => {
   console.log(`[JWT] Signing token for ${role}: ${email}`);
   return jwt.sign({ id, email, role }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES,

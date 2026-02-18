@@ -15,6 +15,7 @@ export type UserRole = 'student' | 'admin';
 export interface Student {
   student_id: string;
   student_name: string;
+  email: string;
   start_year: number;
   end_year: number;
 }
@@ -22,6 +23,7 @@ export interface Student {
 export interface Admin {
   admin_id: string;
   admin_name: string;
+  email: string;
 }
 
 
