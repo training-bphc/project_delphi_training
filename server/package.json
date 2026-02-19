@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
-    "db:migrate": "ts-node src/db/migrate.ts"
+    "dev": "tsx watch src/index.ts",
+    "db:migrate": "tsx src/db/migrate.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,8 +27,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.9",
     "@types/pg": "^8.11.6",
-    "nodemon": "^3.1.4",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.5.3"
   }
 }

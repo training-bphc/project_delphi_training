@@ -9,7 +9,7 @@ Before setting up the project, ensure you have the following installed:
 - **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
 - **npm** (comes with Node.js)
 - **PostgreSQL** (v12 or higher) - [Download here](https://www.postgresql.org/download/)
-- **TypeScript** compiler (`ts-node` is included in dev dependencies)
+- **TypeScript** compiler (`tsx` is included in dev dependencies)
 
 ## Project Setup
 
@@ -23,7 +23,7 @@ This will install all required packages listed in `package.json`, including:
 - **Express** - Web framework
 - **PostgreSQL (pg)** - Database driver
 - **TypeScript** - Type-safe JavaScript
-- **Nodemon** - Auto-reload during development
+- **tsx** - TypeScript execution & watch mode for development
 - **Google Auth Library** - Google OAuth authentication
 - **Helmet** - Security middleware
 - **CORS** - Cross-Origin Resource Sharing support
@@ -48,12 +48,17 @@ DB_NAME=project_delphi
 # Client Configuration
 CLIENT_URL=http://localhost:3000
 
-# Google OAuth (Optional - for authentication)
+# JWT — REQUIRED. The server will refuse to start if this is not set.
+JWT_SECRET=your_long_random_secret_here
+JWT_EXPIRES_IN=7d
+
+# Google OAuth
 GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
 Replace the values with your actual configuration:
 - `DB_USER`, `DB_PASSWORD`, `DB_NAME` - Your PostgreSQL credentials
+- `JWT_SECRET` - A long, random secret string (required — the server will not start without it)
 - `GOOGLE_CLIENT_ID` - Your Google OAuth client ID (from Google Cloud Console)
 
 ### 3. Set Up the Database
@@ -80,11 +85,13 @@ This will execute the SQL migrations from `src/db/migrations/` to set up the nec
 npm run dev
 ```
 
-This starts the server with hot-reload enabled via Nodemon. The server will automatically restart when you make changes to the code.
+This starts the server with watch mode enabled via `tsx`. The server will automatically restart when you make changes to the code.
 
 **Output:**
 ```
-Server is running on http://localhost:5000
+Server running on http://localhost:5000
+Environment: development
+[DB] PostgreSQL connected successfully
 [DB] New client connected to PostgreSQL
 ```
 
@@ -126,20 +133,36 @@ Content-Type: application/json
 - `id_token` (string, required) - Google ID token obtained from the Google OAuth flow
 - `role` (string, required) - User role (`"student"` or `"admin"`)
 
-**Response:**
+**Student Response:**
 ```json
 {
   "success": true,
-  "message": "User authenticated successfully",
+  "token": "jwt_token_here",
   "user": {
-    "id": "user_uuid",
-    "email": "user@example.com",
-    "name": "User Name",
-    "role": "student"
-  },
-  "token": "jwt_token_here"
+    "roll_number": "F20210001",
+    "student_name": "Jane Doe",
+    "email": "f20210001@hyderabad.bits-pilani.ac.in",
+    "start_year": 2021,
+    "end_year": 2025
+  }
 }
 ```
+
+**Admin Response:**
+```json
+{
+  "success": true,
+  "token": "jwt_token_here",
+  "user": {
+    "admin_name": "John Smith",
+    "email": "training@hyderabad.bits-pilani.ac.in"
+  }
+}
+```
+
+> **Note:** The JWT payload carries `roll_number` as the identity field (`id`) for
+> students, and `email` for admins. Internal surrogate keys (`student_id`,
+> `admin_id`) are never returned in API responses.
 
 ## Obtaining a Google ID Token
 
@@ -246,28 +269,31 @@ curl -X POST http://localhost:5000/api/auth/google \
 ```
 server/
 ├── src/
-│   ├── config/          # Configuration files (database, JWT, etc.)
-│   │   ├── db.ts        # PostgreSQL connection pool setup
-│   │   └── jwt.ts       # JWT configuration
-│   ├── controllers/      # Business logic for routes
-│   │   └── authController.ts
-│   ├── db/              # Database migrations
-│   │   ├── migrate.ts   # Migration runner
-│   │   └── migrations/  # SQL migration files
+│   ├── config/          # Configuration files
+│   │   ├── db.ts        # PostgreSQL connection pool (10 s timeout)
+│   │   └── jwt.ts       # JWT sign/verify (throws if JWT_SECRET missing)
+│   ├── controllers/     # Route handlers
+│   │   └── authController.ts  # Google OAuth — student & admin login
+│   ├── db/              # Database layer
+│   │   ├── migrate.ts         # Migration runner
+│   │   └── migrations/
+│   │       └── 001_initial_schema.sql
 │   ├── middleware/      # Express middleware
-│   │   ├── auth.ts      # JWT authentication middleware
+│   │   ├── auth.ts      # authenticate (JWT) + authorize (role guard)
 │   │   └── logger.ts    # Request/response logger
 │   ├── routes/          # API route definitions
-│   │   ├── authRoutes.ts
-│   │   └── roles/       # Role-based routes
+│   │   ├── authRoutes.ts      # POST /api/auth/google
+│   │   └── roles/             # Role-specific routes (in progress)
 │   │       ├── studentRoutes.ts
 │   │       └── adminRoutes.ts
-│   ├── types/           # TypeScript type definitions
+│   ├── types/           # TypeScript interfaces & types
 │   │   └── index.ts
-│   └── index.ts         # Server entry point
+│   ├── utils/           # Shared utilities
+│   │   └── asyncHandler.ts    # Wraps async handlers, forwards errors to next()
+│   └── index.ts         # Server entry point + global error handler
 ├── package.json         # Dependencies and scripts
 ├── tsconfig.json        # TypeScript configuration
-├── test.rest            # REST client test file
+├── test.rest            # REST Client test file (VS Code)
 └── README.md            # This file
 ```
 
@@ -294,11 +320,15 @@ server/
 
 ### Missing Environment Variables
 
+**Error:** `Error: JWT_SECRET environment variable is not set`
+
+**Solution:** Add `JWT_SECRET=your_long_random_secret` to your `.env` file. This variable is required — the server will not start without it.
+
 **Error:** `Error: Cannot read property 'host' of undefined`
 
 **Solution:**
 - Ensure `.env` file exists in the project root
-- Verify all required variables are set
+- Verify all required variables are set (see Environment Variables Reference)
 
 ### TypeScript Compilation Errors
 
@@ -324,35 +354,17 @@ server/
 
 ## Environment Variables Reference
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| PORT | 5000 | Server port |
-| NODE_ENV | development | Environment (development/production) |
-| DB_HOST | localhost | PostgreSQL host |
-| DB_PORT | 5432 | PostgreSQL port |
-| DB_USER | postgres | PostgreSQL username |
-| DB_PASSWORD | - | PostgreSQL password |
-| DB_NAME | project_delphi | Database name |
-| CLIENT_URL | http://localhost:3000 | Frontend client URL (for CORS) |
-| GOOGLE_CLIENT_ID | - | Google OAuth client ID |
+| Variable | Default | Required | Description |
+|----------|---------|----------|-------------|
+| PORT | 5000 | No | Server port |
+| NODE_ENV | development | No | Environment (development/production) |
+| DB_HOST | localhost | Yes | PostgreSQL host |
+| DB_PORT | 5432 | No | PostgreSQL port |
+| DB_USER | postgres | Yes | PostgreSQL username |
+| DB_PASSWORD | - | Yes | PostgreSQL password |
+| DB_NAME | project_delphi | Yes | Database name |
+| CLIENT_URL | http://localhost:3000 | No | Frontend client URL (for CORS) |
+| JWT_SECRET | - | **Yes** | Secret for signing JWTs — server won't start without this |
+| JWT_EXPIRES_IN | 7d | No | JWT expiry duration (e.g. `1d`, `7d`, `24h`) |
+| GOOGLE_CLIENT_ID | - | Yes | Google OAuth client ID |
 
-## Security Features
-
-- **Helmet** - Sets secure HTTP headers
-- **CORS** - Configured for specific origins
-- **JWT** - Secure token-based authentication
-- **Google OAuth** - Secure third-party authentication
-- **Input Validation** - Uses express-validator
-- **Request Logging** - All requests are logged for debugging
-
-## Next Steps
-
-- Implement student routes (currently commented in `index.ts`)
-- Implement admin routes
-- Add more comprehensive error handling
-- Set up unit tests
-- Deploy to production server
-
-## Support
-
-For issues or questions, please check the project's issue tracker or contact the development team.
