@@ -1,0 +1,10 @@
+All the changes I made 
+If you have any queries or any othe change suggestion please refer these numbers
+NOTE - All the new css files created (Table.module.css) are vibe coded
+
+1) In Table.tsx I have created it as a table having colunms 
+S.No	Name	BITS ID	Email	Date	Category    Added By    Verified Status
+The Category again have 8 options, Added by have Student and Training Unit Options and Verified Status have yes /no options
+These I will allow them to sort in the backend files 
+
+2) 
