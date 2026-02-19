@@ -1,10 +1,35 @@
 All the changes I made 
 If you have any queries or any othe change suggestion please refer these numbers
-NOTE - All the new css files created (Table.module.css) are vibe coded
+NOTE - All the new css files created (Table.module.css, createNewRecords.css) are vibe coded
 
 1) In Table.tsx I have created it as a table having colunms 
 S.No	Name	BITS ID	Email	Date	Category    Added By    Verified Status
-The Category again have 8 options, Added by have Student and Training Unit Options and Verified Status have yes /no options
-These I will allow them to sort in the backend files 
+    The Category again have 8 options, Added by have Student and Training Unit Options and Verified Status have yes /no options
+    These I will allow them to sort in the backend files 
 
-2) 
+2) The createNewRecords acts both to search the record or create new record
+    The createNewRecords function as both a search and a record creation system. 
+        (i)Say a student initiated Record Request (say a hacathon)
+            When a student submits a request for training point verification:
+                The record is automatically goes into the “View Records for Verification” tab.
+                The verification status at this stage is set to "No".
+            TU Actions from “View Records for Verification”:
+                If TU Accept →
+                    Status changes to “Verified – Yes”
+                    Record moves to the “Previous Verifications” tab.
+                If TU reject (maybe with reason) →
+                    Status changes to “Rejected”
+                    Record moves to “Pending Records for Verification” (separate filtered view).
+                    Student is notified with the rejection reason and allowed to modify/resubmit.
+
+        (ii)Say TU initiated Record Creation
+            When TU creates a record directly (say speaker session):
+            TU enters the student’s ID in Overview tab.
+            If the ID already exists:
+                The “Search” button changes to “Modify”, in the overview tab redirecting to the "Pending records for verification" Tab.
+            If creating a new entry(i.e. if the ID doesnt exist):
+                The "Search" button changes to “Add New”, in the Overview tab, add we will get a pop-up to make new record.
+                Records created directly by TU are automatically verified (“Yes”)
+                These records immediately appear in the “Previous Verifications” tab.
+
+    
