@@ -1,15 +1,18 @@
 import AppLayout from "../../components/AppLayout";
 import Table from "../../components/layout/Table";
+import CreateNewRecord from "../../components/layout/createNewRecord";
 import styles from "./trainingPoints.module.css";
 // import { useMemo, useState } from "react";
 
 function RecordVerification() {
-
   return (
     <AppLayout>
       <div className={styles.page}>
-        <span> 
-          <h1 style={{textAlign: "center", fontSize: "4vw"}}>Records for Verification</h1>
+        <span>
+          <h1 style={{ textAlign: "center", fontSize: "4vw" }}>
+            Records for Verification
+          </h1>
+          <CreateNewRecord></CreateNewRecord>
           <Table></Table>
         </span>
       </div>
