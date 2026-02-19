@@ -11,11 +11,11 @@ const SIDEBAR_ITEMS = [
     id: "overview", label: "Overview"
   },
   {
-    id: "addhackathon", label: "Add Record for Verification"
+    id: "addhackathon", label: "View Records for Verification"
   },
-  {
-    id: "verify", label: "Verification Requests"
-  }
+  // {
+  //   id: "verify", label: "Verification Requests"
+  // }
 ];
 
 function Sidebar() {
