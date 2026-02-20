@@ -1,6 +1,6 @@
 import SidebarButton from "./layout/SidebarButton";
 import styles from "./layout/sidebar.module.css";
-import React from "react";
+
 import { useLocation, useNavigate } from "react-router-dom";
 
 // Sidebar title

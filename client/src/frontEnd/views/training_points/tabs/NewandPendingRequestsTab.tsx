@@ -16,6 +16,9 @@ const requests = [
   // Add more sample data as needed
 ];
 
+import { getPendingRows } from "../../../../sampleDataBase/sampleDataUtil";
+import Table from "../../../components/layout/Table";
+
 // Tab for displaying new and pending/rejected student requests
 function NewandPendingRequestsTab() {
   return (
@@ -31,34 +34,7 @@ function NewandPendingRequestsTab() {
         <b>Note: Sample data is shown before SQL integration.</b>
       </p>
       {/* Table of requests */}
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>S.No</th>
-            <th>Name</th>
-            <th>BITS ID</th>
-            <th>Email</th>
-            <th>Date</th>
-            <th>Category</th>
-            <th>Added By</th>
-            <th>Verified Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {requests.map((user) => (
-            <tr key={user.bits_id}>
-              <td>{user.s_no}</td>
-              <td>{user.name}</td>
-              <td>{user.bits_id}</td>
-              <td>{user.email}</td>
-              <td>{user.date}</td>
-              <td>{user.category}</td>
-              <td>{user.added_by}</td>
-              <td>{user.verified_status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Table fetchRows={getPendingRows} />
     </div>
   );
 }

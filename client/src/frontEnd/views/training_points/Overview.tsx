@@ -1,4 +1,5 @@
 import Table from "../../components/layout/Table";
+import { getAllRows } from "../../../sampleDataBase/sampleDataUtil";
 import CreateNewRecord from "../../components/layout/createNewRecord";
 import styles from "./trainingPoints.module.css";
 
@@ -12,7 +13,7 @@ function Overview() {
         {/* Input for new record */}
         <CreateNewRecord />
         {/* Table of records */}
-        <Table />
+        <Table fetchRows={getAllRows} />
       </span>
     </div>
   );

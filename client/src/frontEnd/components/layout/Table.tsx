@@ -1,24 +1,32 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Table.module.css";
 
 // Table component fetches SAMPLETESTDATA from backend and displays it
-function Table() {
+// TableProps allows passing a fetchRows function for dynamic data
+type TableProps = {
+  fetchRows?: () => Promise<any[]>; // Corrected type for fetchRows
+};
+
+function Table({ fetchRows }: TableProps) {
   // State for table rows
-
-  // Load data from sampleData.json
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState<any[]>([]);
   useEffect(() => {
-    fetch("/src/sampleDataBase/sampleData.json")
-      .then((res) => res.json())
-      .then((data) => setRows(data));
-  }, []);
-
-  // SQL integration placeholder:
-  // useEffect(() => {
-  //   fetch("/api/sampletestdata")
-  //     .then((res) => res.json())
-  //     .then((data) => setRows(data));
-  // }, []);
+    let isMounted = true;
+    if (typeof fetchRows === "function") {
+      fetchRows().then((data) => {
+        if (isMounted) setRows(data);
+      });
+    } else {
+      fetch("/src/sampleDataBase/sampleData.json")
+        .then((res) => res.json())
+        .then((data) => {
+          if (isMounted) setRows(data);
+        });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchRows]);
 
   return (
     <div className={styles.tableContainer}>
