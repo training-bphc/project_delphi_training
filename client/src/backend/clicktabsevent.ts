@@ -22,4 +22,5 @@ export function logTabClick(event: TabClickEvent) {
   );
 }
 
+// Example usage (remove or replace with real backend logic)
 // logTabClick({ tab: 'newStudentRequest', userId: '20240001', timestamp: Date.now() });
