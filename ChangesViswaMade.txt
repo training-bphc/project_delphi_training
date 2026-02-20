@@ -11,9 +11,9 @@ S.No	Name	BITS ID	Email	Date	Category    Added By    Verified Status
     The createNewRecords function as both a search and a record creation system. 
         (i)Say a student initiated Record Request (say a hacathon)
             When a student submits a request for training point verification:
-                The record is automatically goes into the “View Records for Verification” tab.
+                The record is automatically goes into the “New Student Request” tab.
                 The verification status at this stage is set to "No".
-            TU Actions from “View Records for Verification”:
+            TU Actions from “New Student Request”:
                 If TU Accept →
                     Status changes to “Verified – Yes”
                     Record moves to the “Previous Verifications” tab.
@@ -28,8 +28,27 @@ S.No	Name	BITS ID	Email	Date	Category    Added By    Verified Status
             If the ID already exists:
                 The “Search” button changes to “Modify”, in the overview tab redirecting to the "Pending records for verification" Tab.
             If creating a new entry(i.e. if the ID doesnt exist):
-                The "Search" button changes to “Add New”, in the Overview tab, add we will get a pop-up to make new record.
+                The "Search" button changes to “Add New”, in the Overview tab, add we will get a pop-up a form like in tab window to make new record.
                 Records created directly by TU are automatically verified (“Yes”)
                 These records immediately appear in the “Previous Verifications” tab.
-
     
+3) Sugegsted Tab Structue :
+    
+    *Overview* Tab*
+        Displays the all latest records. (sorted by date)
+        Will have options to sort by Category, verification status and the person who created.
+        Also is the place where TU will create a new record. And also search for any record.
+    
+    *New Student Request* Tab 
+        Contains newly submitted student requests awaiting TU decision.
+    
+    *Pending Records for Verification* Tab
+        Shows only:
+            Status = “Pending” (Pending is when TU need to take some action after student adding it from his end) or 
+            Status = “Rejected” (Rejected is when student need to take some corrections)
+        Helps in tracking incomplete or student-actionable items.
+    
+    *Previous Verifications* Tab
+        Stores all finalized (accepted) records only.
+        This acts as a permanent audit log. (will be helpful to pull a student's horoscope)
+ --> In overview only we van add either for individual or group of people
