@@ -1,39 +1,24 @@
--- Sample PostgreSQL schema and data for Training Points project
+-- Minimal PostgreSQL schema for SAMPLETESTDATA table
+-- Drops table if it exists
+DROP TABLE IF EXISTS SAMPLETESTDATA;
 
--- Drop tables if they exist
-DROP TABLE IF EXISTS student_requests;
-DROP TABLE IF EXISTS users;
-
--- Users table (for admins, TU, students)
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    bits_id VARCHAR(20) UNIQUE NOT NULL,
+-- Creates SAMPLETESTDATA table with required keys
+CREATE TABLE SAMPLETESTDATA (
+    S_no SERIAL PRIMARY KEY, -- Auto-incrementing serial number
     name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    role VARCHAR(20) NOT NULL -- e.g., 'student', 'admin', 'tu'
-);
-
--- Student requests table
-CREATE TABLE student_requests (
-    id SERIAL PRIMARY KEY,
-    student_id INTEGER REFERENCES users(id),
-    category VARCHAR(50) NOT NULL,
+    bits_id VARCHAR(20) UNIQUE NOT NULL,
+    email_id VARCHAR(100) NOT NULL,
     date DATE NOT NULL,
+    category VARCHAR(50) NOT NULL,
     added_by VARCHAR(50) NOT NULL,
-    verified_status VARCHAR(20) NOT NULL, -- e.g., 'Pending', 'Rejected', 'Accepted'
-    details TEXT
+    verification_status VARCHAR(20) NOT NULL,
+    points INTEGER NOT NULL
 );
 
--- Sample users
-INSERT INTO users (bits_id, name, email, role) VALUES
-('20240546', 'Viswa Somayajula', 'f20240546@bits-pilani.ac.in', 'student'),
-('20231100', 'Vedant Barve', 'f20231100@bits-pilani.ac.in', 'student'),
-('20230046', 'Madhav', 'f20230046@bits-pilani.ac.in', 'student'),
-('20231106', 'Siddharth', 'f20231106@bits-pilani.ac.in', 'student');
+-- Sample insert (edit or add more as needed)
+INSERT INTO SAMPLETESTDATA (name, bits_id, email_id, date, category, added_by, verification_status, points) VALUES
+('Viswa Somayajula', '20240546', 'f20240546@bits-pilani.ac.in', '01-01-2026', 'Hackathon', 'Student', 'Pending', 0);
+('Vedant Barve', '20231100', 'f20231100@bits-pilani.ac.in', '01-02-2026', 'Lecture Session ', 'Training Unit', 'Verified', 7);
+('Madhav', '20230046', 'f20230046@bits-pilani.ac.in', '20-02-2026', 'Workshop', 'Training Unit', 'Pending', 0);
+('Siddharth', '20231106', 'f20231106@bits-pilani.ac.in', '21-02-2026', 'Seminar', 'Training Unit', 'Pending', 0);
 
--- Sample student requests
-INSERT INTO student_requests (student_id, category, date, added_by, verified_status, details) VALUES
-(1, 'Hackathon', '2026-01-01', 'Student', 'No', 'Participated in hackathon.'),
-(2, 'Lecture Session', '2026-02-01', 'Training Unit', 'Yes', 'Attended lecture session.'),
-(3, 'Workshop', '2026-02-20', 'Admin', 'Yes', 'Completed workshop.'),
-(4, 'Seminar', '2026-02-21', 'Admin', 'No', 'Attended seminar.');

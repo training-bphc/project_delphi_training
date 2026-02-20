@@ -1,0 +1,35 @@
+[
+  {
+    "S_no": 1,
+    "name": "Viswa Somayajula",
+    "bits_id": "20240546",
+    "email_id": "f20240546@bits-pilani.ac.in",
+    "date": "2026-02-20",
+    "category": "Workshop",
+    "added_by": "Admin",
+    "verification_status": "Accepted",
+    "points": 3
+  },
+  {
+    "S_no": 2,
+    "name": "Vedant",
+    "bits_id": "20231100",
+    "email_id": "f20231100@bits-pilani.ac.in",
+    "date": "2026-03-15",
+    "category": "Seminar",
+    "added_by": "Admin",
+    "verification_status": "Pending",
+    "points": 0
+  },
+  {
+    "S_no": 3,
+    "name": "Madhav",
+    "bits_id": "20236767",
+    "email_id": "f20236767@bits-pilani.ac.in",
+    "date": "2026-04-10",
+    "category": "Lecture Session",
+    "added_by": "Admin",
+    "verification_status": "Accepted",
+    "points": 7
+  }
+]
