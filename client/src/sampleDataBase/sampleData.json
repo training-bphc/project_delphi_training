@@ -31,5 +31,27 @@
     "added_by": "Admin",
     "verification_status": "Verified",
     "points": 7
+  },
+  {
+    "S_no": 4,
+    "name": "VVD",
+    "bits_id": "20236967",
+    "email_id": "f20236967@bits-pilani.ac.in",
+    "date": "2026-04-10",
+    "category": "Lecture Session",
+    "added_by": "Admin",
+    "verification_status": "Pending",
+    "points": 7
+  },
+  {
+    "S_no": 5,
+    "name": "SSVD",
+    "bits_id": "20240143",
+    "email_id": "f20240143@bits-pilani.ac.in",
+    "date": "2026-04-10",
+    "category": "Category 5",
+    "added_by": "Admin",
+    "verification_status": "Pending",
+    "points": 7
   }
 ]
