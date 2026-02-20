@@ -1,0 +1,12 @@
+.tabContainer {
+  padding: 2rem;
+  background: #f6fff6;
+  border-radius: 8px;
+}
+h2 {
+  color: #27ae60;
+  margin-bottom: 1rem;
+}
+p {
+  color: #444;
+}

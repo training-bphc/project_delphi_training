@@ -1,42 +1,59 @@
 import SidebarButton from "./layout/SidebarButton";
-import styles from "./layout/sidebar.module.css"
+import styles from "./layout/sidebar.module.css";
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-// Temporary, until routing comes
-//TODO: setup routing and dynamic functionality
+// Sidebar title
 const sidebarTitle = "Training Points";
-const activeItemId = "overview";
 
+// Sidebar navigation items with route paths
 const SIDEBAR_ITEMS = [
   {
-    id: "overview", label: "Overview"
+    id: "overview",
+    label: "Overview",
+    path: "/overview",
   },
   {
-    id: "addhackathon", label: "View Records for Verification"
+    id: "newstudentrequests",
+    label: "New Student Requests",
+    path: "/new-student-requests",
   },
-  // {
-  //   id: "verify", label: "Verification Requests"
-  // }
+  {
+    id: "pendingrecordsforverification",
+    label: "Pending Records for Verification",
+    path: "/pending-records",
+  },
+  {
+    id: "previousverifications",
+    label: "Previous Verifications",
+    path: "/previous-verifications",
+  },
 ];
 
+// Sidebar component renders navigation on the left
 function Sidebar() {
+  const location = useLocation(); // Get current route
+  const navigate = useNavigate(); // Navigation function
+
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.sidebarHeader}>
-        <span className={styles.sidebarTitle}>
-          {sidebarTitle}
-        </span>
-      </div>
-
-      <nav className={styles.nav}> 
-        {SIDEBAR_ITEMS.map((item) => (
-          <SidebarButton key={item.id} label={item.label} active={item.id === activeItemId} onClick={() => {
-            //Routing later
-          }}
+      {/* Sidebar header/title */}
+      <header className={styles.sidebarHeader}>
+        <span className={styles.sidebarTitle}>{sidebarTitle}</span>
+      </header>
+      {/* Navigation buttons */}
+      <nav className={styles.nav}>
+        {SIDEBAR_ITEMS.map(({ id, label, path }) => (
+          <SidebarButton
+            key={id}
+            label={label}
+            active={location.pathname === path}
+            onClick={() => navigate(path)}
           />
         ))}
       </nav>
     </aside>
-  )
+  );
 }
 
-export default Sidebar
+export default Sidebar;
