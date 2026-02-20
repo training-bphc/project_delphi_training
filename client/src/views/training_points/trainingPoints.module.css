@@ -1,0 +1,94 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  width: 100%;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+}
+
+.summaryLeft {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.pointsCard {
+  width: 240px;
+  height: 140px;
+  border-radius: 18px;
+  background-color: #e5e5e5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pointsValue {
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.infoText {
+  font-size: 14px;
+  color: #777;
+  cursor: pointer;
+}
+
+.infoText:hover {
+  color: #555;
+}
+
+.addButton {
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: none;
+
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  background-color: #dddddd;
+}
+
+.addButton:hover {
+  background-color: #d0d0d0;
+}
+
+.categoryWise {
+  display: flex;
+  width: 100%;
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(320px, 1fr));
+  gap: 28px 40px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.categoryCard {
+  padding: 22px;
+  border-radius: 16px;
+  background-color: #ededed;
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.categoryTitle {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.categoryPoints {
+  font-size: 13px;
+  color: #555;
+}
