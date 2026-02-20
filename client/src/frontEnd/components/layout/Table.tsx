@@ -4,10 +4,12 @@ import styles from "./Table.module.css";
 // Table component fetches SAMPLETESTDATA from backend and displays it
 // TableProps allows passing a fetchRows function for dynamic data
 type TableProps = {
-  fetchRows?: () => Promise<any[]>; // Corrected type for fetchRows
+  fetchRows?: () => Promise<any[]>;
+  showToggle?: boolean;
+  onToggle?: (row: any) => void;
 };
 
-function Table({ fetchRows }: TableProps) {
+function Table({ fetchRows, showToggle = false, onToggle }: TableProps) {
   // State for table rows
   const [rows, setRows] = useState<any[]>([]);
   useEffect(() => {
@@ -42,6 +44,7 @@ function Table({ fetchRows }: TableProps) {
             <th>Added By</th>
             <th>Verification Status</th>
             <th>Points</th>
+            {showToggle && <th>Action</th>}
           </tr>
         </thead>
         <tbody>
@@ -56,6 +59,27 @@ function Table({ fetchRows }: TableProps) {
               <td>{row.added_by}</td>
               <td>{row.verification_status}</td>
               <td>{row.points}</td>
+              {showToggle && (
+                <td>
+                  <button
+                    style={{
+                      background: "#27ae60",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "6px",
+                      padding: "6px 16px",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                      fontSize: "0.95rem",
+                      boxShadow: "0 2px 6px rgba(39,174,96,0.08)",
+                      transition: "background 0.2s",
+                    }}
+                    onClick={() => onToggle && onToggle(row)}
+                  >
+                    Verify & Move (+10)
+                  </button>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

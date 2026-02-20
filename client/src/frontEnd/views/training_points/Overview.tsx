@@ -1,19 +1,18 @@
 import Table from "../../components/layout/Table";
-import { getAllRows } from "../../../sampleDataBase/sampleDataUtil";
 import CreateNewRecord from "../../components/layout/createNewRecord";
 import styles from "./trainingPoints.module.css";
+import { useContext } from "react";
+import { RecordsContext } from "../../../App";
 
 // Overview page: displays heading, create record input, and table
 function Overview() {
+  const { records } = useContext(RecordsContext);
   return (
     <div className={styles.page}>
       <span>
-        {/* Page heading */}
         <h1 style={{ textAlign: "center", fontSize: "4vw" }}>OVERVIEW</h1>
-        {/* Input for new record */}
         <CreateNewRecord />
-        {/* Table of records */}
-        <Table fetchRows={getAllRows} />
+        <Table fetchRows={async () => records} />
       </span>
     </div>
   );
