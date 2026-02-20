@@ -18,7 +18,7 @@ function TrainingPoints() {
 
   const totalPoints = useMemo(
     () => categories.reduce((sum, c) => sum + c.points, 0),
-    [categories]
+    [categories],
   );
 
   return (
@@ -30,23 +30,17 @@ function TrainingPoints() {
               <span className={styles.pointsValue}>{totalPoints} / 75</span>
             </div>
 
-            <span className={styles.infoText}>
-              What are Training Points?
-            </span>
+            <span className={styles.infoText}>What are Training Points?</span>
           </div>
 
-          <button className={styles.addButton}>
-            + Add Training Points
-          </button>
+          <button className={styles.addButton}>+ Add Training Points</button>
         </section>
 
         <section className={styles.categoryWise}>
           <div className={styles.categoryGrid}>
             {categories.map((category, index) => (
               <div key={index} className={styles.categoryCard}>
-                <span className={styles.categoryTitle}>
-                  {category.name}
-                </span>
+                <span className={styles.categoryTitle}>{category.name}</span>
                 <span className={styles.categoryPoints}>
                   {category.points} points
                 </span>

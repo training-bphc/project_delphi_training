@@ -1,8 +1,8 @@
 import React from "react";
 import styles from "./NewStudentRequestTab.module.css";
 
-// Example data for new student requests
-const newRequests = [
+// Example data for new and pending student requests
+const requests = [
   {
     s_no: 1,
     name: "Duth",
@@ -13,15 +13,24 @@ const newRequests = [
     added_by: "Student",
     verified_status: "Pending",
   },
+  // Add more sample data as needed
 ];
 
-// Tab for displaying new student requests
-function NewStudentRequestTab() {
+// Tab for displaying new and pending/rejected student requests
+function NewandPendingRequestsTab() {
   return (
     <div className={styles.tabContainer}>
       {/* Tab heading */}
-      <h2>New Student Requests</h2>
-      {/* Table of new requests */}
+      <h2>New & Pending Student Requests</h2>
+      {/* Description */}
+      <p>
+        Shows newly submitted student requests awaiting TU decision, and records
+        with status <b>"Pending"</b> or <b>"Rejected"</b>.<br />
+        Helps in tracking incomplete or student-actionable items.
+        <br />
+        <b>Note: Sample data is shown before SQL integration.</b>
+      </p>
+      {/* Table of requests */}
       <table className={styles.table}>
         <thead>
           <tr>
@@ -36,7 +45,7 @@ function NewStudentRequestTab() {
           </tr>
         </thead>
         <tbody>
-          {newRequests.map((user) => (
+          {requests.map((user) => (
             <tr key={user.bits_id}>
               <td>{user.s_no}</td>
               <td>{user.name}</td>
@@ -54,4 +63,4 @@ function NewStudentRequestTab() {
   );
 }
 
-export default NewStudentRequestTab;
+export default NewandPendingRequestsTab;

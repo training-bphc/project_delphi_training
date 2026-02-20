@@ -5,11 +5,10 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import AppLayout from "./components/AppLayout";
-import Overview from "./views/training_points/Overview";
-import NewStudentRequestTab from "./views/training_points/tabs/NewStudentRequestTab";
-import PendingRecordsForVerificationTab from "./views/training_points/tabs/PendingRecordsForVerificationTab";
-import PreviousVerificationsTab from "./views/training_points/tabs/PreviousVerificationsTab";
+import AppLayout from "./frontEnd/components/AppLayout";
+import Overview from "./frontEnd/views/training_points/Overview";
+import NewandPendingRequestsTab from "./frontEnd/views/training_points/tabs/NewandPendingRequestsTab";
+import PreviousVerificationsTab from "./frontEnd/views/training_points/tabs/PreviousVerificationsTab";
 
 // Main App component sets up routing and layout
 function App() {
@@ -22,15 +21,14 @@ function App() {
           <Route path="/" element={<Navigate to="/overview" replace />} />
           {/* Route for Overview tab */}
           <Route path="/overview" element={<Overview />} />
-          {/* Route for New Student Requests tab */}
+          {/* Route for New and Pending Requests tab (merged) */}
           <Route
             path="/new-student-requests"
-            element={<NewStudentRequestTab />}
+            element={<NewandPendingRequestsTab />}
           />
-          {/* Route for Pending Records for Verification tab */}
           <Route
             path="/pending-records"
-            element={<PendingRecordsForVerificationTab />}
+            element={<NewandPendingRequestsTab />}
           />
           {/* Route for Previous Verifications tab */}
           <Route

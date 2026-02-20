@@ -14,13 +14,8 @@ const SIDEBAR_ITEMS = [
     path: "/overview",
   },
   {
-    id: "newstudentrequests",
-    label: "New Student Requests",
-    path: "/new-student-requests",
-  },
-  {
-    id: "pendingrecordsforverification",
-    label: "Pending Records for Verification",
+    id: "newandpendingrecordsforverification",
+    label: "New & Pending Records for Verification",
     path: "/pending-records",
   },
   {
