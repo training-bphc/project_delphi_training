@@ -31,3 +31,19 @@ CREATE TABLE IF NOT EXISTS admins (
 -- Indexes for faster lookups
 CREATE INDEX IF NOT EXISTS idx_students_batch ON students(batch_id);
 CREATE INDEX IF NOT EXISTS idx_students_email ON students(email);
+
+-- Training records table used by frontend overview and verification flow.
+CREATE TABLE IF NOT EXISTS training_records (
+  s_no                 SERIAL PRIMARY KEY,
+  name                 VARCHAR(100) NOT NULL,
+  bits_id              VARCHAR(30)  NOT NULL UNIQUE,
+  email_id             VARCHAR(255) NOT NULL,
+  date                 DATE         NOT NULL,
+  category             VARCHAR(100) NOT NULL,
+  added_by             VARCHAR(100) NOT NULL,
+  verification_status  VARCHAR(20)  NOT NULL DEFAULT 'Pending',
+  points               INTEGER      NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_training_records_status ON training_records(verification_status);
+CREATE INDEX IF NOT EXISTS idx_training_records_bits_id ON training_records(bits_id);

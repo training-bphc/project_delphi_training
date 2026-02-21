@@ -1,2 +1,38 @@
-# project_delphi_training
-This is the official repository of the website of Training Unit BITS Pilani, Hyderabad Campus. It works as a repository for all resources as well as a website to track individual student's as well as the entire cohorts data.
+# Project Delphi Training
+
+Monorepo for the Training Unit web app and API.
+
+## Structure
+
+- `client/` - React + Vite frontend
+- `server/` - Express + TypeScript + PostgreSQL backend
+
+## Quick Start
+
+1. Start backend:
+   ```bash
+   cd server
+   npm install
+   npm run db:migrate
+   npm run dev
+   ```
+2. Start frontend (new terminal):
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
+
+Frontend uses Vite proxy for `/api` to `http://localhost:5000`.
+
+## Test Data (Backend)
+
+From `server/`:
+
+- Add test records: `npm run db:seed:test`
+- Remove test records: `npm run db:clear:test`
+
+## Notes
+
+- Backend records API is DB-backed (`training_records` table).
+- See `server/README.md` for environment variables and endpoint details.

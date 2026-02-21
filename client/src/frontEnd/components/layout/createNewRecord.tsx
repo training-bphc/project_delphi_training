@@ -5,23 +5,27 @@ function CreateNewRecord() {
   const [studentId, setStudentId] = useState("");
   const [buttonLabel, setButtonLabel] = useState("Search");
 
-  // Placeholder for backend check
-  // In the future, replace this with an API call to check if BITS ID exists
-  const handleSearch = () => {
-    // This is for sample purpode, like once we have backend and proper API integration,
-    // we can replace this logic with actual API response from the data base
-    if (
-      studentId === "20240546" ||
-      studentId === "20230046" ||
-      studentId === "20231100" ||
-      studentId === "20231106"
-    ) {
-      setButtonLabel("Modify");
-    } else if (studentId) {
-      setButtonLabel("Add new");
-    } else {
+  const handleSearch = async () => {
+    if (!studentId.trim()) {
       setButtonLabel("Search");
+      return;
     }
+
+    const response = await fetch(
+      `/api/records/by-bits-id/${encodeURIComponent(studentId.trim())}`,
+    );
+
+    if (response.ok) {
+      setButtonLabel("Modify");
+      return;
+    }
+
+    if (response.status === 404) {
+      setButtonLabel("Add new");
+      return;
+    }
+
+    setButtonLabel("Search");
   };
 
   // Reset button label when input changes

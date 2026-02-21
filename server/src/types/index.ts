@@ -27,3 +27,28 @@ export interface JwtPayload {
   iat:   number;   // issued at (set automatically by jsonwebtoken)
   exp:   number;   // expiration time (set automatically by jsonwebtoken)
 }
+
+export type VerificationStatus = 'Pending' | 'Verified' | 'Rejected';
+
+export interface TrainingRecord {
+  S_no: number;
+  name: string;
+  bits_id: string;
+  email_id: string;
+  date: string;
+  category: string;
+  added_by: string;
+  verification_status: VerificationStatus;
+  points: number;
+}
+
+export interface CreateTrainingRecordInput {
+  name: string;
+  bits_id: string;
+  email_id: string;
+  date: string;
+  category: string;
+  added_by: string;
+  verification_status?: VerificationStatus;
+  points?: number;
+}

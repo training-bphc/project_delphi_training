@@ -19,10 +19,10 @@ function Table({ fetchRows, showToggle = false, onToggle }: TableProps) {
         if (isMounted) setRows(data);
       });
     } else {
-      fetch("/src/sampleDataBase/sampleData.json")
+      fetch("/api/records")
         .then((res) => res.json())
         .then((data) => {
-          if (isMounted) setRows(data);
+          if (isMounted) setRows(data.data ?? []);
         });
     }
     return () => {

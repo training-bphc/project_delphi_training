@@ -9,35 +9,66 @@ import Overview from "./frontEnd/views/training_points/Overview";
 import NewandPendingRequestsTab from "./frontEnd/views/training_points/tabs/NewandPendingRequestsTab";
 import PreviousVerificationsTab from "./frontEnd/views/training_points/tabs/PreviousVerificationsTab";
 import { createContext, useEffect, useState } from "react";
-import sampleData from "./sampleDataBase/sampleData.json";
+
+type TrainingRecord = {
+  S_no: number;
+  name: string;
+  bits_id: string;
+  email_id: string;
+  date: string;
+  category: string;
+  added_by: string;
+  verification_status: string;
+  points: number;
+};
 
 // Main App component sets up routing and layout
 // Context for global records state
 export const RecordsContext = createContext<any>(null);
 
 function App() {
-  const [records, setRecords] = useState<any[]>([]);
+  const [records, setRecords] = useState<TrainingRecord[]>([]);
+
+  const fetchRecords = async () => {
+    const response = await fetch("/api/records");
+    if (!response.ok) {
+      throw new Error("Failed to fetch records");
+    }
+
+    const payload = await response.json();
+    setRecords(payload.data ?? []);
+  };
+
   useEffect(() => {
-    setRecords(sampleData);
+    fetchRecords().catch((error) => {
+      console.error("Unable to load records", error);
+    });
   }, []);
 
   // Toggle handler: move to verified and increment points
-  const handleVerify = (row: any) => {
+  const handleVerify = async (row: TrainingRecord) => {
+    const response = await fetch(`/api/records/${row.S_no}/verify`, {
+      method: "PATCH",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to verify record");
+    }
+
+    const payload = await response.json();
+    const updatedRecord = payload.data as TrainingRecord;
+
     setRecords((prev) =>
-      prev.map((r) =>
-        r.S_no === row.S_no
-          ? {
-              ...r,
-              verification_status: "Verified",
-              points: (r.points || 0) + 10,
-            }
-          : r,
+      prev.map((record) =>
+        record.S_no === updatedRecord.S_no ? updatedRecord : record,
       ),
     );
   };
 
   return (
-    <RecordsContext.Provider value={{ records, setRecords, handleVerify }}>
+    <RecordsContext.Provider
+      value={{ records, setRecords, handleVerify, refreshRecords: fetchRecords }}
+    >
       <Router>
         <AppLayout>
           <Routes>
