@@ -61,18 +61,4 @@ client/
 				 └─ AddTrainingCSV.tsx
 ```
 
-## Functional Notes
-
-- Authentication is required before route access.
-- Role routing:
-	- Admin: `/admin/*`
-	- Student: `/student/*`
-- Record verification uses `PATCH /api/records/:sNo/verify`.
-- Record ID contract is `s_no`.
-- BITS ID format enforced in admin creation form:
-	- `20XXYYZZWWWWH` (example: `2023A7PS0046H`)
-- Category list follows placement policy:
-	- Department Briefs, Sectorial Briefs, Mock Assessments, Mock Interviews,
-		Mini Assessments, NT-Excel, NT-SQL, NT-Python,
-		Guest Lectures / Workshops, Hackathons/Competitions, Bonus Points.
 

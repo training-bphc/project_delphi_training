@@ -103,8 +103,3 @@ server/
       └─ asyncHandler.ts
 ```
 
-## Data Contract Notes
-
-- Records API returns serial number as `s_no`.
-- Status values: `Pending | Verified | Rejected`.
-- SQL queries are parameterized.
