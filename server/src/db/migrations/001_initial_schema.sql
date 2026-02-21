@@ -36,7 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_students_email ON students(email);
 CREATE TABLE IF NOT EXISTS training_records (
   s_no                 SERIAL PRIMARY KEY,
   name                 VARCHAR(100) NOT NULL,
-  bits_id              VARCHAR(30)  NOT NULL UNIQUE,
+  bits_id              VARCHAR(30)  NOT NULL,
   email_id             VARCHAR(255) NOT NULL,
   date                 DATE         NOT NULL,
   category             VARCHAR(100) NOT NULL,

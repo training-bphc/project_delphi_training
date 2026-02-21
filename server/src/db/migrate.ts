@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readdirSync, readFileSync } from 'fs';
 import { join }         from 'path';
 import pool             from '../config/db';
 import dotenv           from 'dotenv';
@@ -11,11 +11,18 @@ const runMigrations = async (): Promise<void> => {
   try {
     console.log('Running migrations...');
 
-    const migrationPath = join(__dirname, 'migrations', '001_initial_schema.sql');
-    const sql           = readFileSync(migrationPath, 'utf-8');
+    const migrationsDir = join(__dirname, 'migrations');
+    const migrationFiles = readdirSync(migrationsDir)
+      .filter((file) => file.endsWith('.sql'))
+      .sort();
 
     await client.query('BEGIN');
-    await client.query(sql);
+    for (const file of migrationFiles) {
+      const migrationPath = join(migrationsDir, file);
+      const sql = readFileSync(migrationPath, 'utf-8');
+      await client.query(sql);
+      console.log(`Applied migration: ${file}`);
+    }
     await client.query('COMMIT');
 
     console.log('Migrations completed successfully');

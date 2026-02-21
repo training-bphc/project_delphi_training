@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:seed:test": "tsx src/db/seedTestData.ts",
+    "db:reset": "tsx src/db/resetDatabase.ts",
+    "db:seed": "tsx src/db/seedAll.ts",
     "db:clear:test": "tsx src/db/clearTestData.ts"
   },
   "keywords": [],

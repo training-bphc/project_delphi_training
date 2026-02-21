@@ -52,16 +52,18 @@ export const googleAuth = asyncHandler(
     }
 
     const email = payload.email;
+    console.log(`[AUTH] Google token verified for email=${email}, requestedRole=${role}`);
 
     // ── Admin path ──────────────────────────────────────────────────────────
     if (role === 'admin') {
       const result = await pool.query<Admin>(
-        'SELECT * FROM admins WHERE email = $1',
+        'SELECT * FROM admins WHERE LOWER(email) = LOWER($1)',
         [email]
       );
       const user = result.rows[0];
 
       if (!user) {
+        console.log(`[AUTH] Admin lookup failed for email=${email}`);
         res.status(403).json({ success: false, message: 'Unauthorized: not a registered admin' });
         return;
       }
@@ -90,12 +92,13 @@ export const googleAuth = asyncHandler(
     }
 
     const result = await pool.query<Student>(
-      'SELECT * FROM students WHERE email = $1',
+      'SELECT * FROM students WHERE LOWER(email) = LOWER($1)',
       [email]
     );
     const user = result.rows[0];
 
     if (!user) {
+      console.log(`[AUTH] Student lookup failed for email=${email}`);
       res.status(403).json({ success: false, message: 'Unauthorized: not a registered student' });
       return;
     }

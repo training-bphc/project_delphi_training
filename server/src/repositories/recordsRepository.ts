@@ -1,9 +1,9 @@
 import pool from '../config/db';
-import { CreateTrainingRecordInput, TrainingRecord, VerificationStatus } from '../types';
+import { ResolvedTrainingRecordInput, TrainingRecord, VerificationStatus } from '../types';
 
 const SELECT_COLUMNS = `
   SELECT
-    s_no AS "S_no",
+    s_no,
     name,
     bits_id,
     email_id,
@@ -43,9 +43,51 @@ export const findRecordByBitsId = async (
   return result.rows[0] ?? null;
 };
 
+export const findStudentIdentityByEmail = async (
+  email: string,
+): Promise<{ student_name: string; roll_number: string } | null> => {
+  const result = await pool.query<{ student_name: string; roll_number: string }>(
+    `
+      SELECT student_name, roll_number
+      FROM students
+      WHERE LOWER(email) = LOWER($1)
+      LIMIT 1
+    `,
+    [email],
+  );
+
+  console.log('[REPO] findStudentIdentityByEmail(', email, ') -> rows:', result.rows.length);
+  if (result.rows[0]) {
+    console.log('[REPO]   Found:', result.rows[0]);
+  }
+  return result.rows[0] ?? null;
+};
+
+export const findRecordIdentityByEmail = async (
+  email: string,
+): Promise<{ name: string; bits_id: string } | null> => {
+  const result = await pool.query<{ name: string; bits_id: string }>(
+    `
+      SELECT name, bits_id
+      FROM training_records
+      WHERE LOWER(email_id) = LOWER($1)
+      ORDER BY s_no DESC
+      LIMIT 1
+    `,
+    [email],
+  );
+
+  console.log('[REPO] findRecordIdentityByEmail(', email, ') -> rows:', result.rows.length);
+  if (result.rows[0]) {
+    console.log('[REPO]   Found:', result.rows[0]);
+  }
+  return result.rows[0] ?? null;
+};
+
 export const createRecord = async (
-  payload: CreateTrainingRecordInput,
+  payload: ResolvedTrainingRecordInput,
 ): Promise<TrainingRecord> => {
+  console.log('[REPO] createRecord inserting with points:', payload.points, 'verification_status:', payload.verification_status);
   const result = await pool.query<TrainingRecord>(
     `
       INSERT INTO training_records (
@@ -59,7 +101,7 @@ export const createRecord = async (
         points
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING
-        s_no AS "S_no",
+        s_no,
         name,
         bits_id,
         email_id,
@@ -81,6 +123,7 @@ export const createRecord = async (
     ],
   );
 
+  console.log('[REPO] createRecord RETURNED record with points:', result.rows[0]?.points, 'verification_status:', result.rows[0]?.verification_status);
   return result.rows[0];
 };
 
@@ -90,12 +133,10 @@ export const markRecordAsVerified = async (
   const result = await pool.query<TrainingRecord>(
     `
       UPDATE training_records
-      SET
-        verification_status = 'Verified',
-        points = points + 10
+      SET verification_status = 'Verified'
       WHERE s_no = $1
       RETURNING
-        s_no AS "S_no",
+        s_no,
         name,
         bits_id,
         email_id,

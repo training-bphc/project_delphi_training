@@ -1,21 +1,16 @@
 # Project Delphi - Client
 
-React + Vite frontend for Training Unit record workflows.
+React + Vite + TypeScript frontend for admin/student training-points workflows.
 
 ## Prerequisites
 
 - Node.js 18+
 - npm
 
-## Setup
+## Setup & Run
 
 ```bash
 npm install
-```
-
-## Run
-
-```bash
 npm run dev
 ```
 
@@ -23,15 +18,61 @@ Default URL: `http://localhost:5173`
 
 ## Backend Integration
 
-- Client calls backend through `/api`.
-- Vite proxy in `vite.config.ts` points `/api` to `http://localhost:5000`.
-- Start backend first (`server/`) for records/auth API calls.
+- API base path is `/api`
+- Proxy config: `vite.config.ts` → `/api` forwarded to `http://localhost:5000`
+- Backend must be running for auth/records actions
 
-## Main Views
+## Directory Tree (Client)
 
-- Overview table
-- New/Pending requests
-- Previous verifications
+```text
+client/
+├─ README.md
+├─ package.json
+├─ vite.config.ts
+├─ index.html
+├─ public/
+└─ src/
+	 ├─ main.tsx
+	 ├─ App.tsx
+	 ├─ App.css
+	 ├─ index.css
+	 ├─ contexts/
+	 │  └─ auth.tsx                         # Login state, token persistence, logout
+	 ├─ pages/
+	 │  └─ Login.tsx                        # Google OAuth page
+	 ├─ components/
+	 │  ├─ AppLayout.tsx                    # App shell (sidebar + outlet)
+	 │  ├─ Sidebar.tsx                      # Role-based navigation
+	 │  ├─ Table.tsx                        # Records table + verify action
+	 │  ├─ GoogleLogin.tsx                  # Google login component
+	 │  ├─ InfoIcon.tsx
+	 │  └─ layout/
+	 │     └─ createNewRecord.tsx           # Admin add-record form
+	 └─ views/
+			├─ admin/
+			│  ├─ Overview.tsx
+			│  └─ tabs/
+			│     ├─ NewandPendingRequestsTab.tsx
+			│     └─ PreviousVerificationsTab.tsx
+			└─ student/
+				 ├─ TrainingPoints.tsx
+				 ├─ AddTrainingPoints.tsx
+				 ├─ AddTrainingEmail.tsx
+				 └─ AddTrainingCSV.tsx
+```
 
-All record data is fetched from backend APIs (not local JSON runtime data).
+## Functional Notes
+
+- Authentication is required before route access.
+- Role routing:
+	- Admin: `/admin/*`
+	- Student: `/student/*`
+- Record verification uses `PATCH /api/records/:sNo/verify`.
+- Record ID contract is `s_no`.
+- BITS ID format enforced in admin creation form:
+	- `20XXYYZZWWWWH` (example: `2023A7PS0046H`)
+- Category list follows placement policy:
+	- Department Briefs, Sectorial Briefs, Mock Assessments, Mock Interviews,
+		Mini Assessments, NT-Excel, NT-SQL, NT-Python,
+		Guest Lectures / Workshops, Hackathons/Competitions, Bonus Points.
 

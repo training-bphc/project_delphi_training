@@ -10,8 +10,6 @@ import { CreateTrainingRecordInput } from '../types';
 
 const hasRequiredFields = (body: CreateTrainingRecordInput): boolean => {
   return Boolean(
-    body.name &&
-      body.bits_id &&
       body.email_id &&
       body.date &&
       body.category &&
@@ -49,13 +47,40 @@ export const getRecordByBitsIdHandler = asyncHandler(async (req: Request, res: R
 export const createRecordHandler = asyncHandler(async (req: Request, res: Response) => {
   const payload = req.body as CreateTrainingRecordInput;
 
+  console.log('[RECORDS] Incoming create request:', {
+    email_id: payload.email_id,
+    date: payload.date,
+    category: payload.category,
+    points: payload.points,
+    added_by: payload.added_by,
+  });
+
   if (!hasRequiredFields(payload)) {
     res.status(400).json({ success: false, message: 'Missing required record fields' });
     return;
   }
 
-  const record = await addRecord(payload);
-  res.status(201).json({ success: true, data: record });
+  if (payload.points !== undefined && (!Number.isFinite(payload.points) || payload.points < 0)) {
+    res.status(400).json({ success: false, message: 'points must be a non-negative number' });
+    return;
+  }
+
+  try {
+    const record = await addRecord(payload);
+    res.status(201).json({ success: true, data: record });
+  } catch (error: any) {
+    if (error instanceof Error && error.message === 'Student not found for provided email') {
+      res.status(404).json({ success: false, message: error.message });
+      return;
+    }
+
+    if (error?.code === '23505') {
+      res.status(409).json({ success: false, message: 'Duplicate record violates unique constraints' });
+      return;
+    }
+
+    throw error;
+  }
 });
 
 export const verifyRecordHandler = asyncHandler(async (req: Request, res: Response) => {

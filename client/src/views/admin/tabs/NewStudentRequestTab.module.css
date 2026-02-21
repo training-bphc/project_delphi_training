@@ -1,0 +1,14 @@
+.container {
+  padding: 2rem;
+  background: #f9f9fc;
+  border-radius: 8px;
+}
+
+.container h2 {
+  color: #2563eb;
+  margin-bottom: 1rem;
+}
+
+.container p {
+  color: #444;
+}

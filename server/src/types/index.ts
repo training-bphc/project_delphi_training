@@ -31,7 +31,7 @@ export interface JwtPayload {
 export type VerificationStatus = 'Pending' | 'Verified' | 'Rejected';
 
 export interface TrainingRecord {
-  S_no: number;
+  s_no: number;
   name: string;
   bits_id: string;
   email_id: string;
@@ -43,6 +43,17 @@ export interface TrainingRecord {
 }
 
 export interface CreateTrainingRecordInput {
+  email_id: string;
+  date: string;
+  category: string;
+  added_by: string;
+  name?: string;
+  bits_id?: string;
+  verification_status?: VerificationStatus;
+  points?: number;
+}
+
+export interface ResolvedTrainingRecordInput {
   name: string;
   bits_id: string;
   email_id: string;

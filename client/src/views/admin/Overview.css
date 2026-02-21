@@ -1,0 +1,13 @@
+/* Styles for Overview tab buttons and layout */
+
+.overviewContent {
+	flex: 1;
+	padding: 2rem;
+}
+
+.overviewHeading {
+	text-align: center;
+	font-size: 4vw;
+	margin: 0;
+}
+

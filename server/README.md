@@ -1,6 +1,6 @@
 # Project Delphi - Server
 
-Express + TypeScript + PostgreSQL API for authentication and training records.
+Express + TypeScript + PostgreSQL API for auth and training records.
 
 ## Prerequisites
 
@@ -10,15 +10,12 @@ Express + TypeScript + PostgreSQL API for authentication and training records.
 
 ## Setup
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Create `.env` in `server/` (use `.env.example` as reference).
-3. Run migrations:
-   ```bash
-   npm run db:migrate
-   ```
+```bash
+npm install
+npm run db:migrate
+```
+
+Create `server/.env` (or update existing values).
 
 ## Run
 
@@ -26,24 +23,26 @@ Express + TypeScript + PostgreSQL API for authentication and training records.
 npm run dev
 ```
 
-Server starts on `http://localhost:5000` (or `PORT` from `.env`).
+Default server URL: `http://localhost:5000`
 
-## Main Scripts
+## Scripts
 
 - `npm run dev` - Start server in watch mode
-- `npm run db:migrate` - Run SQL migrations
-- `npm run db:seed:test` - Insert/update deterministic test records
-- `npm run db:clear:test` - Remove seeded test records (`added_by = API_TEST_SEED`)
+- `npm run db:migrate` - Apply SQL migrations
+- `npm run db:reset` - Drop and recreate the `public` schema (full reset)
+- `npm run db:seed` - Seed test users (admins/students) and training records
+- `npm run db:clear:test` - Remove deterministic test records
 
 ## Environment Variables
 
 - `PORT` (default `5000`)
 - `NODE_ENV` (default `development`)
-- `CLIENT_URL` (default `http://localhost:3000`)
+- `CLIENT_URL` (recommended `http://localhost:5173`)
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-- `JWT_SECRET` (**required**)
+- `JWT_SECRET` (required)
 - `JWT_EXPIRES_IN` (default `7d`)
-- `GOOGLE_CLIENT_ID` (**required**)
+- `GOOGLE_CLIENT_ID` (required)
+- `GOOGLE_CLIENT_SECRET` (if used by your OAuth setup)
 
 ## API Endpoints
 
@@ -60,8 +59,52 @@ Server starts on `http://localhost:5000` (or `PORT` from `.env`).
 - `POST /api/records`
 - `PATCH /api/records/:sNo/verify`
 
-## Notes
+## Directory Tree (Server)
 
-- Records are stored in PostgreSQL table: `training_records`.
-- Queries are parameterized to prevent SQL injection.
-- Role route files exist but are not yet implemented.
+```text
+server/
+├─ README.md
+├─ package.json
+├─ tsconfig.json
+├─ .env.example
+├─ test.rest
+└─ src/
+   ├─ index.ts                            # Express bootstrap + middleware + routes
+   ├─ config/
+   │  ├─ db.ts                            # PostgreSQL connection pool
+   │  └─ jwt.ts                           # JWT sign/verify
+   ├─ controllers/
+   │  ├─ authController.ts
+   │  └─ recordsController.ts
+   ├─ repositories/
+   │  └─ recordsRepository.ts             # SQL queries
+   ├─ services/
+   │  └─ recordsService.ts                # Validation/business layer
+   ├─ routes/
+   │  ├─ authRoutes.ts
+   │  ├─ recordsRoutes.ts
+   │  └─ roles/
+   │     ├─ adminRoutes.ts
+   │     └─ studentRoutes.ts
+   ├─ middleware/
+   │  ├─ auth.ts
+   │  └─ logger.ts
+   ├─ db/
+   │  ├─ migrate.ts
+   │  ├─ seedAll.ts                       # Unified seed (users + test training records)
+   │  ├─ resetDatabase.ts
+   │  ├─ clearTestData.ts
+   │  └─ migrations/
+   │     ├─ 001_initial_schema.sql
+   │     └─ 002_allow_multiple_records_per_student.sql
+   ├─ types/
+   │  └─ index.ts
+   └─ utils/
+      └─ asyncHandler.ts
+```
+
+## Data Contract Notes
+
+- Records API returns serial number as `s_no`.
+- Status values: `Pending | Verified | Rejected`.
+- SQL queries are parameterized.
