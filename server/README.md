@@ -38,7 +38,8 @@ Default server URL: `http://localhost:5000`
 - `PORT` (default `5000`)
 - `NODE_ENV` (default `development`)
 - `CLIENT_URL` (recommended `http://localhost:5173`)
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+- `DATABASE_URL` (recommended)
+- Optional alternative: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
 - `JWT_SECRET` (required)
 - `JWT_EXPIRES_IN` (default `7d`)
 - `GOOGLE_CLIENT_ID` (required)
@@ -47,12 +48,16 @@ Default server URL: `http://localhost:5000`
 ## API Endpoints
 
 ### Health
+
 - `GET /api/health`
 
 ### Auth
+
 - `POST /api/auth/google`
+- `POST /api/auth/dev-login` (development only)
 
 ### Records
+
 - `GET /api/records`
 - `GET /api/records?status=pending|verified|rejected`
 - `GET /api/records/by-bits-id/:bitsId`
@@ -102,4 +107,3 @@ server/
    └─ utils/
       └─ asyncHandler.ts
 ```
-

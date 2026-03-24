@@ -2,8 +2,8 @@
  * Unified seed script for test data (users + training records)
  * Run with: npm run db:seed
  */
-import pool from '../config/db';
-import dotenv from 'dotenv';
+import pool from "../config/db";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -11,13 +11,13 @@ const seedData = async (): Promise<void> => {
   const client = await pool.connect();
 
   try {
-    console.log('[DB] Seeding test data...');
-    await client.query('BEGIN');
+    console.log("[DB] Seeding test data...");
+    await client.query("BEGIN");
 
     // ── Create batch ────────────────────────────────────────────
     const batchResult = await client.query(
-      'INSERT INTO batches (batch_name, start_year, end_year) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING batch_id',
-      ['2024-2025', 2024, 2025]
+      "INSERT INTO batches (batch_name, start_year, end_year) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING RETURNING batch_id",
+      ["2024-2025", 2024, 2025],
     );
 
     let batchId = 1;
@@ -31,14 +31,14 @@ const seedData = async (): Promise<void> => {
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (email) DO NOTHING`,
       [
-        'f20240546@hyderabad.bits-pilani.ac.in',
-        'Viswa Somayajula',
-        '2024A8PS0546H',
+        "f20240546@hyderabad.bits-pilani.ac.in",
+        "Viswa Somayajula",
+        "2024A8PS0546H",
         2024,
         2025,
         batchId,
         true,
-      ]
+      ],
     );
 
     await client.query(
@@ -46,14 +46,44 @@ const seedData = async (): Promise<void> => {
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (email) DO NOTHING`,
       [
-        'f20230046@hyderabad.bits-pilani.ac.in',
-        'Madhav Ramini',
-        '2023A8PS0046H',
+        "f20231100@hyderabad.bits-pilani.ac.in",
+        "Vedant Barve",
+        "2023A8PS1100H",
         2023,
         2027,
         batchId,
         true,
-      ]
+      ],
+    );
+
+    await client.query(
+      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, batch_id, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (email) DO NOTHING`,
+      [
+        "f20231106@hyderabad.bits-pilani.ac.in",
+        "Siddharth",
+        "2023A8PS1106H",
+        2023,
+        2027,
+        batchId,
+        true,
+      ],
+    );
+
+    await client.query(
+      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, batch_id, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (email) DO NOTHING`,
+      [
+        "f20230046@hyderabad.bits-pilani.ac.in",
+        "Madhav Ramini",
+        "2023A8PS0046H",
+        2023,
+        2027,
+        batchId,
+        true,
+      ],
     );
 
     // ── Seed admins ─────────────────────────────────────────────
@@ -62,23 +92,18 @@ const seedData = async (): Promise<void> => {
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (email) DO NOTHING`,
       [
-        'admin@hyderabad.bits-pilani.ac.in',
-        'Test Admin',
-        'Training Unit',
+        "admin@hyderabad.bits-pilani.ac.in",
+        "Test Admin",
+        "Training Unit",
         true,
-      ]
+      ],
     );
 
     await client.query(
       `INSERT INTO admins (email, admin_name, department, is_super_admin)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (email) DO NOTHING`,
-      [
-        'madhavramini@gmail.com',
-        'Madhav Ramini',
-        'Training Unit',
-        true,
-      ]
+      ["madhavramini@gmail.com", "Madhav Ramini", "Training Unit", true],
     );
 
     // ── Seed training records ───────────────────────────────────
@@ -87,7 +112,7 @@ const seedData = async (): Promise<void> => {
         DELETE FROM training_records
         WHERE added_by = $1
       `,
-      ['API_TEST_SEED'],
+      ["API_TEST_SEED"],
     );
 
     await client.query(
@@ -111,17 +136,17 @@ const seedData = async (): Promise<void> => {
       `,
     );
 
-    await client.query('COMMIT');
-    console.log('[DB] Test data seeded successfully');
-    console.log('[DB] Test Students:');
-    console.log('     f20240546@hyderabad.bits-pilani.ac.in');
-    console.log('     f20230046@hyderabad.bits-pilani.ac.in');
-    console.log('[DB] Test Admins:');
-    console.log('     admin@hyderabad.bits-pilani.ac.in');
-    console.log('     madhavramini@gmail.com');
+    await client.query("COMMIT");
+    console.log("[DB] Test data seeded successfully");
+    console.log("[DB] Test Students:");
+    console.log("     f20240546@hyderabad.bits-pilani.ac.in");
+    console.log("     f20230046@hyderabad.bits-pilani.ac.in");
+    console.log("[DB] Test Admins:");
+    console.log("     admin@hyderabad.bits-pilani.ac.in");
+    console.log("     madhavramini@gmail.com");
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('[DB] Seeding failed:', error);
+    await client.query("ROLLBACK");
+    console.error("[DB] Seeding failed:", error);
     process.exitCode = 1;
   } finally {
     client.release();

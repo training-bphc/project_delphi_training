@@ -16,11 +16,20 @@ npm run dev
 
 Default URL: `http://localhost:5173`
 
+Create `client/.env` from `client/.env.example` for local setup.
+
 ## Backend Integration
 
 - API base path is `/api`
-- Proxy config: `vite.config.ts` → `/api` forwarded to `http://localhost:5000`
+- Proxy config: `vite.config.ts` → `/api` forwarded to `VITE_API_PROXY_TARGET` (default `http://localhost:5000`)
 - Backend must be running for auth/records actions
+
+## Local Testing Login
+
+- In development, login page includes quick test buttons:
+  - `Dev Login as Student` (`f20240546@hyderabad.bits-pilani.ac.in`)
+  - `Dev Login as Admin` (`admin@hyderabad.bits-pilani.ac.in`)
+- These use backend `POST /api/auth/dev-login` and require seeded users (`npm run db:seed` in `server`).
 
 ## Directory Tree (Client)
 
@@ -60,5 +69,3 @@ client/
 				 ├─ AddTrainingEmail.tsx
 				 └─ AddTrainingCSV.tsx
 ```
-
-

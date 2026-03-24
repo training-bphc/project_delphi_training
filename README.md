@@ -8,14 +8,17 @@ Monorepo for the Training Unit web application.
 ## Quick Start
 
 ### 1) Backend
+
 ```bash
 cd server
 npm install
 npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
 ### 2) Frontend
+
 ```bash
 cd client
 npm install
@@ -23,6 +26,13 @@ npm run dev
 ```
 
 Frontend runs on `http://localhost:5173` and proxies `/api` to backend `http://localhost:5000`.
+
+## End-to-End Local Test Flow
+
+1. Start backend (`server`) and frontend (`client`) in separate terminals.
+2. Open `http://localhost:5173/login`.
+3. Use `Dev Login as Student` or `Dev Login as Admin` for local testing.
+4. Test records create/verify flows from UI.
 
 ## Repository Tree
 
@@ -46,4 +56,3 @@ project_delphi_training/
       ├─ routes/
       └─ db/
 ```
-

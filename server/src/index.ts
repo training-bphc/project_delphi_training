@@ -2,6 +2,7 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
+import net from "net";
 
 import { connectDB } from "./config/db";
 import authRoutes from "./routes/authRoutes";
@@ -11,12 +12,31 @@ import { requestLogger } from "./middleware/logger";
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 5000;
+const DEFAULT_PORT = Number(process.env.PORT) || 5000;
+
+const findAvailablePort = async (startPort: number): Promise<number> => {
+  const checkPort = (port: number): Promise<boolean> =>
+    new Promise((resolve) => {
+      const tester = net
+        .createServer()
+        .once("error", () => resolve(false))
+        .once("listening", () => {
+          tester.close(() => resolve(true));
+        })
+        .listen(port);
+    });
+
+  let currentPort = startPort;
+  while (!(await checkPort(currentPort))) {
+    currentPort += 1;
+  }
+  return currentPort;
+};
 
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
   }),
 );
@@ -48,8 +68,16 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 const start = async (): Promise<void> => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+    const port = await findAvailablePort(DEFAULT_PORT);
+
+    if (port !== DEFAULT_PORT) {
+      console.warn(
+        `[SERVER] Port ${DEFAULT_PORT} is in use. Started on available port ${port} instead.`,
+      );
+    }
+
+    app.listen(port, () => {
+      console.log(`Server running on http://localhost:${port}`);
       console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     });
   } catch (error) {

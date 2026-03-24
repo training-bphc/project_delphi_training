@@ -1,0 +1,118 @@
+{
+  "info": {
+    "name": "Delphi Training Server API",
+    "_postman_id": "6d8e5f5c-3d2e-4db0-9f95-0d42d9ca9a37",
+    "description": "Collection for testing local server endpoints at /api.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "Records - Get All",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/records",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records"]
+        }
+      }
+    },
+    {
+      "name": "Records - Get By Status (Pending)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/records?status=pending",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records"],
+          "query": [
+            {
+              "key": "status",
+              "value": "pending"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Records - Get By Bits ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/records/by-bits-id/{{bitsId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records", "by-bits-id", "{{bitsId}}"]
+        }
+      }
+    },
+    {
+      "name": "Records - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email_id\": \"{{studentEmail}}\",\n  \"date\": \"2026-03-23\",\n  \"category\": \"Hackathons/Competitions\",\n  \"added_by\": \"POSTMAN_TEST\",\n  \"points\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/records",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records"]
+        }
+      }
+    },
+    {
+      "name": "Records - Verify By Serial",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/records/{{sNo}}/verify",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "records", "{{sNo}}", "verify"]
+        }
+      }
+    },
+    {
+      "name": "Auth - Google (requires real id_token)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id_token\": \"{{googleIdToken}}\",\n  \"role\": \"student\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/google",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "google"]
+        }
+      }
+    }
+  ]
+}
