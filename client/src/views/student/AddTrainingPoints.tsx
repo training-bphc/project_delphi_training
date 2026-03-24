@@ -8,6 +8,16 @@ interface AddTrainingPointsProps {
   onRecordAdded?: () => void;
 }
 
+const EMAIL_DOMAIN = '@hyderabad.bits-pilani.ac.in';
+
+const getTodayDateString = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 function AddTrainingPoints({ studentId, onRecordAdded }: AddTrainingPointsProps) {
   const context = useContext(RecordsContext);
 
@@ -24,7 +34,7 @@ function AddTrainingPoints({ studentId, onRecordAdded }: AddTrainingPointsProps)
     const newRecord: CreateRecordPayload = {
       name: formData.get('name') as string,
       bits_id: studentId,
-      email_id: formData.get('email') as string,
+      email_id: `${(formData.get('email_local') as string).trim()}${EMAIL_DOMAIN}`,
       date: formData.get('date') as string,
       category: formData.get('category') as string,
       added_by: studentId,
@@ -52,18 +62,29 @@ function AddTrainingPoints({ studentId, onRecordAdded }: AddTrainingPointsProps)
 
         <div className={styles.formGroup}>
           <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            placeholder="your.email@example.com"
-          />
+          <div className={styles.emailInputGroup}>
+            <input
+              type="text"
+              id="email"
+              name="email_local"
+              required
+              placeholder="f20230046"
+              pattern="^[^@\s]+$"
+              title="Enter only the email part before @"
+            />
+            <span className={styles.emailDomain}>{EMAIL_DOMAIN}</span>
+          </div>
         </div>
 
         <div className={styles.formGroup}>
           <label htmlFor="date">Date</label>
-          <input type="date" id="date" name="date" required />
+          <input
+            type="date"
+            id="date"
+            name="date"
+            required
+            defaultValue={getTodayDateString()}
+          />
         </div>
 
         <div className={styles.formGroup}>

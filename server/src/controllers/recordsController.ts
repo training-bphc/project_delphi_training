@@ -5,6 +5,10 @@ import {
   getRecordByBitsId,
   getRecords,
   verifyRecord,
+  deleteRecord,
+  undoDeleteRecord,
+  bulkAddRecords,
+  BulkAddInput,
 } from '../services/recordsService';
 import { CreateTrainingRecordInput } from '../types';
 
@@ -99,4 +103,82 @@ export const verifyRecordHandler = asyncHandler(async (req: Request, res: Respon
   }
 
   res.status(200).json({ success: true, data: updatedRecord });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// DELETE / UNDO HANDLERS
+// ─────────────────────────────────────────────────────────────────
+
+export const deleteRecordHandler = asyncHandler(async (req: Request, res: Response) => {
+  const serialNo = Number(req.params.sNo);
+
+  if (!Number.isInteger(serialNo) || serialNo <= 0) {
+    res.status(400).json({ success: false, message: 'Invalid record serial number' });
+    return;
+  }
+
+  const deletedRecord = await deleteRecord(serialNo);
+
+  if (!deletedRecord) {
+    res.status(404).json({ success: false, message: 'Record not found' });
+    return;
+  }
+
+  res.status(200).json({ success: true, message: 'Record deleted', data: deletedRecord });
+});
+
+export const undoDeleteRecordHandler = asyncHandler(async (req: Request, res: Response) => {
+  const serialNo = Number(req.params.sNo);
+
+  if (!Number.isInteger(serialNo) || serialNo <= 0) {
+    res.status(400).json({ success: false, message: 'Invalid record serial number' });
+    return;
+  }
+
+  const restoredRecord = await undoDeleteRecord(serialNo);
+
+  if (!restoredRecord) {
+    res.status(404).json({ success: false, message: 'Record not found' });
+    return;
+  }
+
+  res.status(200).json({ success: true, message: 'Record restored', data: restoredRecord });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// BULK UPLOAD HANDLERS
+// ─────────────────────────────────────────────────────────────────
+
+export const bulkAddRecordsHandler = asyncHandler(async (req: Request, res: Response) => {
+  const payload = req.body as { emails?: string[]; category?: string; points?: number; added_by?: string };
+
+  if (!payload.emails || !Array.isArray(payload.emails) || payload.emails.length === 0) {
+    res.status(400).json({ success: false, message: 'emails must be a non-empty array' });
+    return;
+  }
+
+  if (!payload.category || typeof payload.category !== 'string') {
+    res.status(400).json({ success: false, message: 'category is required and must be a string' });
+    return;
+  }
+
+  if (payload.points === undefined || !Number.isFinite(payload.points) || payload.points < 0) {
+    res.status(400).json({ success: false, message: 'points must be a non-negative number' });
+    return;
+  }
+
+  if (!payload.added_by || typeof payload.added_by !== 'string') {
+    res.status(400).json({ success: false, message: 'added_by is required' });
+    return;
+  }
+
+  const bulkInput: BulkAddInput = {
+    emails: payload.emails,
+    category: payload.category,
+    points: payload.points,
+    added_by: payload.added_by,
+  };
+
+  const result = await bulkAddRecords(bulkInput);
+  res.status(201).json({ success: true, data: result });
 });

@@ -76,3 +76,46 @@
   background: #ccc;
   cursor: not-allowed;
 }
+
+.status.rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.rejectBtn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(231, 76, 60, 0.08);
+  transition: background 0.2s;
+}
+
+.rejectBtn:hover {
+  background: #c0392b;
+}
+
+.rejectBtn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid #2563eb;
+  transition: color 0.2s;
+}
+
+.link:hover {
+  color: #1d4ed8;
+}
+
+.link:visited {
+  color: #7c3aed;
+}

@@ -18,8 +18,19 @@ export interface Record {
   date: string;
   category: string;
   added_by: string;
-  verification_status: 'Pending' | 'Verified';
+  verification_status: 'Pending' | 'Verified' | 'Rejected';
   points?: number;
+}
+
+export interface VerificationRequest {
+  request_id: number;
+  student_id: number;
+  category: string;
+  description?: string;
+  proof_links: string[];
+  status: 'Pending' | 'Verified' | 'Rejected';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateRecordPayload {
@@ -34,8 +45,13 @@ export interface CreateRecordPayload {
 
 export interface RecordsContextType {
   records: Record[];
+  verificationRequests: VerificationRequest[];
   handleVerify: (sNo: number) => Promise<void>;
   handleCreateRecord: (record: CreateRecordPayload) => Promise<void>;
+  handleVerifyRequest: (requestId: number) => Promise<void>;
+  handleRejectRequest: (requestId: number) => Promise<void>;
+  handleDeleteRecord: (sNo: number) => Promise<void>;
+  handleUndoDelete: (sNo: number) => Promise<void>;
 }
 
 export const RecordsContext = createContext<RecordsContextType | undefined>(undefined);
@@ -43,14 +59,18 @@ export const RecordsContext = createContext<RecordsContextType | undefined>(unde
 function AppContent() {
   const { user, token, isLoading: authLoading } = useAuth();
   const [records, setRecords] = useState<Record[]>([]);
+  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch records on token change
   useEffect(() => {
     if (token) {
       fetchRecords();
+      if (user?.role === 'admin') {
+        fetchVerificationRequests();
+      }
     }
-  }, [token]);
+  }, [token, user?.role]);
 
   const fetchRecords = async () => {
     try {
@@ -78,6 +98,32 @@ function AppContent() {
       setRecords([]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchVerificationRequests = async () => {
+    try {
+      const response = await fetch('/api/verification-requests', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch verification requests: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const requestsPayload: VerificationRequest[] = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.requests)
+          ? data.requests
+          : [];
+
+      setVerificationRequests(requestsPayload);
+    } catch (error) {
+      console.error('Failed to fetch verification requests:', error);
+      setVerificationRequests([]);
     }
   };
 
@@ -124,6 +170,90 @@ function AppContent() {
     }
   };
 
+  const handleVerifyRequest = async (requestId: number) => {
+    try {
+      const response = await fetch(`/api/verification-requests/${requestId}/verify`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to verify request: ${response.statusText}`);
+      }
+
+      await fetchVerificationRequests();
+    } catch (error) {
+      console.error('Failed to verify request:', error);
+      alert('Failed to verify request');
+    }
+  };
+
+  const handleRejectRequest = async (requestId: number) => {
+    try {
+      const response = await fetch(`/api/verification-requests/${requestId}/reject`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to reject request: ${response.statusText}`);
+      }
+
+      await fetchVerificationRequests();
+    } catch (error) {
+      console.error('Failed to reject request:', error);
+      alert('Failed to reject request');
+    }
+  };
+
+  const handleDeleteRecord = async (sNo: number) => {
+    try {
+      const response = await fetch(`/api/records/${sNo}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete record: ${response.statusText}`);
+      }
+
+      await fetchRecords();
+    } catch (error) {
+      console.error('Failed to delete record:', error);
+      alert('Failed to delete record');
+    }
+  };
+
+  const handleUndoDelete = async (sNo: number) => {
+    try {
+      const response = await fetch(`/api/records/${sNo}/undo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to undo delete: ${response.statusText}`);
+      }
+
+      await fetchRecords();
+    } catch (error) {
+      console.error('Failed to undo delete:', error);
+      alert('Failed to undo delete');
+    }
+  };
+
   if (authLoading || isLoading) {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
   }
@@ -140,7 +270,18 @@ function AppContent() {
 
   // Logged in - show role-based layout
   return (
-    <RecordsContext.Provider value={{ records, handleVerify, handleCreateRecord }}>
+    <RecordsContext.Provider
+      value={{
+        records,
+        verificationRequests,
+        handleVerify,
+        handleCreateRecord,
+        handleVerifyRequest,
+        handleRejectRequest,
+        handleDeleteRecord,
+        handleUndoDelete,
+      }}
+    >
       <Routes>
         {user.role === 'admin' ? (
           <>

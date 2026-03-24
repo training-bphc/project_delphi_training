@@ -1,5 +1,5 @@
 import pool from '../config/db';
-import { ResolvedTrainingRecordInput, TrainingRecord, VerificationStatus } from '../types';
+import { ResolvedTrainingRecordInput, TrainingRecord, VerificationStatus, VerificationRequest, RequestStatus } from '../types';
 
 const SELECT_COLUMNS = `
   SELECT
@@ -11,8 +11,10 @@ const SELECT_COLUMNS = `
     category,
     added_by,
     verification_status,
-    points
+    points,
+    deleted_at
   FROM training_records
+  WHERE deleted_at IS NULL
 `;
 
 export const findAllRecords = async (
@@ -134,6 +136,60 @@ export const markRecordAsVerified = async (
     `
       UPDATE training_records
       SET verification_status = 'Verified'
+      WHERE s_no = $1 AND deleted_at IS NULL
+      RETURNING
+        s_no,
+        name,
+        bits_id,
+        email_id,
+        date::text AS date,
+        category,
+        added_by,
+        verification_status,
+        points,
+        deleted_at
+    `,
+    [serialNo],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+// Soft delete a record (for undo functionality)
+export const softDeleteRecord = async (
+  serialNo: number,
+): Promise<TrainingRecord | null> => {
+  const result = await pool.query<TrainingRecord>(
+    `
+      UPDATE training_records
+      SET deleted_at = CURRENT_TIMESTAMP
+      WHERE s_no = $1 AND deleted_at IS NULL
+      RETURNING
+        s_no,
+        name,
+        bits_id,
+        email_id,
+        date::text AS date,
+        category,
+        added_by,
+        verification_status,
+        points,
+        deleted_at
+    `,
+    [serialNo],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+// Restore a soft-deleted record (for undo functionality)
+export const restoreRecord = async (
+  serialNo: number,
+): Promise<TrainingRecord | null> => {
+  const result = await pool.query<TrainingRecord>(
+    `
+      UPDATE training_records
+      SET deleted_at = NULL
       WHERE s_no = $1
       RETURNING
         s_no,
@@ -144,9 +200,104 @@ export const markRecordAsVerified = async (
         category,
         added_by,
         verification_status,
-        points
+        points,
+        deleted_at
     `,
     [serialNo],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+// ───────────────────────────────────────────────────────────────────
+// VERIFICATION REQUESTS
+// ───────────────────────────────────────────────────────────────────
+
+export const findAllVerificationRequests = async (
+  status?: RequestStatus,
+): Promise<VerificationRequest[]> => {
+  if (status) {
+    const result = await pool.query<VerificationRequest>(
+      `
+        SELECT
+          request_id,
+          student_id,
+          category,
+          description,
+          proof_links,
+          status,
+          created_at::text AS created_at,
+          updated_at::text AS updated_at
+        FROM verification_requests
+        WHERE status = $1
+        ORDER BY created_at DESC
+      `,
+      [status],
+    );
+    return result.rows;
+  }
+
+  const result = await pool.query<VerificationRequest>(
+    `
+      SELECT
+        request_id,
+        student_id,
+        category,
+        description,
+        proof_links,
+        status,
+        created_at::text AS created_at,
+        updated_at::text AS updated_at
+      FROM verification_requests
+      ORDER BY created_at DESC
+    `,
+  );
+  return result.rows;
+};
+
+export const findVerificationRequestById = async (
+  requestId: number,
+): Promise<VerificationRequest | null> => {
+  const result = await pool.query<VerificationRequest>(
+    `
+      SELECT
+        request_id,
+        student_id,
+        category,
+        description,
+        proof_links,
+        status,
+        created_at::text AS created_at,
+        updated_at::text AS updated_at
+      FROM verification_requests
+      WHERE request_id = $1
+    `,
+    [requestId],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+export const updateVerificationRequestStatus = async (
+  requestId: number,
+  newStatus: RequestStatus,
+): Promise<VerificationRequest | null> => {
+  const result = await pool.query<VerificationRequest>(
+    `
+      UPDATE verification_requests
+      SET status = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE request_id = $2
+      RETURNING
+        request_id,
+        student_id,
+        category,
+        description,
+        proof_links,
+        status,
+        created_at::text AS created_at,
+        updated_at::text AS updated_at
+    `,
+    [newStatus, requestId],
   );
 
   return result.rows[0] ?? null;

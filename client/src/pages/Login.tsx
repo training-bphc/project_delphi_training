@@ -9,6 +9,7 @@ function Login() {
   const navigate = useNavigate();
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const isDev = import.meta.env.DEV;
+  const enableDevLogin = import.meta.env.VITE_ENABLE_DEV_LOGIN === "true";
 
   const handleDevLogin = async (email: string, role: "student" | "admin") => {
     try {
@@ -46,7 +47,7 @@ function Login() {
             </p>
           )}
 
-          {isDev && (
+          {isDev && enableDevLogin && (
             <div className={styles.devActions}>
               <button
                 className={styles.devButton}

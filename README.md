@@ -31,7 +31,7 @@ Frontend runs on `http://localhost:5173` and proxies `/api` to backend `http://l
 
 1. Start backend (`server`) and frontend (`client`) in separate terminals.
 2. Open `http://localhost:5173/login`.
-3. Use `Dev Login as Student` or `Dev Login as Admin` for local testing.
+3. For quick local bypass login, set `VITE_ENABLE_DEV_LOGIN=true` in `client/.env`, then use `Dev Login as Student` or `Dev Login as Admin`.
 4. Test records create/verify flows from UI.
 
 ## Repository Tree

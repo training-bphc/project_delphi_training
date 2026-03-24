@@ -5,6 +5,8 @@ import {
   findRecordByBitsId,
   findStudentIdentityByEmail,
   markRecordAsVerified,
+  softDeleteRecord,
+  restoreRecord,
 } from '../repositories/recordsRepository';
 import {
   CreateTrainingRecordInput,
@@ -69,7 +71,7 @@ export const addRecord = async (
     ...payload,
     name: resolvedName,
     bits_id: resolvedBitsId,
-    verification_status: payload.verification_status ?? 'Pending',
+    verification_status: 'Verified',
     points: payload.points ?? 0,
   };
 
@@ -82,4 +84,83 @@ export const verifyRecord = async (
   serialNo: number,
 ): Promise<TrainingRecord | null> => {
   return markRecordAsVerified(serialNo);
+};
+
+// ─────────────────────────────────────────────────────────────────
+// UNDO / DELETE FUNCTIONALITY
+// ─────────────────────────────────────────────────────────────────
+
+export const deleteRecord = async (
+  serialNo: number,
+): Promise<TrainingRecord | null> => {
+  return softDeleteRecord(serialNo);
+};
+
+export const undoDeleteRecord = async (
+  serialNo: number,
+): Promise<TrainingRecord | null> => {
+  return restoreRecord(serialNo);
+};
+
+// ─────────────────────────────────────────────────────────────────
+// BULK OPERATIONS
+// ─────────────────────────────────────────────────────────────────
+
+export interface BulkAddInput {
+  emails: string[];
+  category: string;
+  points: number;
+  added_by: string;
+}
+
+export interface BulkAddResult {
+  success: number;
+  failed: number;
+  errors: Array<{ email: string; error: string }>;
+  records: TrainingRecord[];
+}
+
+export const bulkAddRecords = async (input: BulkAddInput): Promise<BulkAddResult> => {
+  const { emails, category, points, added_by } = input;
+
+  const errors: Array<{ email: string; error: string }> = [];
+  const records: TrainingRecord[] = [];
+
+  for (const email of emails) {
+    try {
+      // Look up student
+      const student = await findStudentIdentityByEmail(email);
+      if (!student) {
+        errors.push({ email, error: 'Student not found' });
+        continue;
+      }
+
+      // Create record with auto-verified status
+      const payload: ResolvedTrainingRecordInput = {
+        name: student.student_name,
+        bits_id: student.roll_number,
+        email_id: email,
+        date: new Date().toISOString().split('T')[0], // Today's date
+        category,
+        added_by,
+        verification_status: 'Verified', // Auto-verified for admin bulk additions
+        points,
+      };
+
+      const record = await createRecord(payload);
+      records.push(record);
+    } catch (error: any) {
+      errors.push({
+        email,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  return {
+    success: records.length,
+    failed: errors.length,
+    errors,
+    records,
+  };
 };

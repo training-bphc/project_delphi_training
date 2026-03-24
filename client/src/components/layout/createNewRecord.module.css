@@ -51,6 +51,40 @@
   font-size: 0.9rem;
 }
 
+.emailInputGroup {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.emailInputGroup input {
+  border: none;
+  border-radius: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.emailInputGroup input:focus {
+  box-shadow: none;
+}
+
+.emailInputGroup:focus-within {
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.emailDomain {
+  padding: 0.5rem 0.65rem;
+  background: #f9fafb;
+  color: #374151;
+  border-left: 1px solid #e5e7eb;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
 .formGroup input:focus,
 .formGroup select:focus {
   outline: none;

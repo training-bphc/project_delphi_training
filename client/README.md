@@ -26,10 +26,11 @@ Create `client/.env` from `client/.env.example` for local setup.
 
 ## Local Testing Login
 
-- In development, login page includes quick test buttons:
-  - `Dev Login as Student` (`f20240546@hyderabad.bits-pilani.ac.in`)
-  - `Dev Login as Admin` (`admin@hyderabad.bits-pilani.ac.in`)
-- These use backend `POST /api/auth/dev-login` and require seeded users (`npm run db:seed` in `server`).
+- Development quick-login buttons are opt-in.
+- Set `VITE_ENABLE_DEV_LOGIN=true` in `client/.env` to show:
+	- `Dev Login as Student` (`f20240546@hyderabad.bits-pilani.ac.in`)
+	- `Dev Login as Admin` (`admin@hyderabad.bits-pilani.ac.in`)
+- These use backend `POST /api/auth/dev-login` and still validate against database users (requires seeded users via `npm run db:seed` in `server`).
 
 ## Directory Tree (Client)
 

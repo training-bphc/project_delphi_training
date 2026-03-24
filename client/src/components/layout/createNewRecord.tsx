@@ -6,9 +6,20 @@ interface CreateNewRecordProps {
   handleCreateRecord: (record: CreateRecordPayload) => Promise<void>;
 }
 
+const EMAIL_DOMAIN = '@hyderabad.bits-pilani.ac.in';
+
+const getTodayDateString = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 function CreateNewRecord({ handleCreateRecord }: CreateNewRecordProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [emailLocalPart, setEmailLocalPart] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -17,7 +28,7 @@ function CreateNewRecord({ handleCreateRecord }: CreateNewRecordProps) {
     try {
       const formData = new FormData(e.currentTarget);
       const newRecord: CreateRecordPayload = {
-        email_id: formData.get('email_id') as string,
+        email_id: `${(formData.get('email_local') as string).trim()}${EMAIL_DOMAIN}`,
         date: formData.get('date') as string,
         category: formData.get('category') as string,
         added_by: formData.get('added_by') as string,
@@ -26,6 +37,7 @@ function CreateNewRecord({ handleCreateRecord }: CreateNewRecordProps) {
 
       await handleCreateRecord(newRecord);
       setIsOpen(false);
+      setEmailLocalPart('');
       (e.target as HTMLFormElement).reset();
     } catch (error) {
       console.error('Failed to create record:', error);
@@ -48,18 +60,31 @@ function CreateNewRecord({ handleCreateRecord }: CreateNewRecordProps) {
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label htmlFor="email_id">Email</label>
-            <input
-              type="email"
-              id="email_id"
-              name="email_id"
-              required
-              placeholder="email@example.com"
-            />
+            <div className={styles.emailInputGroup}>
+              <input
+                type="text"
+                id="email_id"
+                name="email_local"
+                required
+                value={emailLocalPart}
+                onChange={(e) => setEmailLocalPart(e.target.value.trim())}
+                placeholder="f20230046"
+                pattern="^[^@\s]+$"
+                title="Enter only the email part before @"
+              />
+              <span className={styles.emailDomain}>{EMAIL_DOMAIN}</span>
+            </div>
           </div>
 
           <div className={styles.formGroup}>
             <label htmlFor="date">Date</label>
-            <input type="date" id="date" name="date" required />
+            <input
+              type="date"
+              id="date"
+              name="date"
+              required
+              defaultValue={getTodayDateString()}
+            />
           </div>
 
           <div className={styles.formGroup}>

@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import Table from '../../../components/Table';
+import VerificationRequestsTable from '../../../components/VerificationRequestsTable';
 import styles from './NewStudentRequestTab.module.css';
 import { RecordsContext } from '../../../App';
 
@@ -9,24 +9,24 @@ function NewandPendingRequestsTab() {
     return <div>Loading...</div>;
   }
 
-  const { records, handleVerify } = context;
+  const { verificationRequests, handleVerifyRequest, handleRejectRequest } = context;
 
-  // Filter new and pending records
-  const pendingRecords = records.filter(
-    (record) => record.verification_status === 'Pending'
+  // Filter pending verification requests
+  const pendingRequests = verificationRequests.filter(
+    (request) => request.status === 'Pending'
   );
 
   return (
     <section className={styles.container}>
-      <h2>New & Pending Student Requests</h2>
+      <h2>Student Verification Requests</h2>
       <p>
-        Shows newly submitted student requests awaiting TU decision, and records
-        with status <b>"Pending"</b>.
+        Shows newly submitted student verification requests awaiting TU review. Students can submit
+        requests with proof links for events like hackathons, workshops, and competitions.
       </p>
-      <Table
-        records={pendingRecords}
-        handleVerify={handleVerify}
-        showVerifyButton={true}
+      <VerificationRequestsTable
+        requests={pendingRequests}
+        handleVerify={handleVerifyRequest}
+        handleReject={handleRejectRequest}
       />
     </section>
   );
