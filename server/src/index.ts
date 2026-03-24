@@ -4,9 +4,9 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import net from "net";
 
-import { connectDB } from "./config/db";
-import authRoutes from "./routes/authRoutes";
-import recordsRoutes from "./routes/recordsRoutes";
+import { connectDB } from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+import recordsRoutes from "./routes/recordsRoutes.js";
 import { requestLogger } from "./middleware/logger";
 
 dotenv.config();
@@ -77,8 +77,10 @@ const start = async (): Promise<void> => {
     }
 
     app.listen(port, () => {
-      console.log(`Server running on http://localhost:${port}`);
-      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`[SERVER] Running on http://localhost:${port}`);
+      console.log(
+        `[SERVER] Environment: ${process.env.NODE_ENV || "development"}`,
+      );
     });
   } catch (error) {
     console.error("Failed to start server:", error);
