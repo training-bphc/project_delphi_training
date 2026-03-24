@@ -1,128 +1,312 @@
 import { Request, Response, NextFunction } from 'express';
-import { OAuth2Client } from 'google-auth-library';
-import pool              from '../config/db';
-import { signToken }     from '../config/jwt';
-import { asyncHandler }  from '../utils/asyncHandler';
-import { Student, Admin } from '../types';
+import { supabase } from '../config/supabase';
+import pool from '../config/db';
+import { signToken } from '../config/jwt';
+import { asyncHandler } from '../utils/asyncHandler';
 
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-const ELIGIBILITY_DOMAIN  = '@hyderabad.bits-pilani.ac.in';
-const MAX_STUDENT_YEARS   = 5;
+const ELIGIBILITY_DOMAIN = '@hyderabad.bits-pilani.ac.in';
+const ADMIN_EMAIL = 'training@hyderabad.bits-pilani.ac.in';
 
 /**
- * Returns true if the student's email domain is correct and their
- * start_year falls within the active enrolment window.
+ * Extract student info from email
+ * Email format: f20231100@hyderabad.bits-pilani.ac.in
  */
-const isEligibleStudent = (email: string, startYear: number): boolean => {
-  const currentYear = new Date().getFullYear();
-  return (
-    email.endsWith(ELIGIBILITY_DOMAIN) &&
-    startYear <= currentYear &&
-    startYear >= currentYear - MAX_STUDENT_YEARS
-  );
+const extractStudentInfo = (email: string) => {
+  const [prefix] = email.split('@');
+  const rollNumber = prefix;
+  const studentName = prefix;
+  
+  return { rollNumber, studentName };
 };
 
-export const googleAuth = asyncHandler(
+/**
+ * Get or create batch for student
+ */
+const getOrCreateBatch = async (startYear: number) => {
+  const endYear = startYear + 4;
+  
+  const result = await pool.query(
+    'SELECT batch_id FROM batches WHERE start_year = $1 AND end_year = $2',
+    [startYear, endYear]
+  );
+
+  if (result.rows[0]) {
+    return result.rows[0].batch_id;
+  }
+
+  const batchName = `${startYear}-${endYear} Batch`;
+  const insertResult = await pool.query(
+    'INSERT INTO batches (batch_name, start_year, end_year) VALUES ($1, $2, $3) RETURNING batch_id',
+    [batchName, startYear, endYear]
+  );
+
+  return insertResult.rows[0].batch_id;
+};
+
+/**
+ * Add student to students table
+ */
+const addStudentToDatabase = async (email: string, rollNumber: string, studentName: string, startYear: number) => {
+  try {
+    const batchId = await getOrCreateBatch(startYear);
+
+    const existingStudent = await pool.query(
+      'SELECT * FROM students WHERE LOWER(email) = LOWER($1)',
+      [email]
+    );
+
+    if (existingStudent.rows[0]) {
+      console.log(`[AUTH] Student already exists: ${email}`);
+      return existingStudent.rows[0];
+    }
+
+    const result = await pool.query(
+      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, batch_id, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, true)
+       RETURNING *`,
+      [email, studentName, rollNumber, startYear, startYear + 4, batchId]
+    );
+
+    console.log(`[AUTH] Student added to database: ${email}`);
+    return result.rows[0];
+  } catch (error) {
+    console.error('[AUTH] Error adding student to database:', error);
+    throw error;
+  }
+};
+
+/**
+ * Add admin to admins table
+ */
+const addAdminToDatabase = async (email: string, adminName: string) => {
+  try {
+    const existingAdmin = await pool.query(
+      'SELECT * FROM admins WHERE LOWER(email) = LOWER($1)',
+      [email]
+    );
+
+    if (existingAdmin.rows[0]) {
+      console.log(`[AUTH] Admin already exists: ${email}`);
+      return existingAdmin.rows[0];
+    }
+
+    const result = await pool.query(
+      `INSERT INTO admins (email, admin_name, department, permissions, is_super_admin)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [email, adminName, 'Training Unit', '{}', true]
+    );
+
+    console.log(`[AUTH] Admin added to database: ${email}`);
+    return result.rows[0];
+  } catch (error) {
+    console.error('[AUTH] Error adding admin to database:', error);
+    throw error;
+  }
+};
+
+/**
+ * Sign up user with email and password
+ * - Students: auto-added to students table
+ * - Admin (training@...): auto-added to admins table
+ */
+export const signUp = asyncHandler(
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
-    const { id_token, role } = req.body as { id_token?: string; role?: string };
+    const { email, password, role } = req.body as {
+      email?: string;
+      password?: string;
+      role?: string;
+    };
 
-    // ── Input validation ────────────────────────────────────────────────────
-    if (!id_token || !role) {
-      res.status(400).json({ success: false, message: 'id_token and role are required' });
+    // Validation
+    if (!email || !password || !role) {
+      res.status(400).json({
+        success: false,
+        message: 'email, password, and role are required',
+      });
       return;
     }
+
     if (role !== 'student' && role !== 'admin') {
-      res.status(400).json({ success: false, message: 'role must be "student" or "admin"' });
+      res.status(400).json({
+        success: false,
+        message: 'role must be "student" or "admin"',
+      });
       return;
     }
 
-    // ── Verify Google token ─────────────────────────────────────────────────
-    // verifyIdToken throws if the token is invalid. asyncHandler forwards the
-    // thrown error to next(err) → global error handler → 500 response.
-    const ticket = await googleClient.verifyIdToken({
-      idToken:  id_token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    if (!payload?.email) {
-      res.status(400).json({ success: false, message: 'Invalid Google token payload' });
+    // ✅ ONLY CHECK: Email domain
+    if (!email.endsWith(ELIGIBILITY_DOMAIN)) {
+      res.status(403).json({
+        success: false,
+        message: `Unauthorized: email must be ${ELIGIBILITY_DOMAIN}`,
+      });
       return;
     }
 
-    const email = payload.email;
-    console.log(`[AUTH] Google token verified for email=${email}, requestedRole=${role}`);
+    try {
+      // Create user in Supabase Auth
+      const { data, error } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { role },
+      });
 
-    // ── Admin path ──────────────────────────────────────────────────────────
-    if (role === 'admin') {
-      const result = await pool.query<Admin>(
-        'SELECT * FROM admins WHERE LOWER(email) = LOWER($1)',
-        [email]
-      );
-      const user = result.rows[0];
-
-      if (!user) {
-        console.log(`[AUTH] Admin lookup failed for email=${email}`);
-        res.status(403).json({ success: false, message: 'Unauthorized: not a registered admin' });
+      if (error || !data.user) {
+        console.error('Supabase signup error:', error);
+        res.status(400).json({
+          success: false,
+          message: error?.message || 'Failed to create user',
+        });
         return;
       }
 
-      // Use email as the JWT identity for admins — more meaningful than admin_id
-      const token = signToken(user.email, user.email, 'admin');
-      console.log(`[AUTH] Admin authenticated: ${email}`);
+      console.log(`[AUTH] User signed up in Supabase: ${email}`);
+
+      // ✅ AUTO-ADD TO DATABASE BASED ON EMAIL
+      if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        // Special case: training@... is automatically an admin
+        const adminName = 'Training Unit Admin';
+        await addAdminToDatabase(email, adminName);
+        console.log(`[AUTH] Admin automatically added to admins table: ${email}`);
+      } else if (role === 'student') {
+        // Regular student signup
+        const { rollNumber, studentName } = extractStudentInfo(email);
+        const startYear = parseInt(rollNumber.substring(1, 5));
+        await addStudentToDatabase(email, rollNumber, studentName, startYear);
+        console.log(`[AUTH] Student automatically added to students table: ${email}`);
+      }
+
+      res.json({
+        success: true,
+        message: 'Sign up successful. Please log in.',
+      });
+    } catch (error) {
+      console.error('Sign up error:', error);
+      throw error;
+    }
+  }
+);
+
+/**
+ * Login with email and password
+ */
+export const login = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { email, password, role } = req.body as {
+      email?: string;
+      password?: string;
+      role?: string;
+    };
+
+    // Validation
+    if (!email || !password || !role) {
+      res.status(400).json({
+        success: false,
+        message: 'email, password, and role are required',
+      });
+      return;
+    }
+
+    if (role !== 'student' && role !== 'admin') {
+      res.status(400).json({
+        success: false,
+        message: 'role must be "student" or "admin"',
+      });
+      return;
+    }
+
+    // ✅ ONLY CHECK: Email domain
+    if (!email.endsWith(ELIGIBILITY_DOMAIN)) {
+      res.status(403).json({
+        success: false,
+        message: `Unauthorized: email must be ${ELIGIBILITY_DOMAIN}`,
+      });
+      return;
+    }
+
+    try {
+      // Authenticate with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error || !data.user) {
+        console.error('[AUTH] Supabase login error:', error);
+        res.status(401).json({
+          success: false,
+          message: 'Invalid email or password',
+        });
+        return;
+      }
+
+      // Create JWT token
+      const token = signToken(email, email, role);
+      console.log(`[AUTH] User authenticated: ${email} as ${role}`);
 
       res.json({
         success: true,
         token,
         user: {
-          admin_name: user.admin_name,
-          email:      user.email,
-          // admin_id intentionally omitted — internal surrogate key
+          email,
+          role,
+          name: email.split('@')[0],
         },
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  }
+);
+
+/**
+ * Magic Link Login (Optional - Email based)
+ */
+export const magicLink = asyncHandler(
+  async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
+    const { email } = req.body as { email?: string };
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        message: 'email is required',
       });
       return;
     }
 
-    // ── Student path ────────────────────────────────────────────────────────
-    // Check domain BEFORE hitting the DB to avoid unnecessary queries.
     if (!email.endsWith(ELIGIBILITY_DOMAIN)) {
-      res.status(403).json({ success: false, message: 'Unauthorized: invalid email domain' });
+      res.status(403).json({
+        success: false,
+        message: `Unauthorized: email must be ${ELIGIBILITY_DOMAIN}`,
+      });
       return;
     }
 
-    const result = await pool.query<Student>(
-      'SELECT * FROM students WHERE LOWER(email) = LOWER($1)',
-      [email]
-    );
-    const user = result.rows[0];
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+      });
 
-    if (!user) {
-      console.log(`[AUTH] Student lookup failed for email=${email}`);
-      res.status(403).json({ success: false, message: 'Unauthorized: not a registered student' });
-      return;
+      if (error) {
+        console.error('[AUTH] Magic link error:', error);
+        res.status(400).json({
+          success: false,
+          message: error.message || 'Failed to send magic link',
+        });
+        return;
+      }
+
+      console.log(`[AUTH] Magic link sent to: ${email}`);
+      res.json({
+        success: true,
+        message: 'Check your email for login link',
+      });
+    } catch (error) {
+      console.error('Magic link error:', error);
+      throw error;
     }
-
-    if (!isEligibleStudent(email, user.start_year)) {
-      res.status(403).json({ success: false, message: 'Unauthorized: does not meet eligibility criteria' });
-      return;
-    }
-
-    // Use roll_number as the JWT identity — the real student identifier.
-    const token = signToken(user.roll_number, user.email, 'student');
-    console.log(`[AUTH] Student authenticated: ${email}`);
-
-    res.json({
-      success: true,
-      token,
-      user: {
-        roll_number:  user.roll_number,
-        student_name: user.student_name,
-        email:        user.email,
-        start_year:   user.start_year,
-        end_year:     user.end_year,
-        // student_id intentionally omitted — internal surrogate key
-      },
-    });
   }
 );

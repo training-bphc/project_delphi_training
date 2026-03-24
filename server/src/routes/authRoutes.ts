@@ -2,21 +2,22 @@
  * AUTHENTICATION ROUTES
  * 
  * Defines all authentication-related endpoints:
- * - Google OAuth login
- * - Get current user profile
+ * - Email/Password login and signup
+ * - Magic link (optional)
  */
 
 import { Router } from 'express';
-import { googleAuth } from '../controllers/authController';
-import { authenticate } from '../middleware/auth';
+import { login, signUp, magicLink } from '../controllers/authController';
 
 const router = Router();
 
-// POST /api/auth/google - Google OAuth login (student or admin)
-router.post('/google', googleAuth);
+// POST /api/auth/signup - Register new user
+router.post('/signup', signUp);
 
-// GET /api/auth/me - Returns current authenticated user's profile
-// Requires valid JWT token in Authorization header
-// router.get('/me', authenticate, getMe);
+// POST /api/auth/login - Login with email and password
+router.post('/login', login);
+
+// POST /api/auth/magic-link - Send magic link to email (optional)
+router.post('/magic-link', magicLink);
 
 export default router;

@@ -14,7 +14,8 @@ export interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (idToken: string, role: UserRole) => Promise<void>;
+  login: (email: string, password: string, role: UserRole) => Promise<void>;
+  signup: (email: string, password: string, role: UserRole) => Promise<void>;
   logout: () => void;
 }
 
@@ -51,7 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (normalizedUser.email && normalizedUser.id) {
           setToken(savedToken);
           setUser(normalizedUser);
-          localStorage.setItem('auth_user', JSON.stringify(normalizedUser));
         } else {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('auth_user');
@@ -65,13 +65,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (idToken: string, role: UserRole) => {
+  const signup = async (email: string, password: string, role: UserRole) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/google', {
+      const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_token: idToken, role }),
+        body: JSON.stringify({ email, password, role }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || `Signup failed: ${response.statusText}`);
+      }
+
+      console.log('Signup successful. Please log in.');
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string, role: UserRole) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role }),
       });
 
       const data = await response.json();
@@ -87,10 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const normalizedUser: User = {
-        id: userData.roll_number || userData.email,
+        id: userData.email,
         email: userData.email,
         role,
-        name: userData.student_name || userData.admin_name,
+        name: userData.name,
       };
 
       // Store token and normalized user
@@ -115,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
