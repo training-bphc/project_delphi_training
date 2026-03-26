@@ -6,8 +6,10 @@ import Login from './pages/Login';
 import AdminOverview from './views/admin/Overview';
 import NewandPendingRequestsTab from './views/admin/tabs/NewandPendingRequestsTab';
 import PreviousVerificationsTab from './views/admin/tabs/PreviousVerificationsTab';
+import AdminResources from './views/admin/Resources';
 import StudentTrainingPoints from './views/student/TrainingPoints';
 import AddTrainingPoints from './views/student/AddTrainingPoints';
+import StudentResources from './views/student/Resources';
 import './App.css';
 
 export interface Record {
@@ -342,6 +344,7 @@ function AppContent() {
               <Route path="/admin/overview" element={<AdminOverview />} />
               <Route path="/admin/pending" element={<NewandPendingRequestsTab />} />
               <Route path="/admin/verified" element={<PreviousVerificationsTab />} />
+              <Route path="/admin/resources" element={<AdminResources />} />
               <Route path="*" element={<Navigate to="/admin/overview" replace />} />
             </Route>
           </>
@@ -353,6 +356,7 @@ function AppContent() {
                 element={<StudentTrainingPoints studentId={user.id} studentEmail={user.email} />}
               />
               <Route path="/student/add" element={<AddTrainingPoints studentId={user.id} />} />
+              <Route path="/student/resources" element={<StudentResources />} />
               <Route path="*" element={<Navigate to="/student/training" replace />} />
             </Route>
           </>

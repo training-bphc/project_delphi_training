@@ -236,6 +236,50 @@ const seedData = async (): Promise<void> => {
       ],
     );
 
+    // ── Seed resources module sample tree ─────────────────────
+    await client.query(`DELETE FROM resources`);
+    await client.query(`DELETE FROM resource_folders`);
+
+    const rootFolder = await client.query<{ folder_id: number }>(
+      `
+        INSERT INTO resource_folders (folder_name, parent_folder_id, domain_id, created_by)
+        VALUES ($1, NULL, NULL, $2)
+        RETURNING folder_id
+      `,
+      ['Placement Prep', 'admin@hyderabad.bits-pilani.ac.in'],
+    );
+
+    const rootFolderId = rootFolder.rows[0].folder_id;
+
+    const interviewFolder = await client.query<{ folder_id: number }>(
+      `
+        INSERT INTO resource_folders (folder_name, parent_folder_id, domain_id, created_by)
+        VALUES ($1, $2, NULL, $3)
+        RETURNING folder_id
+      `,
+      ['Interview Prep', rootFolderId, 'admin@hyderabad.bits-pilani.ac.in'],
+    );
+
+    const codingFolder = await client.query<{ folder_id: number }>(
+      `
+        INSERT INTO resource_folders (folder_name, parent_folder_id, domain_id, created_by)
+        VALUES ($1, $2, NULL, $3)
+        RETURNING folder_id
+      `,
+      ['Coding Practice', rootFolderId, 'madhavramini@gmail.com'],
+    );
+
+    await client.query(
+      `
+        INSERT INTO resources (resource_name, resource_type, file_url, folder_id, uploaded_by)
+        VALUES
+          ('NeetCode Roadmap', 'external_link', 'https://neetcode.io/roadmap', $1, 'madhavramini@gmail.com'),
+          ('LeetCode Interview Guide', 'external_link', 'https://leetcode.com/explore/interview/card/top-interview-questions-easy/', $1, 'admin@hyderabad.bits-pilani.ac.in'),
+          ('System Design Primer', 'external_link', 'https://github.com/donnemartin/system-design-primer', $2, 'admin@hyderabad.bits-pilani.ac.in')
+      `,
+      [codingFolder.rows[0].folder_id, interviewFolder.rows[0].folder_id],
+    );
+
     void student4Id;
 
     await client.query("COMMIT");
@@ -250,6 +294,9 @@ const seedData = async (): Promise<void> => {
     console.log("[DB] Test Admins:");
     console.log("     admin@hyderabad.bits-pilani.ac.in");
     console.log("     madhavramini@gmail.com");
+    console.log("[DB] Resources seed added:");
+    console.log("     Root: Placement Prep");
+    console.log("     Children: Interview Prep, Coding Practice");
   } catch (error) {
     await client.query("ROLLBACK");
     console.error("[DB] Seeding failed:", error);

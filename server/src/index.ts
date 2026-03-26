@@ -7,6 +7,7 @@ import net from "net";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import recordsRoutes from "./routes/recordsRoutes.js";
+import resourcesRoutes from "./routes/resourcesRoutes.js";
 import { requestLogger } from "./middleware/logger";
 
 dotenv.config();
@@ -52,6 +53,7 @@ app.get("/api/health", (_req: Request, res: Response) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api", recordsRoutes);
+app.use("/api", resourcesRoutes);
 
 // 404 Handler
 app.use((_req: Request, res: Response) => {

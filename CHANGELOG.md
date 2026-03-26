@@ -2,6 +2,48 @@
 
 All notable changes to this project are documented in this file.
 
+## v1.2.3 (26.03.2026, Madhav Ramini)
+
+### Added
+- Full Resources module (folder-style file system for links) across backend and frontend.
+  - Database migration `002_resources_module.sql` introducing:
+    - `resource_folders` (self-referential tree via `parent_folder_id`)
+    - `resources` (link records tied to folders)
+    - Referential constraints, sibling-name uniqueness constraints, and lookup indexes for tree traversal.
+  - Resource APIs with role-aware access:
+    - Read tree: `GET /api/resources/tree` (admin + student)
+    - Folder management (admin only):
+      - `POST /api/resources/folders`
+      - `PATCH /api/resources/folders/:folderId`
+      - `DELETE /api/resources/folders/:folderId`
+    - Resource management (admin only):
+      - `POST /api/resources`
+      - `PATCH /api/resources/:resourceId`
+      - `DELETE /api/resources/:resourceId`
+  - New backend layers for resources:
+    - Repository: tree fetch + CRUD operations
+    - Service: validation and business guards
+    - Controller/routes: request handling and RBAC wiring
+  - New React resources views/pages for both roles:
+    - Admin: create/rename/delete folders and add/edit/remove links
+    - Student: read-only browsing of the same shared resource tree
+- Seed data for resources module to provide immediately testable folder/link hierarchy in local environments.
+
+### Changed
+- Server route registration updated to mount resources routes in app bootstrap.
+- Sidebar/navigation expanded for both admin and student to include resources entry points.
+- Resources UI styling naming simplified:
+  - Migrated from CSS-module-style naming to plain stylesheet naming.
+  - Finalized resource styles in `client/src/components/resources/resources.css`.
+
+### Fixed
+- Folder delete behavior now safely rejects deletion when folder is non-empty (contains child folders or resources), preventing accidental structure loss.
+- Resources link validation hardened to accept only secure external links (`https://`) to avoid malformed URL entries.
+
+### Notes
+- Resources module is intentionally isolated from existing training-points and verification business flows.
+- Current resources scope supports folder/link CRUD and hierarchical browsing; move/reorder operations are intentionally out of scope for this release.
+
 ## v1.2.2 (26.03.2026, Madhav Ramini)
 
 ### Added

@@ -38,6 +38,12 @@ function Sidebar() {
             >
               Previous Verifications
             </NavLink>
+            <NavLink
+              to="/admin/resources"
+              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+            >
+              Resources
+            </NavLink>
           </>
         ) : (
           <>
@@ -46,6 +52,12 @@ function Sidebar() {
               className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
             >
               Training Points
+            </NavLink>
+            <NavLink
+              to="/student/resources"
+              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+            >
+              Resources
             </NavLink>
           </>
         )}
