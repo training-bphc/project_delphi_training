@@ -1,12 +1,13 @@
-import pool from '../config/db';
+import pool from "../config/db";
 import {
+  CreateVerificationRequestInput,
   RequestStatus,
   ResolvedTrainingRecordInput,
   TrainingPointCategory,
   TrainingRecord,
   VerificationRequest,
   VerificationStatus,
-} from '../types';
+} from "../types";
 
 const RECORD_SELECT = `
   SELECT
@@ -38,6 +39,7 @@ const REQUEST_SELECT = `
     hs.description,
     hs.proof_links,
     hs.status,
+    hs.rejection_reason,
     hs.awarded_by,
     hs.created_at::text AS created_at,
     hs.updated_at::text AS updated_at
@@ -84,7 +86,10 @@ export const findRecordByBitsId = async (
 export const findStudentIdentityByEmail = async (
   email: string,
 ): Promise<{ student_name: string; roll_number: string } | null> => {
-  const result = await pool.query<{ student_name: string; roll_number: string }>(
+  const result = await pool.query<{
+    student_name: string;
+    roll_number: string;
+  }>(
     `
       SELECT student_name, roll_number
       FROM students
@@ -160,7 +165,7 @@ export const createRecord = async (
       payload.date,
       payload.category_id,
       payload.added_by,
-      payload.verification_status ?? 'Pending',
+      payload.verification_status ?? "Pending",
       payload.points ?? 0,
       payload.awarded_by ?? null,
     ],
@@ -170,7 +175,7 @@ export const createRecord = async (
   const category = await findCategoryById(row.category_id);
   return {
     ...row,
-    category: category?.category_name ?? 'Unknown',
+    category: category?.category_name ?? "Unknown",
   };
 };
 
@@ -208,7 +213,7 @@ export const markRecordAsVerified = async (
   const category = await findCategoryById(row.category_id);
   return {
     ...row,
-    category: category?.category_name ?? 'Unknown',
+    category: category?.category_name ?? "Unknown",
   };
 };
 
@@ -244,7 +249,7 @@ export const softDeleteRecord = async (
   const category = await findCategoryById(row.category_id);
   return {
     ...row,
-    category: category?.category_name ?? 'Unknown',
+    category: category?.category_name ?? "Unknown",
   };
 };
 
@@ -280,7 +285,7 @@ export const restoreRecord = async (
   const category = await findCategoryById(row.category_id);
   return {
     ...row,
-    category: category?.category_name ?? 'Unknown',
+    category: category?.category_name ?? "Unknown",
   };
 };
 
@@ -304,6 +309,108 @@ export const findAllVerificationRequests = async (
   return result.rows;
 };
 
+export const findVerificationRequestsForStudent = async (
+  studentEmail: string,
+  status?: RequestStatus,
+): Promise<VerificationRequest[]> => {
+  if (status) {
+    const result = await pool.query<VerificationRequest>(
+      `${REQUEST_SELECT}
+       WHERE LOWER(s.email) = LOWER($1) AND hs.status = $2
+       ORDER BY hs.created_at DESC`,
+      [studentEmail, status],
+    );
+    return result.rows;
+  }
+
+  const result = await pool.query<VerificationRequest>(
+    `${REQUEST_SELECT}
+     WHERE LOWER(s.email) = LOWER($1)
+     ORDER BY hs.created_at DESC`,
+    [studentEmail],
+  );
+  return result.rows;
+};
+
+export const createVerificationRequest = async (
+  studentEmail: string,
+  payload: CreateVerificationRequestInput,
+): Promise<VerificationRequest> => {
+  const studentResult = await pool.query<{
+    student_id: number;
+    student_name: string;
+    email: string;
+  }>(
+    `
+      SELECT student_id, student_name, email
+      FROM students
+      WHERE LOWER(email) = LOWER($1)
+      LIMIT 1
+    `,
+    [studentEmail],
+  );
+
+  const student = studentResult.rows[0];
+  if (!student) {
+    throw new Error("Student not found");
+  }
+
+  if (student.email.toLowerCase() !== payload.student_email.toLowerCase()) {
+    throw new Error("Submitted email must match logged-in student email");
+  }
+
+  if (
+    student.student_name.trim().toLowerCase() !==
+    payload.student_name.trim().toLowerCase()
+  ) {
+    throw new Error("Submitted name must match logged-in student name");
+  }
+
+  const categoryResult = await pool.query<{ category_id: number }>(
+    `
+      SELECT category_id
+      FROM training_point_categories
+      WHERE category_name = 'Hackathons/Competitions'
+      LIMIT 1
+    `,
+  );
+
+  const category = categoryResult.rows[0];
+  if (!category) {
+    throw new Error("Hackathons/Competitions category not found");
+  }
+
+  const insertResult = await pool.query<{ request_id: number }>(
+    `
+      INSERT INTO hackathon_submissions (
+        student_id,
+        category_id,
+        description,
+        proof_links,
+        status,
+        rejection_reason,
+        awarded_by
+      ) VALUES ($1, $2, $3, ARRAY[$4], 'Pending', NULL, NULL)
+      RETURNING request_id
+    `,
+    [
+      student.student_id,
+      category.category_id,
+      "Hackathon verification request",
+      payload.proof_link,
+    ],
+  );
+
+  const created = await findVerificationRequestById(
+    insertResult.rows[0].request_id,
+  );
+  if (!created) {
+    throw new Error("Failed to create verification request");
+  }
+
+  return created;
+};
+
 export const findVerificationRequestById = async (
   requestId: number,
 ): Promise<VerificationRequest | null> => {
@@ -320,11 +427,16 @@ export const updateVerificationRequestStatus = async (
   requestId: number,
   newStatus: RequestStatus,
   adminEmail?: string,
+  rejectionReason?: string,
 ): Promise<VerificationRequest | null> => {
   const result = await pool.query<{ student_id: number; category_id: number }>(
     `
       UPDATE hackathon_submissions hs
       SET status = $1,
+          rejection_reason = CASE
+            WHEN $1 = 'Rejected' THEN $4
+            ELSE NULL
+          END,
           updated_at = CURRENT_TIMESTAMP,
           awarded_by = CASE
             WHEN $1 = 'Verified' THEN COALESCE($3, hs.awarded_by)
@@ -333,13 +445,17 @@ export const updateVerificationRequestStatus = async (
       WHERE hs.request_id = $2
       RETURNING hs.student_id, hs.category_id
     `,
-    [newStatus, requestId, adminEmail ?? null],
+    [newStatus, requestId, adminEmail ?? null, rejectionReason ?? null],
   );
 
   const requestRow = await findVerificationRequestById(requestId);
 
-  if (newStatus === 'Verified' && result.rows[0]) {
-    const studentResult = await pool.query<{ student_name: string; roll_number: string; email: string }>(
+  if (newStatus === "Verified" && result.rows[0]) {
+    const studentResult = await pool.query<{
+      student_name: string;
+      roll_number: string;
+      email: string;
+    }>(
       `
         SELECT student_name, roll_number, email
         FROM students
@@ -370,7 +486,7 @@ export const updateVerificationRequestStatus = async (
           student.roll_number,
           student.email,
           result.rows[0].category_id,
-          'VERIFICATION_REQUEST',
+          "VERIFICATION_REQUEST",
           adminEmail ?? null,
         ],
       );

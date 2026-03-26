@@ -14,7 +14,7 @@ const runMigrations = async (): Promise<void> => {
     const migrationsDir = join(__dirname, "migrations");
     const migrationFiles = readdirSync(migrationsDir)
       .filter((file) => file.endsWith(".sql"))
-      .filter((file) => file !== '002_remove_batches_add_verification_undo.sql')
+      .filter((file) => file !== "002_remove_batches_add_verification_undo.sql")
       .sort();
 
     await client.query(`
@@ -28,6 +28,40 @@ const runMigrations = async (): Promise<void> => {
       "SELECT filename FROM schema_migrations",
     );
     const appliedFiles = new Set(appliedResult.rows.map((row) => row.filename));
+
+    const requiredBaselineTables = [
+      "training_point_categories",
+      "training_points",
+      "hackathon_submissions",
+    ];
+
+    const missingTablesResult = await client.query<{ table_name: string }>(
+      `
+        SELECT t.table_name
+        FROM (SELECT unnest($1::text[]) AS table_name) t
+        LEFT JOIN information_schema.tables ist
+          ON ist.table_schema = 'public'
+         AND ist.table_name = t.table_name
+        WHERE ist.table_name IS NULL
+      `,
+      [requiredBaselineTables],
+    );
+
+    if (
+      appliedFiles.has("001_initial_schema.sql") &&
+      missingTablesResult.rows.length > 0
+    ) {
+      console.warn(
+        `[DB] Baseline migration marked applied but missing tables: ${missingTablesResult.rows
+          .map((row) => row.table_name)
+          .join(", ")}. Reapplying 001_initial_schema.sql.`,
+      );
+
+      await client.query(
+        "DELETE FROM schema_migrations WHERE filename = '001_initial_schema.sql'",
+      );
+      appliedFiles.delete("001_initial_schema.sql");
+    }
 
     for (const file of migrationFiles) {
       if (appliedFiles.has(file)) {

@@ -14,3 +14,78 @@
   color: #4b5563;
   margin: 0;
 }
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal {
+  width: min(520px, calc(100% - 2rem));
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+}
+
+.modal h3 {
+  margin: 0 0 0.5rem;
+  color: #111827;
+}
+
+.modal p {
+  margin: 0 0 0.9rem;
+}
+
+.modalLink {
+  display: inline-flex;
+  margin-bottom: 0.9rem;
+  color: #2563eb;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.primaryBtn,
+.secondaryBtn,
+.rejectBtn {
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.primaryBtn {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.secondaryBtn {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.rejectBtn {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.55rem;
+  resize: vertical;
+  margin-bottom: 0.75rem;
+}

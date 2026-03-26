@@ -1,16 +1,17 @@
-import { createContext, useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/auth';
-import AppLayout from './components/AppLayout';
-import Login from './pages/Login';
-import AdminOverview from './views/admin/Overview';
-import NewandPendingRequestsTab from './views/admin/tabs/NewandPendingRequestsTab';
-import PreviousVerificationsTab from './views/admin/tabs/PreviousVerificationsTab';
-import AdminResources from './views/admin/Resources';
-import StudentTrainingPoints from './views/student/TrainingPoints';
-import AddTrainingPoints from './views/student/AddTrainingPoints';
-import StudentResources from './views/student/Resources';
-import './App.css';
+import { createContext, useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./contexts/auth";
+import AppLayout from "./components/AppLayout";
+import Login from "./pages/Login";
+import AdminOverview from "./views/admin/Overview";
+import NewandPendingRequestsTab from "./views/admin/tabs/NewandPendingRequestsTab";
+import PreviousVerificationsTab from "./views/admin/tabs/PreviousVerificationsTab";
+import AdminResources from "./views/admin/Resources";
+import StudentTrainingPoints from "./views/student/TrainingPoints";
+import AddTrainingPoints from "./views/student/AddTrainingPoints";
+import AddVerification from "./views/student/AddVerification";
+import StudentResources from "./views/student/Resources";
+import "./App.css";
 
 export interface Record {
   s_no: number;
@@ -21,7 +22,7 @@ export interface Record {
   category_id: number;
   category: string;
   added_by: string;
-  verification_status: 'Pending' | 'Verified' | 'Rejected';
+  verification_status: "Pending" | "Verified" | "Rejected";
   points?: number;
   awarded_by?: string | null;
 }
@@ -36,10 +37,17 @@ export interface VerificationRequest {
   category: string;
   description?: string;
   proof_links: string[];
-  status: 'Pending' | 'Verified' | 'Rejected';
+  status: "Pending" | "Verified" | "Rejected";
+  rejection_reason?: string | null;
   awarded_by?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface CreateVerificationRequestPayload {
+  student_name: string;
+  student_email: string;
+  proof_link: string;
 }
 
 export interface TrainingCategory {
@@ -66,19 +74,29 @@ export interface RecordsContextType {
   categories: TrainingCategory[];
   handleVerify: (sNo: number) => Promise<void>;
   handleCreateRecord: (record: CreateRecordPayload) => Promise<void>;
+  handleCreateVerificationRequest: (
+    request: CreateVerificationRequestPayload,
+  ) => Promise<void>;
   handleVerifyRequest: (requestId: number) => Promise<void>;
-  handleRejectRequest: (requestId: number) => Promise<void>;
+  handleRejectRequest: (
+    requestId: number,
+    rejectionReason: string,
+  ) => Promise<void>;
   handleDeleteRecord: (sNo: number) => Promise<void>;
   handleUndoDelete: (sNo: number) => Promise<void>;
   handleRefreshRecords: () => Promise<void>;
 }
 
-export const RecordsContext = createContext<RecordsContextType | undefined>(undefined);
+export const RecordsContext = createContext<RecordsContextType | undefined>(
+  undefined,
+);
 
 function AppContent() {
   const { user, token, isLoading: authLoading } = useAuth();
   const [records, setRecords] = useState<Record[]>([]);
-  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
+  const [verificationRequests, setVerificationRequests] = useState<
+    VerificationRequest[]
+  >([]);
   const [categories, setCategories] = useState<TrainingCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -87,16 +105,14 @@ function AppContent() {
     if (token) {
       fetchRecords();
       fetchCategories();
-      if (user?.role === 'admin') {
-        fetchVerificationRequests();
-      }
+      fetchVerificationRequests();
     }
   }, [token, user?.role]);
 
   const fetchRecords = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/records', {
+      const response = await fetch("/api/records", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -115,7 +131,7 @@ function AppContent() {
 
       setRecords(recordsPayload);
     } catch (error) {
-      console.error('Failed to fetch records:', error);
+      console.error("Failed to fetch records:", error);
       setRecords([]);
     } finally {
       setIsLoading(false);
@@ -124,14 +140,16 @@ function AppContent() {
 
   const fetchVerificationRequests = async () => {
     try {
-      const response = await fetch('/api/verification-requests', {
+      const response = await fetch("/api/verification-requests", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch verification requests: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch verification requests: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -143,14 +161,14 @@ function AppContent() {
 
       setVerificationRequests(requestsPayload);
     } catch (error) {
-      console.error('Failed to fetch verification requests:', error);
+      console.error("Failed to fetch verification requests:", error);
       setVerificationRequests([]);
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories', {
+      const response = await fetch("/api/categories", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -169,7 +187,7 @@ function AppContent() {
 
       setCategories(categoriesPayload);
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      console.error("Failed to fetch categories:", error);
       setCategories([]);
     }
   };
@@ -177,9 +195,9 @@ function AppContent() {
   const handleVerify = async (sNo: number) => {
     try {
       const response = await fetch(`/api/records/${sNo}/verify`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
@@ -190,17 +208,17 @@ function AppContent() {
 
       await fetchRecords();
     } catch (error) {
-      console.error('Failed to verify record:', error);
-      alert('Failed to verify record');
+      console.error("Failed to verify record:", error);
+      alert("Failed to verify record");
     }
   };
 
   const handleCreateRecord = async (record: CreateRecordPayload) => {
     try {
-      const response = await fetch('/api/records', {
-        method: 'POST',
+      const response = await fetch("/api/records", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(record),
@@ -212,20 +230,23 @@ function AppContent() {
 
       await fetchRecords();
     } catch (error) {
-      console.error('Failed to create record:', error);
-      alert('Failed to create record');
+      console.error("Failed to create record:", error);
+      alert("Failed to create record");
     }
   };
 
   const handleVerifyRequest = async (requestId: number) => {
     try {
-      const response = await fetch(`/api/verification-requests/${requestId}/verify`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/verification-requests/${requestId}/verify`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to verify request: ${response.statusText}`);
@@ -234,20 +255,27 @@ function AppContent() {
       await fetchRecords();
       await fetchVerificationRequests();
     } catch (error) {
-      console.error('Failed to verify request:', error);
-      alert('Failed to verify request');
+      console.error("Failed to verify request:", error);
+      alert("Failed to verify request");
     }
   };
 
-  const handleRejectRequest = async (requestId: number) => {
+  const handleRejectRequest = async (
+    requestId: number,
+    rejectionReason: string,
+  ) => {
     try {
-      const response = await fetch(`/api/verification-requests/${requestId}/reject`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/verification-requests/${requestId}/reject`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ rejection_reason: rejectionReason }),
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to reject request: ${response.statusText}`);
@@ -256,17 +284,50 @@ function AppContent() {
       await fetchRecords();
       await fetchVerificationRequests();
     } catch (error) {
-      console.error('Failed to reject request:', error);
-      alert('Failed to reject request');
+      console.error("Failed to reject request:", error);
+      alert("Failed to reject request");
+    }
+  };
+
+  const handleCreateVerificationRequest = async (
+    request: CreateVerificationRequestPayload,
+  ) => {
+    try {
+      const response = await fetch("/api/verification-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message ||
+            `Failed to create verification request: ${response.statusText}`,
+        );
+      }
+
+      await fetchVerificationRequests();
+    } catch (error) {
+      console.error("Failed to create verification request:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Failed to create verification request",
+      );
+      throw error;
     }
   };
 
   const handleDeleteRecord = async (sNo: number) => {
     try {
       const response = await fetch(`/api/records/${sNo}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
@@ -277,17 +338,17 @@ function AppContent() {
 
       await fetchRecords();
     } catch (error) {
-      console.error('Failed to delete record:', error);
-      alert('Failed to delete record');
+      console.error("Failed to delete record:", error);
+      alert("Failed to delete record");
     }
   };
 
   const handleUndoDelete = async (sNo: number) => {
     try {
       const response = await fetch(`/api/records/${sNo}/undo`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
@@ -298,20 +359,22 @@ function AppContent() {
 
       await fetchRecords();
     } catch (error) {
-      console.error('Failed to undo delete:', error);
-      alert('Failed to undo delete');
+      console.error("Failed to undo delete:", error);
+      alert("Failed to undo delete");
     }
   };
 
   const handleRefreshRecords = async () => {
     await fetchRecords();
-    if (user?.role === 'admin') {
+    if (user?.role === "admin") {
       await fetchVerificationRequests();
     }
   };
 
   if (authLoading || isLoading) {
-    return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>
+    );
   }
 
   // Not logged in - show login
@@ -333,6 +396,7 @@ function AppContent() {
         categories,
         handleVerify,
         handleCreateRecord,
+        handleCreateVerificationRequest,
         handleVerifyRequest,
         handleRejectRequest,
         handleDeleteRecord,
@@ -341,14 +405,23 @@ function AppContent() {
       }}
     >
       <Routes>
-        {user.role === 'admin' ? (
+        {user.role === "admin" ? (
           <>
             <Route element={<AppLayout />}>
               <Route path="/admin/overview" element={<AdminOverview />} />
-              <Route path="/admin/pending" element={<NewandPendingRequestsTab />} />
-              <Route path="/admin/verified" element={<PreviousVerificationsTab />} />
+              <Route
+                path="/admin/pending"
+                element={<NewandPendingRequestsTab />}
+              />
+              <Route
+                path="/admin/verified"
+                element={<PreviousVerificationsTab />}
+              />
               <Route path="/admin/resources" element={<AdminResources />} />
-              <Route path="*" element={<Navigate to="/admin/overview" replace />} />
+              <Route
+                path="*"
+                element={<Navigate to="/admin/overview" replace />}
+              />
             </Route>
           </>
         ) : (
@@ -356,11 +429,26 @@ function AppContent() {
             <Route element={<AppLayout />}>
               <Route
                 path="/student/training"
-                element={<StudentTrainingPoints studentId={user.id} studentEmail={user.email} />}
+                element={
+                  <StudentTrainingPoints
+                    studentId={user.id}
+                    studentEmail={user.email}
+                  />
+                }
               />
-              <Route path="/student/add" element={<AddTrainingPoints studentId={user.id} />} />
+              <Route
+                path="/student/add"
+                element={<AddTrainingPoints studentId={user.id} />}
+              />
+              <Route
+                path="/student/verification"
+                element={<AddVerification />}
+              />
               <Route path="/student/resources" element={<StudentResources />} />
-              <Route path="*" element={<Navigate to="/student/training" replace />} />
+              <Route
+                path="*"
+                element={<Navigate to="/student/training" replace />}
+              />
             </Route>
           </>
         )}
