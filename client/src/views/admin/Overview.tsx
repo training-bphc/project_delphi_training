@@ -40,7 +40,26 @@ function Overview() {
       }
 
       const data = await response.json();
-      alert(`Successfully added ${data.data.success} records. ${data.data.failed} failed.`);
+      const result = data.data as {
+        success: number;
+        failed: number;
+        errors?: Array<{ email: string; error: string }>;
+      };
+
+      let message = `Successfully added ${result.success} records. ${result.failed} failed.`;
+      if (result.failed > 0 && result.errors && result.errors.length > 0) {
+        const errorLines = result.errors
+          .slice(0, 10)
+          .map((entry) => `- ${entry.email}: ${entry.error}`)
+          .join('\n');
+        message += `\n\nFailed emails:\n${errorLines}`;
+
+        if (result.errors.length > 10) {
+          message += `\n...and ${result.errors.length - 10} more`;
+        }
+      }
+
+      alert(message);
 
       await handleRefreshRecords();
     } catch (error: any) {

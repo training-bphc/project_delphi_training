@@ -31,12 +31,22 @@ All notable changes to this project are documented in this file.
 - Frontend category usage fully DB-backed:
   - Removed hardcoded training category lists from student/admin forms and dashboards.
   - Bulk upload now submits category IDs and refreshes context state without full page reload.
+- Google login role fallback refined for deterministic behavior in one attempt:
+  - Admin check is attempted first.
+  - If user is not a registered admin, flow immediately falls back to student check without requiring a second login attempt.
+- Admin create-record flow no longer asks for manual identity input.
+  - `added_by` is always derived from authenticated login credentials.
 
 ### Fixed
 - Foreign key failure on `training_points_awarded_by_fk` caused by manual free-text admin values.
   - Attribution now stores valid logged-in admin email IDs only.
 - Verification approval flow now records admin attribution automatically when moving `Pending` -> `Verified`.
 - Seed data updated to comply with the new schema and FK constraints across categories and admin attribution.
+- Google token verification errors no longer surface as generic `500 Internal server error` for common token issues.
+  - Expired/invalid Google ID tokens now return actionable `401` responses.
+- Bulk upload testability improvements:
+  - Added sample bulk-upload student emails to seed data.
+  - UI now reports failed email IDs with reasons while still preserving partial success inserts.
 
 ### Notes
 - Existing environments using old migrations should recreate/reset DB before applying the consolidated baseline.

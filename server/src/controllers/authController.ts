@@ -10,6 +10,29 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const ELIGIBILITY_DOMAIN = "@hyderabad.bits-pilani.ac.in";
 const MAX_STUDENT_YEARS = 5;
 
+const getGoogleTokenErrorMessage = (error: unknown): string => {
+  const rawMessage = error instanceof Error ? error.message : "Google token verification failed";
+  const message = rawMessage.toLowerCase();
+
+  if (
+    message.includes("token used too late") ||
+    message.includes("jwt expired") ||
+    message.includes("expired")
+  ) {
+    return "Google sign-in token expired. Please sign in again.";
+  }
+
+  if (
+    message.includes("wrong recipient") ||
+    message.includes("audience") ||
+    message.includes("issued to a different client")
+  ) {
+    return "Google token audience mismatch. Check GOOGLE_CLIENT_ID configuration.";
+  }
+
+  return "Google sign-in token is invalid. Please try signing in again.";
+};
+
 const isEligibleStudent = (email: string, startYear: number): boolean => {
   const currentYear = new Date().getFullYear();
   return (
@@ -37,10 +60,19 @@ export const googleAuth = asyncHandler(
       return;
     }
 
-    const ticket = await googleClient.verifyIdToken({
-      idToken: id_token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({
+        idToken: id_token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (error) {
+      res.status(401).json({
+        success: false,
+        message: getGoogleTokenErrorMessage(error),
+      });
+      return;
+    }
 
     const payload = ticket.getPayload();
     if (!payload?.email) {

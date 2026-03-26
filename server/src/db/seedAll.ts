@@ -119,6 +119,28 @@ const seedData = async (): Promise<void> => {
       studentResult4.rows[0]?.student_id ||
       (await getStudentIdByEmail(client, "f20230046@hyderabad.bits-pilani.ac.in"));
 
+    const bulkTestStudents = [
+      { email: "f20250001@hyderabad.bits-pilani.ac.in", name: "Bulk Student 01", roll: "2025A8PS0001H" },
+      { email: "f20250002@hyderabad.bits-pilani.ac.in", name: "Bulk Student 02", roll: "2025A8PS0002H" },
+      { email: "f20250003@hyderabad.bits-pilani.ac.in", name: "Bulk Student 03", roll: "2025A8PS0003H" },
+      { email: "f20250004@hyderabad.bits-pilani.ac.in", name: "Bulk Student 04", roll: "2025A8PS0004H" },
+      { email: "f20250005@hyderabad.bits-pilani.ac.in", name: "Bulk Student 05", roll: "2025A8PS0005H" },
+      { email: "f20250006@hyderabad.bits-pilani.ac.in", name: "Bulk Student 06", roll: "2025A8PS0006H" },
+      { email: "f20250007@hyderabad.bits-pilani.ac.in", name: "Bulk Student 07", roll: "2025A8PS0007H" },
+      { email: "f20250008@hyderabad.bits-pilani.ac.in", name: "Bulk Student 08", roll: "2025A8PS0008H" },
+      { email: "f20250009@hyderabad.bits-pilani.ac.in", name: "Bulk Student 09", roll: "2025A8PS0009H" },
+      { email: "f20250010@hyderabad.bits-pilani.ac.in", name: "Bulk Student 10", roll: "2025A8PS0010H" },
+    ];
+
+    for (const student of bulkTestStudents) {
+      await client.query(
+        `INSERT INTO students (email, student_name, roll_number, start_year, end_year, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (email) DO NOTHING`,
+        [student.email, student.name, student.roll, 2025, 2029, true],
+      );
+    }
+
     // ── Seed admins ─────────────────────────────────────────────
     await client.query(
       `INSERT INTO admins (email, admin_name, department, is_super_admin)
@@ -221,6 +243,10 @@ const seedData = async (): Promise<void> => {
     console.log("[DB] Test Students:");
     console.log("     f20240546@hyderabad.bits-pilani.ac.in");
     console.log("     f20230046@hyderabad.bits-pilani.ac.in");
+    console.log("[DB] Bulk Upload Test Students:");
+    for (const student of bulkTestStudents) {
+      console.log(`     ${student.email}`);
+    }
     console.log("[DB] Test Admins:");
     console.log("     admin@hyderabad.bits-pilani.ac.in");
     console.log("     madhavramini@gmail.com");

@@ -6,25 +6,37 @@ function GoogleLoginButton() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const shouldFallbackFromAdminToStudent = (message: string): boolean => {
+    const normalized = message.toLowerCase();
+    return (
+      normalized.includes('not a registered admin') ||
+      normalized.includes('unauthorized: not a registered admin')
+    );
+  };
+
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       const idToken = credentialResponse.credential;
-      
-      // Try student login first
+
+      // Try admin first. If not an admin, fall back to student in the same attempt.
       try {
-        await login(idToken, 'student');
-        navigate('/student/training');
+        await login(idToken, 'admin');
+        navigate('/admin/overview');
         return;
-      } catch (studentError: any) {
-        // If student login fails, try admin
-        console.log('Student login failed, trying admin:', studentError.message);
+      } catch (adminError: any) {
+        const adminMessage = adminError?.message || 'Unknown error';
+
+        if (!shouldFallbackFromAdminToStudent(adminMessage)) {
+          throw adminError;
+        }
+
         try {
-          await login(idToken, 'admin');
-          navigate('/admin/overview');
+          await login(idToken, 'student');
+          navigate('/student/training');
           return;
-        } catch (adminError: any) {
-          console.error('Both student and admin login failed:', adminError.message);
-          alert('Login failed: ' + (adminError.message || 'Unknown error'));
+        } catch (studentError: any) {
+          console.error('Both admin and student login failed:', studentError.message);
+          alert('Login failed: ' + (studentError.message || 'Unknown error'));
         }
       }
     } catch (error: any) {
