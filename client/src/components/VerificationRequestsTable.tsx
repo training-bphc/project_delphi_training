@@ -7,6 +7,7 @@ interface VerificationRequest {
   description?: string;
   proof_links: string[];
   status: 'Pending' | 'Verified' | 'Rejected';
+  awarded_by?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +36,7 @@ function VerificationRequestsTable({
             <th>Description</th>
             <th>Proof Links</th>
             <th>Status</th>
+            <th>Awarded By</th>
             <th>Created</th>
             {(handleVerify || handleReject) && <th>Actions</th>}
           </tr>
@@ -72,6 +74,7 @@ function VerificationRequestsTable({
                   {request.status}
                 </span>
               </td>
+              <td>{request.awarded_by || '-'}</td>
               <td>{new Date(request.created_at).toLocaleDateString()}</td>
               {(handleVerify || handleReject) && (
                 <td>

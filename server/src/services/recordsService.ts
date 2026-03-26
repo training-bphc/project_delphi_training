@@ -1,7 +1,8 @@
 import {
   createRecord,
+  findAllCategories,
+  findCategoryById,
   findAllRecords,
-  findRecordIdentityByEmail,
   findRecordByBitsId,
   findStudentIdentityByEmail,
   markRecordAsVerified,
@@ -11,6 +12,7 @@ import {
 import {
   CreateTrainingRecordInput,
   ResolvedTrainingRecordInput,
+  TrainingPointCategory,
   TrainingRecord,
   VerificationStatus,
 } from '../types';
@@ -45,26 +47,22 @@ export const getRecordByBitsId = async (
 export const addRecord = async (
   payload: CreateTrainingRecordInput,
 ): Promise<TrainingRecord> => {
-  console.log('[SERVICE] addRecord called with points:', payload.points);
-
   let resolvedName = payload.name;
   let resolvedBitsId = payload.bits_id;
 
   if (!resolvedName || !resolvedBitsId) {
-    console.log('[SERVICE] No name/bits_id provided, looking up by email:', payload.email_id);
-
     const student = await findStudentIdentityByEmail(payload.email_id);
     if (!student) {
-      console.log('[SERVICE] Student NOT found in students table. Throwing error.');
       throw new Error('Student not found for provided email');
     }
 
-    console.log('[SERVICE] Found student in students table:', {
-      student_name: student.student_name,
-      roll_number: student.roll_number,
-    });
     resolvedName = resolvedName || student.student_name;
     resolvedBitsId = resolvedBitsId || student.roll_number;
+  }
+
+  const categoryExists = await findCategoryById(payload.category_id);
+  if (!categoryExists) {
+    throw new Error('Invalid category_id');
   }
 
   const resolvedPayload: ResolvedTrainingRecordInput = {
@@ -75,15 +73,14 @@ export const addRecord = async (
     points: payload.points ?? 0,
   };
 
-  console.log('[SERVICE] Final payload being saved: points =', resolvedPayload.points);
-
   return createRecord(resolvedPayload);
 };
 
 export const verifyRecord = async (
   serialNo: number,
+  adminEmail?: string,
 ): Promise<TrainingRecord | null> => {
-  return markRecordAsVerified(serialNo);
+  return markRecordAsVerified(serialNo, adminEmail);
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -108,9 +105,10 @@ export const undoDeleteRecord = async (
 
 export interface BulkAddInput {
   emails: string[];
-  category: string;
+  category_id: number;
   points: number;
   added_by: string;
+  awarded_by?: string;
 }
 
 export interface BulkAddResult {
@@ -121,7 +119,12 @@ export interface BulkAddResult {
 }
 
 export const bulkAddRecords = async (input: BulkAddInput): Promise<BulkAddResult> => {
-  const { emails, category, points, added_by } = input;
+  const { emails, category_id, points, added_by, awarded_by } = input;
+
+  const categoryExists = await findCategoryById(category_id);
+  if (!categoryExists) {
+    throw new Error('Invalid category_id');
+  }
 
   const errors: Array<{ email: string; error: string }> = [];
   const records: TrainingRecord[] = [];
@@ -141,8 +144,9 @@ export const bulkAddRecords = async (input: BulkAddInput): Promise<BulkAddResult
         bits_id: student.roll_number,
         email_id: email,
         date: new Date().toISOString().split('T')[0], // Today's date
-        category,
+        category_id,
         added_by,
+        awarded_by,
         verification_status: 'Verified', // Auto-verified for admin bulk additions
         points,
       };
@@ -163,4 +167,8 @@ export const bulkAddRecords = async (input: BulkAddInput): Promise<BulkAddResult
     errors,
     records,
   };
+};
+
+export const getCategories = async (): Promise<TrainingPointCategory[]> => {
+  return findAllCategories();
 };

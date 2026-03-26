@@ -8,8 +8,9 @@ interface Record {
   date: string;
   category: string;
   added_by: string;
-  verification_status: 'Pending' | 'Verified';
+  verification_status: 'Pending' | 'Verified' | 'Rejected';
   points?: number;
+  awarded_by?: string | null;
 }
 
 interface TableProps {
@@ -32,6 +33,7 @@ function Table({ records, handleVerify, showVerifyButton = false }: TableProps) 
             <th>Category</th>
             <th>Points</th>
             <th>Added By</th>
+            <th>Awarded By</th>
             <th>Status</th>
             {showVerifyButton && <th>Action</th>}
           </tr>
@@ -47,6 +49,7 @@ function Table({ records, handleVerify, showVerifyButton = false }: TableProps) 
               <td>{record.category}</td>
               <td>{record.points}</td>
               <td>{record.added_by}</td>
+              <td>{record.awarded_by || '-'}</td>
               <td>
                 <span
                   className={`${styles.status} ${styles[record.verification_status.toLowerCase()]}`}

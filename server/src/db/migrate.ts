@@ -14,6 +14,7 @@ const runMigrations = async (): Promise<void> => {
     const migrationsDir = join(__dirname, "migrations");
     const migrationFiles = readdirSync(migrationsDir)
       .filter((file) => file.endsWith(".sql"))
+      .filter((file) => file !== '002_remove_batches_add_verification_undo.sql')
       .sort();
 
     await client.query(`

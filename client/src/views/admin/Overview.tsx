@@ -6,19 +6,6 @@ import CreateNewRecord from '../../components/layout/createNewRecord';
 import BulkUpload from '../../components/layout/BulkUpload';
 import { RecordsContext } from '../../App';
 
-const TRAINING_CATEGORIES = [
-  'Sectorial Briefs',
-  'Mock Assessments',
-  'Mock Interviews',
-  'Mini Assessments',
-  'NT-Excel',
-  'NT-SQL',
-  'NT-Python',
-  'Guest Lectures / Workshops',
-  'Hackathons/Competitions',
-  'Bonus Points',
-];
-
 function Overview() {
   const context = useContext(RecordsContext);
   const { user } = useAuth();
@@ -28,9 +15,9 @@ function Overview() {
     return <div>Loading...</div>;
   }
 
-  const { records, handleCreateRecord } = context;
+  const { records, categories, handleCreateRecord, handleRefreshRecords } = context;
 
-  const handleBulkUpload = async (emails: string[], category: string, points: number) => {
+  const handleBulkUpload = async (emails: string[], categoryId: number, points: number) => {
     setIsUploading(true);
     try {
       const response = await fetch('/api/records/bulk-add', {
@@ -41,7 +28,7 @@ function Overview() {
         },
         body: JSON.stringify({
           emails,
-          category,
+          category_id: categoryId,
           points,
           added_by: user?.email || 'admin',
         }),
@@ -54,9 +41,8 @@ function Overview() {
 
       const data = await response.json();
       alert(`Successfully added ${data.data.success} records. ${data.data.failed} failed.`);
-      
-      // Refresh records
-      window.location.reload();
+
+      await handleRefreshRecords();
     } catch (error: any) {
       console.error('Bulk upload error:', error);
       alert(`Bulk upload failed: ${error.message}`);
@@ -69,12 +55,12 @@ function Overview() {
     <main className="overviewContent">
       <h1 className="overviewHeading">OVERVIEW</h1>
       <BulkUpload
-        categories={TRAINING_CATEGORIES}
+        categories={categories}
         onUpload={handleBulkUpload}
         isLoading={isUploading}
       />
       <Table records={records} />
-      <CreateNewRecord handleCreateRecord={handleCreateRecord} />
+      <CreateNewRecord handleCreateRecord={handleCreateRecord} categories={categories} />
     </main>
   );
 }

@@ -36,7 +36,7 @@ function AddTrainingPoints({ studentId, onRecordAdded }: AddTrainingPointsProps)
       bits_id: studentId,
       email_id: `${(formData.get('email_local') as string).trim()}${EMAIL_DOMAIN}`,
       date: formData.get('date') as string,
-      category: formData.get('category') as string,
+      category_id: Number(formData.get('category_id')),
       added_by: studentId,
       points: 0,
     };
@@ -89,18 +89,13 @@ function AddTrainingPoints({ studentId, onRecordAdded }: AddTrainingPointsProps)
 
         <div className={styles.formGroup}>
           <label htmlFor="category">Category</label>
-          <select id="category" name="category" required defaultValue="">
+          <select id="category" name="category_id" required defaultValue="">
             <option value="">Select a category</option>
-            <option value="Sectorial Briefs">Sectorial Briefs</option>
-            <option value="Mock Assessments">Mock Assessments</option>
-            <option value="Mock Interviews">Mock Interviews</option>
-            <option value="Mini Assessments">Mini Assessments</option>
-            <option value="NT-Excel">NT-Excel</option>
-            <option value="NT-SQL">NT-SQL</option>
-            <option value="NT-Python">NT-Python</option>
-            <option value="Guest Lectures / Workshops">Guest Lectures / Workshops</option>
-            <option value="Hackathons/Competitions">Hackathons/Competitions</option>
-            <option value="Bonus Points">Bonus Points</option>
+            {context.categories.map((category) => (
+              <option key={category.category_id} value={category.category_id}>
+                {category.category_name}
+              </option>
+            ))}
           </select>
         </div>
 

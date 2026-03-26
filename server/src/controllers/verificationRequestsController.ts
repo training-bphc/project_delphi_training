@@ -50,7 +50,11 @@ export const verifyRequestHandler = asyncHandler(async (req: Request, res: Respo
     return;
   }
 
-  const updatedRequest = await updateVerificationRequestStatus(requestId, 'Verified');
+  const updatedRequest = await updateVerificationRequestStatus(
+    requestId,
+    'Verified',
+    req.user?.email,
+  );
 
   if (!updatedRequest) {
     res.status(404).json({ success: false, message: 'Request not found' });
@@ -68,7 +72,11 @@ export const rejectRequestHandler = asyncHandler(async (req: Request, res: Respo
     return;
   }
 
-  const updatedRequest = await updateVerificationRequestStatus(requestId, 'Rejected');
+  const updatedRequest = await updateVerificationRequestStatus(
+    requestId,
+    'Rejected',
+    req.user?.email,
+  );
 
   if (!updatedRequest) {
     res.status(404).json({ success: false, message: 'Request not found' });

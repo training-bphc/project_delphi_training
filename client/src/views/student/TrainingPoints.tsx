@@ -2,65 +2,6 @@ import { useContext } from 'react';
 import styles from './trainingPoints.module.css';
 import { RecordsContext, type Record } from '../../App';
 
-interface TrainingCategory {
-  name: string;
-  targetPoints: number;
-  currentPoints: number;
-}
-
-const initialCategories: TrainingCategory[] = [
-  {
-    name: 'Sectorial Briefs',
-    targetPoints: 8,
-    currentPoints: 0,
-  },
-  {
-    name: 'Mock Assessments',
-    targetPoints: 8,
-    currentPoints: 0,
-  },
-  {
-    name: 'Mock Interviews',
-    targetPoints: 12,
-    currentPoints: 0,
-  },
-  {
-    name: 'Mini Assessments',
-    targetPoints: 2,
-    currentPoints: 0,
-  },
-  {
-    name: 'NT-Excel',
-    targetPoints: 3,
-    currentPoints: 0,
-  },
-  {
-    name: 'NT-SQL',
-    targetPoints: 3,
-    currentPoints: 0,
-  },
-  {
-    name: 'NT-Python',
-    targetPoints: 5,
-    currentPoints: 0,
-  },
-  {
-    name: 'Guest Lectures / Workshops',
-    targetPoints: 10,
-    currentPoints: 0,
-  },
-  {
-    name: 'Hackathons/Competitions',
-    targetPoints: 10,
-    currentPoints: 0,
-  },
-  {
-    name: 'Bonus Points',
-    targetPoints: 15,
-    currentPoints: 0,
-  },
-];
-
 interface TrainingPointsProps {
   studentId?: string;
   studentEmail?: string;
@@ -75,11 +16,10 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
     return <div>Loading...</div>;
   }
 
-  // Calculate points by category from verified records
-  const categories = initialCategories.map((cat) => {
+  const categories = context.categories.map((cat) => {
     const categoryRecords = context.records?.filter(
       (record: Record) =>
-        record.category === cat.name &&
+        record.category_id === cat.category_id &&
         record.verification_status === 'Verified' &&
         (
           (!studentId && !studentEmail) ||
@@ -93,7 +33,12 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
       0
     );
 
-    return { ...cat, currentPoints };
+    return {
+      categoryId: cat.category_id,
+      name: cat.category_name,
+      targetPoints: cat.max_points,
+      currentPoints,
+    };
   });
 
   const totalPoints = categories.reduce((sum, cat) => sum + cat.currentPoints, 0);
@@ -112,7 +57,7 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
       <section className={styles.categoryWise}>
         <div className={styles.categoryGrid}>
           {categories.map((category) => (
-            <div key={category.name} className={styles.categoryCard}>
+            <div key={category.categoryId} className={styles.categoryCard}>
               <span className={styles.categoryTitle}>{category.name}</span>
               <span className={styles.categoryPoints}>{category.currentPoints} / {category.targetPoints}</span>
             </div>

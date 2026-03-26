@@ -1,18 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './bulkUpload.module.css';
+import type { TrainingCategory } from '../../App';
 
 interface BulkUploadProps {
-  categories: string[];
-  onUpload: (emails: string[], category: string, points: number) => Promise<void>;
+  categories: TrainingCategory[];
+  onUpload: (emails: string[], categoryId: number, points: number) => Promise<void>;
   isLoading?: boolean;
 }
 
 function BulkUpload({ categories, onUpload, isLoading = false }: BulkUploadProps) {
   const [emails, setEmails] = useState<string[]>([]);
-  const [category, setCategory] = useState<string>(categories[0] || '');
+  const [categoryId, setCategoryId] = useState<number>(categories[0]?.category_id ?? 0);
   const [points, setPoints] = useState<number>(1);
   const [fileError, setFileError] = useState<string>('');
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    if (!categoryId && categories.length > 0) {
+      setCategoryId(categories[0].category_id);
+    }
+  }, [categories, categoryId]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -47,7 +54,7 @@ function BulkUpload({ categories, onUpload, isLoading = false }: BulkUploadProps
       return;
     }
 
-    if (!category) {
+    if (!categoryId) {
       setFileError('Please select a category');
       return;
     }
@@ -58,9 +65,9 @@ function BulkUpload({ categories, onUpload, isLoading = false }: BulkUploadProps
     }
 
     try {
-      await onUpload(emails, category, points);
+      await onUpload(emails, categoryId, points);
       setEmails([]);
-      setCategory(categories[0] || '');
+      setCategoryId(categories[0]?.category_id ?? 0);
       setPoints(1);
       setShowForm(false);
       setFileError('');
@@ -99,13 +106,13 @@ function BulkUpload({ categories, onUpload, isLoading = false }: BulkUploadProps
           <div className={styles.formGroup}>
             <label>Category</label>
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              value={categoryId}
+              onChange={(e) => setCategoryId(Number(e.target.value))}
               disabled={isLoading}
             >
               {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+                <option key={cat.category_id} value={cat.category_id}>
+                  {cat.category_name}
                 </option>
               ))}
             </select>

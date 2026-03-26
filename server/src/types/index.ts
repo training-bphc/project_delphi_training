@@ -37,29 +37,42 @@ export interface TrainingRecord {
   bits_id: string;
   email_id: string;
   date: string;
+  category_id: number;
   category: string;
   added_by: string;
   verification_status: VerificationStatus;
   points: number;
+  awarded_by?: string | null;
   deleted_at?: string | null;
 }
 
 export interface VerificationRequest {
   request_id: number;
   student_id: number;
+  category_id: number;
   category: string;
   description?: string;
   proof_links: string[];
   status: RequestStatus;
+  awarded_by?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface TrainingPointCategory {
+  category_id: number;
+  category_name: string;
+  description?: string | null;
+  max_points: number;
+  is_mythology: boolean;
 }
 
 export interface CreateTrainingRecordInput {
   email_id: string;
   date: string;
-  category: string;
+  category_id: number;
   added_by: string;
+  awarded_by?: string;
   name?: string;
   bits_id?: string;
   verification_status?: VerificationStatus;
@@ -71,8 +84,9 @@ export interface ResolvedTrainingRecordInput {
   bits_id: string;
   email_id: string;
   date: string;
-  category: string;
+  category_id: number;
   added_by: string;
+  awarded_by?: string;
   verification_status?: VerificationStatus;
   points?: number;
 }

@@ -10,7 +10,7 @@ const clearTrainingRecordSeeds = async (): Promise<void> => {
     await client.query('BEGIN');
     const result = await client.query(
       `
-        DELETE FROM training_records
+        DELETE FROM training_points
         WHERE added_by = $1
       `,
       ['API_TEST_SEED'],

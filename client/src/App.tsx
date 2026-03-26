@@ -16,27 +16,39 @@ export interface Record {
   bits_id: string;
   email_id: string;
   date: string;
+  category_id: number;
   category: string;
   added_by: string;
   verification_status: 'Pending' | 'Verified' | 'Rejected';
   points?: number;
+  awarded_by?: string | null;
 }
 
 export interface VerificationRequest {
   request_id: number;
   student_id: number;
+  category_id: number;
   category: string;
   description?: string;
   proof_links: string[];
   status: 'Pending' | 'Verified' | 'Rejected';
+  awarded_by?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface TrainingCategory {
+  category_id: number;
+  category_name: string;
+  description?: string | null;
+  max_points: number;
+  is_mythology: boolean;
 }
 
 export interface CreateRecordPayload {
   email_id: string;
   date: string;
-  category: string;
+  category_id: number;
   added_by: string;
   name?: string;
   bits_id?: string;
@@ -46,12 +58,14 @@ export interface CreateRecordPayload {
 export interface RecordsContextType {
   records: Record[];
   verificationRequests: VerificationRequest[];
+  categories: TrainingCategory[];
   handleVerify: (sNo: number) => Promise<void>;
   handleCreateRecord: (record: CreateRecordPayload) => Promise<void>;
   handleVerifyRequest: (requestId: number) => Promise<void>;
   handleRejectRequest: (requestId: number) => Promise<void>;
   handleDeleteRecord: (sNo: number) => Promise<void>;
   handleUndoDelete: (sNo: number) => Promise<void>;
+  handleRefreshRecords: () => Promise<void>;
 }
 
 export const RecordsContext = createContext<RecordsContextType | undefined>(undefined);
@@ -60,12 +74,14 @@ function AppContent() {
   const { user, token, isLoading: authLoading } = useAuth();
   const [records, setRecords] = useState<Record[]>([]);
   const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
+  const [categories, setCategories] = useState<TrainingCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch records on token change
   useEffect(() => {
     if (token) {
       fetchRecords();
+      fetchCategories();
       if (user?.role === 'admin') {
         fetchVerificationRequests();
       }
@@ -127,6 +143,32 @@ function AppContent() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const categoriesPayload: TrainingCategory[] = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.categories)
+          ? data.categories
+          : [];
+
+      setCategories(categoriesPayload);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      setCategories([]);
+    }
+  };
+
   const handleVerify = async (sNo: number) => {
     try {
       const response = await fetch(`/api/records/${sNo}/verify`, {
@@ -184,6 +226,7 @@ function AppContent() {
         throw new Error(`Failed to verify request: ${response.statusText}`);
       }
 
+      await fetchRecords();
       await fetchVerificationRequests();
     } catch (error) {
       console.error('Failed to verify request:', error);
@@ -205,6 +248,7 @@ function AppContent() {
         throw new Error(`Failed to reject request: ${response.statusText}`);
       }
 
+      await fetchRecords();
       await fetchVerificationRequests();
     } catch (error) {
       console.error('Failed to reject request:', error);
@@ -254,6 +298,13 @@ function AppContent() {
     }
   };
 
+  const handleRefreshRecords = async () => {
+    await fetchRecords();
+    if (user?.role === 'admin') {
+      await fetchVerificationRequests();
+    }
+  };
+
   if (authLoading || isLoading) {
     return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
   }
@@ -274,12 +325,14 @@ function AppContent() {
       value={{
         records,
         verificationRequests,
+        categories,
         handleVerify,
         handleCreateRecord,
         handleVerifyRequest,
         handleRejectRequest,
         handleDeleteRecord,
         handleUndoDelete,
+        handleRefreshRecords,
       }}
     >
       <Routes>

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import styles from './createNewRecord.module.css';
-import type { CreateRecordPayload } from '../../App';
+import type { CreateRecordPayload, TrainingCategory } from '../../App';
+import { useAuth } from '../../contexts/auth';
 
 interface CreateNewRecordProps {
   handleCreateRecord: (record: CreateRecordPayload) => Promise<void>;
+  categories: TrainingCategory[];
 }
 
 const EMAIL_DOMAIN = '@hyderabad.bits-pilani.ac.in';
@@ -16,7 +18,8 @@ const getTodayDateString = (): string => {
   return `${year}-${month}-${day}`;
 };
 
-function CreateNewRecord({ handleCreateRecord }: CreateNewRecordProps) {
+function CreateNewRecord({ handleCreateRecord, categories }: CreateNewRecordProps) {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [emailLocalPart, setEmailLocalPart] = useState('');
@@ -30,8 +33,8 @@ function CreateNewRecord({ handleCreateRecord }: CreateNewRecordProps) {
       const newRecord: CreateRecordPayload = {
         email_id: `${(formData.get('email_local') as string).trim()}${EMAIL_DOMAIN}`,
         date: formData.get('date') as string,
-        category: formData.get('category') as string,
-        added_by: formData.get('added_by') as string,
+        category_id: Number(formData.get('category_id')),
+        added_by: user?.email || '',
         points: Number(formData.get('points')),
       };
 
@@ -89,18 +92,13 @@ function CreateNewRecord({ handleCreateRecord }: CreateNewRecordProps) {
 
           <div className={styles.formGroup}>
             <label htmlFor="category">Category</label>
-            <select id="category" name="category" required defaultValue="">
+            <select id="category" name="category_id" required defaultValue="">
               <option value="">Select a category</option>
-              <option value="Sectorial Briefs">Sectorial Briefs</option>
-              <option value="Mock Assessments">Mock Assessments</option>
-              <option value="Mock Interviews">Mock Interviews</option>
-              <option value="Mini Assessments">Mini Assessments</option>
-              <option value="NT-Excel">NT-Excel</option>
-              <option value="NT-SQL">NT-SQL</option>
-              <option value="NT-Python">NT-Python</option>
-              <option value="Guest Lectures / Workshops">Guest Lectures / Workshops</option>
-              <option value="Hackathons/Competitions">Hackathons/Competitions</option>
-              <option value="Bonus Points">Bonus Points</option>
+              {categories.map((category) => (
+                <option key={category.category_id} value={category.category_id}>
+                  {category.category_name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -115,17 +113,6 @@ function CreateNewRecord({ handleCreateRecord }: CreateNewRecordProps) {
               step={1}
               defaultValue={0}
               placeholder="Enter points"
-            />
-          </div>
-
-          <div className={styles.formGroup}>
-            <label htmlFor="added_by">Added By</label>
-            <input
-              type="text"
-              id="added_by"
-              name="added_by"
-              required
-              placeholder="Your ID or name"
             />
           </div>
 

@@ -23,6 +23,22 @@ const getStudentIdByEmail = async (
   return result.rows[0].student_id;
 };
 
+const getCategoryIdByName = async (
+  client: any,
+  categoryName: string,
+): Promise<number> => {
+  const result = await client.query(
+    `SELECT category_id FROM training_point_categories WHERE category_name = $1 LIMIT 1`,
+    [categoryName],
+  );
+
+  if (!result.rows[0]?.category_id) {
+    throw new Error(`Category not found in training_point_categories: ${categoryName}`);
+  }
+
+  return result.rows[0].category_id;
+};
+
 const seedData = async (): Promise<void> => {
   const client = await pool.connect();
 
@@ -123,54 +139,79 @@ const seedData = async (): Promise<void> => {
       ["madhavramini@gmail.com", "Madhav Ramini", "Training Unit", true],
     );
 
-    // ── Seed training records ───────────────────────────────────
+    const hackathonsCategoryId = await getCategoryIdByName(client, 'Hackathons/Competitions');
+    const mockAssessmentsCategoryId = await getCategoryIdByName(client, 'Mock Assessments');
+    const guestLecturesCategoryId = await getCategoryIdByName(client, 'Guest Lectures / Workshops');
+    const sectorialBriefsCategoryId = await getCategoryIdByName(client, 'Sectorial Briefs');
+    const mockInterviewsCategoryId = await getCategoryIdByName(client, 'Mock Interviews');
+
+    // ── Seed training points ───────────────────────────────────
     await client.query(
       `
-        DELETE FROM training_records
-        WHERE added_by = $1
+        DELETE FROM training_points
+        WHERE added_by IN ($1, $2, $3)
       `,
-      ["API_TEST_SEED"],
+      [
+        "admin@hyderabad.bits-pilani.ac.in",
+        "madhavramini@gmail.com",
+        "f20231106@hyderabad.bits-pilani.ac.in",
+      ],
     );
 
     await client.query(
       `
-        INSERT INTO training_records (
+        INSERT INTO training_points (
           name,
           bits_id,
           email_id,
           date,
-          category,
+          category_id,
           added_by,
           verification_status,
-          points
+          points,
+          awarded_by
         )
         VALUES
-          ('Viswa Somayajula', '2024A8PS0546H', 'f20240546@hyderabad.bits-pilani.ac.in', '2026-01-01', 'Hackathons/Competitions', 'API_TEST_SEED', 'Verified', 5),
-          ('Vedant Barve', '2023A8PS1100H', 'f20231100@hyderabad.bits-pilani.ac.in', '2026-01-02', 'Mock Assessments', 'API_TEST_SEED', 'Verified', 8),
-          ('Madhav', '2023A8PS0046H', 'f20230046@hyderabad.bits-pilani.ac.in', '2026-02-20', 'Guest Lectures / Workshops', 'API_TEST_SEED', 'Verified', 10),
-          ('Siddharth', '2023A8PS1106H', 'f20231106@hyderabad.bits-pilani.ac.in', '2026-02-21', 'Sectorial Briefs', 'API_TEST_SEED', 'Pending', 0)
+          ('Viswa Somayajula', '2024A8PS0546H', 'f20240546@hyderabad.bits-pilani.ac.in', '2026-01-01', $1, 'admin@hyderabad.bits-pilani.ac.in', 'Verified', 5, 'admin@hyderabad.bits-pilani.ac.in'),
+          ('Vedant Barve', '2023A8PS1100H', 'f20231100@hyderabad.bits-pilani.ac.in', '2026-01-02', $2, 'madhavramini@gmail.com', 'Verified', 8, 'madhavramini@gmail.com'),
+          ('Madhav', '2023A8PS0046H', 'f20230046@hyderabad.bits-pilani.ac.in', '2026-02-20', $3, 'admin@hyderabad.bits-pilani.ac.in', 'Verified', 10, 'admin@hyderabad.bits-pilani.ac.in'),
+          ('Siddharth', '2023A8PS1106H', 'f20231106@hyderabad.bits-pilani.ac.in', '2026-02-21', $4, 'f20231106@hyderabad.bits-pilani.ac.in', 'Pending', 0, NULL)
       ;
       `,
+      [
+        hackathonsCategoryId,
+        mockAssessmentsCategoryId,
+        guestLecturesCategoryId,
+        sectorialBriefsCategoryId,
+      ],
     );
 
-    // ── Seed verification requests ──────────────────────────────
-    await client.query(`DELETE FROM verification_requests`);
+    // ── Seed hackathon submissions (verification requests) ─────
+    await client.query(`DELETE FROM hackathon_submissions`);
 
     await client.query(
       `
-        INSERT INTO verification_requests (
+        INSERT INTO hackathon_submissions (
           student_id,
-          category,
+          category_id,
           description,
           proof_links,
-          status
+          status,
+          awarded_by
         )
         VALUES
-          ($1, 'Hackathons/Competitions', 'HackerEarth Hackathon participation', ARRAY['https://hackerearth.com/challenges/hack2026'], 'Pending'),
-          ($2, 'Guest Lectures / Workshops', 'Python workshop attended', ARRAY['https://example.com/workshop-cert'], 'Verified'),
-          ($3, 'Mock Interviews', 'Mock interview session', ARRAY['https://drive.google.com/file/d/example'], 'Pending')
+          ($1, $4, 'HackerEarth Hackathon participation', ARRAY['https://hackerearth.com/challenges/hack2026'], 'Pending', NULL),
+          ($2, $5, 'Python workshop attended', ARRAY['https://example.com/workshop-cert'], 'Verified', 'admin@hyderabad.bits-pilani.ac.in'),
+          ($3, $6, 'Mock interview session', ARRAY['https://drive.google.com/file/d/example'], 'Pending', NULL)
       `,
-      [student1Id, student2Id, student3Id],
+      [
+        student1Id,
+        student2Id,
+        student3Id,
+        hackathonsCategoryId,
+        guestLecturesCategoryId,
+        mockInterviewsCategoryId,
+      ],
     );
 
     void student4Id;
