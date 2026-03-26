@@ -7,7 +7,7 @@
 
 .table {
   width: 100%;
-  min-width: 980px;
+  min-width: 760px;
   border-collapse: collapse;
   background: #fff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -17,17 +17,19 @@
 
 .table th {
   background: #f5f6fa;
-  padding: 0.75rem 1.25rem;
+  padding: 0.55rem 0.75rem;
   text-align: left;
   font-weight: 600;
   color: #333;
-  font-size: 1rem;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   border-bottom: 2px solid #eaeaea;
 }
 
 .table td {
-  padding: 0.75rem 1.25rem;
-  font-size: 0.97rem;
+  padding: 0.52rem 0.75rem;
+  font-size: 0.86rem;
   color: #444;
   border-bottom: 1px solid #f0f0f0;
 }

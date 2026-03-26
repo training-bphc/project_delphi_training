@@ -3,6 +3,7 @@ import styles from './Table.module.css';
 interface VerificationRequest {
   request_id: number;
   student_id: number;
+  student_email?: string;
   category: string;
   description?: string;
   proof_links: string[];
@@ -30,24 +31,20 @@ function VerificationRequestsTable({
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Request ID</th>
-            <th>Student ID</th>
+            <th>Email</th>
+            <th>Date</th>
             <th>Category</th>
-            <th>Description</th>
             <th>Proof Links</th>
             <th>Status</th>
-            <th>Awarded By</th>
-            <th>Created</th>
             {(handleVerify || handleReject) && <th>Actions</th>}
           </tr>
         </thead>
         <tbody>
           {requests.map((request) => (
             <tr key={request.request_id}>
-              <td>{request.request_id}</td>
-              <td>{request.student_id}</td>
+              <td>{request.student_email || `Student #${request.student_id}`}</td>
+              <td>{new Date(request.created_at).toLocaleDateString()}</td>
               <td>{request.category}</td>
-              <td>{request.description || '-'}</td>
               <td>
                 {request.proof_links.length > 0 ? (
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -74,8 +71,6 @@ function VerificationRequestsTable({
                   {request.status}
                 </span>
               </td>
-              <td>{request.awarded_by || '-'}</td>
-              <td>{new Date(request.created_at).toLocaleDateString()}</td>
               {(handleVerify || handleReject) && (
                 <td>
                   {request.status === 'Pending' && (

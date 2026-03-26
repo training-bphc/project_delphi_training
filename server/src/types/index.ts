@@ -49,6 +49,9 @@ export interface TrainingRecord {
 export interface VerificationRequest {
   request_id: number;
   student_id: number;
+  student_name?: string;
+  student_email?: string;
+  student_bits_id?: string;
   category_id: number;
   category: string;
   description?: string;

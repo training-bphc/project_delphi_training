@@ -6,6 +6,10 @@ function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  const identityLines = user?.role === 'admin'
+    ? [user.name || 'Training Unit', user.email]
+    : [user?.name || 'Student', user?.email || '', user?.id || ''];
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -14,7 +18,11 @@ function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <h2>Training Points</h2>
+        <p className="sidebar-title">{identityLines[0]}</p>
+        <p className="sidebar-subtitle">{identityLines[1]}</p>
+        {user?.role === 'student' && identityLines[2] && (
+          <p className="sidebar-meta">{identityLines[2]}</p>
+        )}
       </div>
 
       <nav className="sidebar-nav">
@@ -30,7 +38,7 @@ function Sidebar() {
               to="/admin/pending"
               className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
             >
-              New & Pending Records for Verification
+              Pending Requests
             </NavLink>
             <NavLink
               to="/admin/verified"

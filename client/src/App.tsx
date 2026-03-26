@@ -29,6 +29,9 @@ export interface Record {
 export interface VerificationRequest {
   request_id: number;
   student_id: number;
+  student_email?: string;
+  student_bits_id?: string;
+  student_name?: string;
   category_id: number;
   category: string;
   description?: string;

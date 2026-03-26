@@ -18,10 +18,9 @@ function NewandPendingRequestsTab() {
 
   return (
     <section className={styles.container}>
-      <h2>Student Verification Requests</h2>
+      <h2>Pending Requests</h2>
       <p>
-        Shows newly submitted student verification requests awaiting TU review. Students can submit
-        requests with proof links for events like hackathons, workshops, and competitions.
+        Student submissions waiting for TU review.
       </p>
       <VerificationRequestsTable
         requests={pendingRequests}

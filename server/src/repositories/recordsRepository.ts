@@ -30,6 +30,9 @@ const REQUEST_SELECT = `
   SELECT
     hs.request_id,
     hs.student_id,
+    s.student_name,
+    s.email AS student_email,
+    s.roll_number AS student_bits_id,
     hs.category_id,
     tpc.category_name AS category,
     hs.description,
@@ -39,6 +42,7 @@ const REQUEST_SELECT = `
     hs.created_at::text AS created_at,
     hs.updated_at::text AS updated_at
   FROM hackathon_submissions hs
+  JOIN students s ON s.student_id = hs.student_id
   JOIN training_point_categories tpc ON tpc.category_id = hs.category_id
 `;
 

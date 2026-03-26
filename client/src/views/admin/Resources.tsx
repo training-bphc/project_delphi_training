@@ -1,4 +1,4 @@
-import ResourcesPage from '../../components/resources/ResourcesPage';
+import ResourcesPage from '../../components/layout/resources/ResourcesPage';
 
 function AdminResources() {
   return <ResourcesPage canManage={true} title="Resources" />;

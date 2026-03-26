@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import Table from '../../../components/Table';
+import VerificationRequestsTable from '../../../components/VerificationRequestsTable';
 import styles from './PreviousVerificationsTab.module.css';
 import { RecordsContext } from '../../../App';
 
@@ -9,21 +9,19 @@ function PreviousVerificationsTab() {
     return <div>Loading...</div>;
   }
 
-  const { records } = context;
+  const { verificationRequests } = context;
 
-  // Filter previously verified records
-  const verifiedRecords = records.filter(
-    (record) => record.verification_status === 'Verified'
+  const finalizedRequests = verificationRequests.filter(
+    (request) => request.status !== 'Pending'
   );
 
   return (
     <section className={styles.container}>
       <h2>Previous Verifications</h2>
       <p>
-        Stores all finalized (accepted) records only. This acts as a permanent
-        audit log.
+        Finalized request decisions with proof links.
       </p>
-      <Table records={verifiedRecords} />
+      <VerificationRequestsTable requests={finalizedRequests} />
     </section>
   );
 }

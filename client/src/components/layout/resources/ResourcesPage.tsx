@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../contexts/auth';
-import './resources.css';
+import { useAuth } from '../../../contexts/auth';
+import styles from './resources.module.css';
 
 interface ResourceRecord {
   resource_id: number;
@@ -29,6 +29,14 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   const [tree, setTree] = useState<ResourceFolderNode[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const getHostname = (url: string) => {
+    try {
+      return new URL(url).hostname;
+    } catch {
+      return url;
+    }
+  };
 
   const apiCall = async (path: string, options: RequestInit = {}) => {
     const response = await fetch(path, {
@@ -188,30 +196,39 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   const renderFolder = (node: ResourceFolderNode) => {
     return (
       <div key={node.folder_id}>
-        <div className="resources-folder-row">
-          <span className="resources-folder-name">📁 {node.folder_name}</span>
+        <div className={styles.folderRow}>
+          <span className={styles.folderName}>📁 {node.folder_name}</span>
           {canManage && (
-            <div className="resources-folder-actions">
-              <button className="resources-small-btn" onClick={() => createFolder(node.folder_id)}>Add Subfolder</button>
-              <button className="resources-small-btn" onClick={() => addResource(node.folder_id)}>Add Link</button>
-              <button className="resources-small-btn" onClick={() => renameFolder(node.folder_id, node.folder_name)}>Rename</button>
-              <button className="resources-small-btn" onClick={() => deleteFolder(node.folder_id)}>Delete</button>
+            <div className={styles.folderActions}>
+              <button className={styles.smallBtn} onClick={() => createFolder(node.folder_id)}>Add Subfolder</button>
+              <button className={styles.smallBtn} onClick={() => addResource(node.folder_id)}>Add Link</button>
+              <button className={styles.smallBtn} onClick={() => renameFolder(node.folder_id, node.folder_name)}>Rename</button>
+              <button className={styles.smallBtn} onClick={() => deleteFolder(node.folder_id)}>Delete</button>
             </div>
           )}
         </div>
 
         {node.resources.length > 0 && (
-          <ul className="resources-resource-list">
+          <ul className={styles.resourceList}>
             {node.resources.map((resource) => (
-              <li key={resource.resource_id} className="resources-resource-item">
-                <a className="resources-resource-link" href={resource.file_url} target="_blank" rel="noopener noreferrer">
+              <li key={resource.resource_id} className={styles.resourceItem}>
+                <a
+                  className={styles.resourceLink}
+                  href={resource.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={resource.file_url}
+                >
                   {resource.resource_name}
                 </a>
+                <span className={styles.resourceHost} title={resource.file_url}>
+                  {getHostname(resource.file_url)}
+                </span>
                 {canManage && (
                   <>
-                    <button className="resources-small-btn" onClick={() => renameResource(resource.resource_id, resource.resource_name)}>Rename</button>
-                    <button className="resources-small-btn" onClick={() => updateResourceUrl(resource.resource_id, resource.file_url)}>Update URL</button>
-                    <button className="resources-small-btn" onClick={() => deleteResource(resource.resource_id)}>Delete</button>
+                    <button className={styles.smallBtn} onClick={() => renameResource(resource.resource_id, resource.resource_name)}>Rename</button>
+                    <button className={styles.smallBtn} onClick={() => updateResourceUrl(resource.resource_id, resource.file_url)}>Update URL</button>
+                    <button className={styles.smallBtn} onClick={() => deleteResource(resource.resource_id)}>Delete</button>
                   </>
                 )}
               </li>
@@ -220,30 +237,30 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
         )}
 
         {node.children.length > 0 && (
-          <div className="resources-children">{node.children.map((child) => renderFolder(child))}</div>
+          <div className={styles.children}>{node.children.map((child) => renderFolder(child))}</div>
         )}
       </div>
     );
   };
 
   return (
-    <section className="resources-container">
-      <div className="resources-header">
-        <h1 className="resources-title">{title}</h1>
+    <section className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.title}>{title}</h1>
         {canManage && (
-          <button className="resources-action-btn" onClick={() => createFolder(null)}>
+          <button className={styles.actionBtn} onClick={() => createFolder(null)}>
             Add Root Folder
           </button>
         )}
       </div>
 
-      {error && <div className="resources-error">{error}</div>}
+      {error && <div className={styles.error}>{error}</div>}
 
-      <div className="resources-tree">
+      <div className={styles.tree}>
         {isLoading ? (
-          <div className="resources-empty">Loading resources...</div>
+          <div className={styles.empty}>Loading resources...</div>
         ) : tree.length === 0 ? (
-          <div className="resources-empty">No resources available yet.</div>
+          <div className={styles.empty}>No resources available yet.</div>
         ) : (
           tree.map((node) => renderFolder(node))
         )}

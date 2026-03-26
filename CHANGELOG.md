@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## v1.2.4 (26.03.2026, Madhav Ramini)
+
+### Changed
+- Frontend layout refreshed for higher information density and better use of screen width, reducing unnecessary side gutters and scrolling.
+- Sidebar identity is now role-aware:
+  - Admin: name + email
+  - Student: name + email + ID
+- Admin Overview redesigned to a student-centric summary view with totals and per-category breakdown.
+- Verification views streamlined to show essential review fields (email, date, category, proof links, status).
+- Resources UI reorganized under the layout component area and aligned back to CSS module conventions.
+
+### Fixed
+- Removed obsolete project info tooltip widget from the app shell.
+- Training-points progress bar added.
+
+### Backend
+- Verification request payload now includes student identity metadata used by the updated admin tables.
+
 ## v1.2.3 (26.03.2026, Madhav Ramini)
 
 ### Added

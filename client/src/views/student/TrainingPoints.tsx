@@ -36,6 +36,7 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
     return {
       categoryId: cat.category_id,
       name: cat.category_name,
+      description: cat.description || 'No description available.',
       targetPoints: cat.max_points,
       currentPoints,
     };
@@ -58,8 +59,24 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
         <div className={styles.categoryGrid}>
           {categories.map((category) => (
             <div key={category.categoryId} className={styles.categoryCard}>
-              <span className={styles.categoryTitle}>{category.name}</span>
+              <div className={styles.categoryHeadingRow}>
+                <span className={styles.categoryTitle}>{category.name}</span>
+                <span className={styles.categoryInfo} title={category.description}>i</span>
+              </div>
               <span className={styles.categoryPoints}>{category.currentPoints} / {category.targetPoints}</span>
+              <div className={styles.progressTrack}>
+                <div
+                  className={styles.progressFill}
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      category.targetPoints > 0
+                        ? (category.currentPoints / category.targetPoints) * 100
+                        : 0,
+                    )}%`,
+                  }}
+                />
+              </div>
             </div>
           ))}
         </div>

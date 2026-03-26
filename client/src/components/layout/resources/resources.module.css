@@ -1,20 +1,20 @@
-.resources-container {
+.container {
   padding: 1.5rem;
 }
 
-.resources-header {
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.resources-title {
+.title {
   margin: 0;
   font-size: 1.5rem;
 }
 
-.resources-action-btn {
+.actionBtn {
   border: none;
   border-radius: 8px;
   padding: 0.5rem 0.8rem;
@@ -24,30 +24,32 @@
   color: #fff;
 }
 
-.resources-tree {
+.tree {
   border: 1px solid #d9dce3;
   border-radius: 10px;
-  padding: 1rem;
+  padding: 0.9rem;
   background: #fff;
 }
 
-.resources-folder-row {
+.folderRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
-.resources-folder-name {
+.folderName {
   font-weight: 600;
 }
 
-.resources-folder-actions {
+.folderActions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
 }
 
-.resources-small-btn {
+.smallBtn {
   border: 1px solid #d0d5dd;
   background: #f8fafc;
   color: #111827;
@@ -57,35 +59,45 @@
   font-size: 0.78rem;
 }
 
-.resources-resource-list {
+.resourceList {
   margin: 0.4rem 0 0.6rem 1.2rem;
   padding: 0;
   list-style: none;
 }
 
-.resources-resource-item {
+.resourceItem {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.35rem;
 }
 
-.resources-resource-link {
+.resourceLink {
   color: #0f4fcb;
   text-decoration: none;
 }
 
-.resources-children {
+.resourceHost {
+  color: #6b7280;
+  font-size: 0.78rem;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.children {
   margin-left: 1.2rem;
   border-left: 1px dashed #d0d5dd;
   padding-left: 0.8rem;
 }
 
-.resources-empty {
+.empty {
   color: #6b7280;
 }
 
-.resources-error {
+.error {
   color: #b42318;
   margin-bottom: 1rem;
 }
