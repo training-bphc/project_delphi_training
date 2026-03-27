@@ -71,7 +71,7 @@ function CreateNewRecord({ handleCreateRecord, categories }: CreateNewRecordProp
                 required
                 value={emailLocalPart}
                 onChange={(e) => setEmailLocalPart(e.target.value.trim())}
-                placeholder="f20230046"
+                placeholder="f202xyyyy"
                 pattern="^[^@\s]+$"
                 title="Enter only the email part before @"
               />
@@ -102,7 +102,7 @@ function CreateNewRecord({ handleCreateRecord, categories }: CreateNewRecordProp
             </select>
           </div>
 
-          <div className={styles.formGroup}>
+          <div className={`${styles.formGroup} ${styles.pointsGroup}`}>
             <label htmlFor="points">Points</label>
             <input
               type="number"
@@ -120,6 +120,7 @@ function CreateNewRecord({ handleCreateRecord, categories }: CreateNewRecordProp
             {isLoading ? 'Creating...' : 'Create Record'}
           </button>
         </form>
+        
       )}
     </div>
   );
