@@ -2,6 +2,34 @@
 
 All notable changes to this project are documented in this file.
 
+## v1.2.5 (27.03.2026, Vishwa Somayajula)
+
+### Added
+- Student verification request workflow on the frontend:
+  - New student page for submitting hackathon proof links.
+  - Student-side request history sections for `Pending`, `Verified`, and `Rejected` requests.
+  - Rejected requests now surface rejection reasons to students.
+- New student navigation entry for verification submission and tracking.
+- Admin review UX enhancements in pending requests:
+  - Proof-review modal before decision.
+  - Decision modal with explicit accept/reject flow.
+  - Rejection-reason capture UI.
+- New migration `003_add_rejection_reason_to_hackathon_submissions.sql` to persist rejection reasons.
+
+### Changed
+- Verification request API access model expanded:
+  - Students can now fetch their own verification requests.
+  - Students can create verification requests.
+  - Admin verification/rejection endpoints remain admin-only.
+- Verification request payloads now include `rejection_reason` and student-facing metadata needed by the updated UI.
+- App-level client context now includes handlers for creating verification requests and rejecting with explicit reasons.
+- Migration runner now includes baseline table health-check logic and can reapply baseline schema when marked-applied state is inconsistent.
+- Verification decision handling now uses explicit status-specific update paths for `Verified` and `Rejected` actions, with rejection reason persistence as part of the standard decision flow.
+- Admin rejection modal input behavior was refined to keep long reasons fully contained within dialog bounds.
+
+### Notes
+- Removed legacy `updates.txt` from the repository.
+
 ## v1.2.4 (26.03.2026, Madhav Ramini)
 
 ### Changed

@@ -429,24 +429,46 @@ export const updateVerificationRequestStatus = async (
   adminEmail?: string,
   rejectionReason?: string,
 ): Promise<VerificationRequest | null> => {
-  const result = await pool.query<{ student_id: number; category_id: number }>(
-    `
-      UPDATE hackathon_submissions hs
-      SET status = $1,
-          rejection_reason = CASE
-            WHEN $1 = 'Rejected' THEN $4
-            ELSE NULL
-          END,
-          updated_at = CURRENT_TIMESTAMP,
-          awarded_by = CASE
-            WHEN $1 = 'Verified' THEN COALESCE($3, hs.awarded_by)
-            ELSE hs.awarded_by
-          END
-      WHERE hs.request_id = $2
-      RETURNING hs.student_id, hs.category_id
-    `,
-    [newStatus, requestId, adminEmail ?? null, rejectionReason ?? null],
-  );
+  let result;
+
+  if (newStatus === "Rejected") {
+    result = await pool.query<{ student_id: number; category_id: number }>(
+      `
+        UPDATE hackathon_submissions hs
+        SET status = 'Rejected',
+            rejection_reason = $2::text,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE hs.request_id = $1
+        RETURNING hs.student_id, hs.category_id
+      `,
+      [requestId, rejectionReason ?? null],
+    );
+  } else if (newStatus === "Verified") {
+    result = await pool.query<{ student_id: number; category_id: number }>(
+      `
+        UPDATE hackathon_submissions hs
+        SET status = 'Verified',
+            rejection_reason = NULL,
+            updated_at = CURRENT_TIMESTAMP,
+            awarded_by = COALESCE($2::text, hs.awarded_by)
+        WHERE hs.request_id = $1
+        RETURNING hs.student_id, hs.category_id
+      `,
+      [requestId, adminEmail ?? null],
+    );
+  } else {
+    result = await pool.query<{ student_id: number; category_id: number }>(
+      `
+        UPDATE hackathon_submissions hs
+        SET status = $2::text,
+            rejection_reason = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE hs.request_id = $1
+        RETURNING hs.student_id, hs.category_id
+      `,
+      [requestId, newStatus],
+    );
+  }
 
   const requestRow = await findVerificationRequestById(requestId);
 
