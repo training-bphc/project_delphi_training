@@ -38,6 +38,7 @@ export interface VerificationRequest {
   description?: string;
   proof_links: string[];
   status: "Pending" | "Verified" | "Rejected";
+  awarded_points?: number | null;
   rejection_reason?: string | null;
   awarded_by?: string | null;
   created_at: string;
@@ -77,7 +78,7 @@ export interface RecordsContextType {
   handleCreateVerificationRequest: (
     request: CreateVerificationRequestPayload,
   ) => Promise<void>;
-  handleVerifyRequest: (requestId: number) => Promise<void>;
+  handleVerifyRequest: (requestId: number, points: number) => Promise<void>;
   handleRejectRequest: (
     requestId: number,
     rejectionReason: string,
@@ -235,7 +236,7 @@ function AppContent() {
     }
   };
 
-  const handleVerifyRequest = async (requestId: number) => {
+  const handleVerifyRequest = async (requestId: number, points: number) => {
     try {
       const response = await fetch(
         `/api/verification-requests/${requestId}/verify`,
@@ -245,18 +246,23 @@ function AppContent() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+          body: JSON.stringify({ points }),
         },
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to verify request: ${response.statusText}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message ||
+            `Failed to verify request: ${response.statusText}`,
+        );
       }
 
       await fetchRecords();
       await fetchVerificationRequests();
     } catch (error) {
       console.error("Failed to verify request:", error);
-      alert("Failed to verify request");
+      throw error;
     }
   };
 

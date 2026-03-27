@@ -39,6 +39,7 @@ const REQUEST_SELECT = `
     hs.description,
     hs.proof_links,
     hs.status,
+    hs.awarded_points,
     hs.rejection_reason,
     hs.awarded_by,
     hs.created_at::text AS created_at,
@@ -428,68 +429,117 @@ export const updateVerificationRequestStatus = async (
   newStatus: RequestStatus,
   adminEmail?: string,
   rejectionReason?: string,
+  awardedPoints?: number,
 ): Promise<VerificationRequest | null> => {
-  let result;
+  const client = await pool.connect();
 
-  if (newStatus === "Rejected") {
-    result = await pool.query<{ student_id: number; category_id: number }>(
-      `
-        UPDATE hackathon_submissions hs
-        SET status = 'Rejected',
-            rejection_reason = $2::text,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE hs.request_id = $1
-        RETURNING hs.student_id, hs.category_id
-      `,
-      [requestId, rejectionReason ?? null],
-    );
-  } else if (newStatus === "Verified") {
-    result = await pool.query<{ student_id: number; category_id: number }>(
-      `
-        UPDATE hackathon_submissions hs
-        SET status = 'Verified',
-            rejection_reason = NULL,
-            updated_at = CURRENT_TIMESTAMP,
-            awarded_by = COALESCE($2::text, hs.awarded_by)
-        WHERE hs.request_id = $1
-        RETURNING hs.student_id, hs.category_id
-      `,
-      [requestId, adminEmail ?? null],
-    );
-  } else {
-    result = await pool.query<{ student_id: number; category_id: number }>(
-      `
-        UPDATE hackathon_submissions hs
-        SET status = $2::text,
-            rejection_reason = NULL,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE hs.request_id = $1
-        RETURNING hs.student_id, hs.category_id
-      `,
-      [requestId, newStatus],
-    );
-  }
+  try {
+    await client.query("BEGIN");
 
-  const requestRow = await findVerificationRequestById(requestId);
-
-  if (newStatus === "Verified" && result.rows[0]) {
-    const studentResult = await pool.query<{
-      student_name: string;
-      roll_number: string;
-      email: string;
+    const requestLookup = await client.query<{
+      student_id: number;
+      category_id: number;
+      status: RequestStatus;
     }>(
       `
-        SELECT student_name, roll_number, email
-        FROM students
-        WHERE student_id = $1
+        SELECT student_id, category_id, status
+        FROM hackathon_submissions
+        WHERE request_id = $1
         LIMIT 1
       `,
-      [result.rows[0].student_id],
+      [requestId],
     );
 
-    const student = studentResult.rows[0];
-    if (student) {
-      await pool.query(
+    const requestContext = requestLookup.rows[0];
+    if (!requestContext) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+
+    if (newStatus === "Rejected") {
+      await client.query(
+        `
+          UPDATE hackathon_submissions
+          SET status = 'Rejected',
+              awarded_points = 0,
+              rejection_reason = $2::text,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE request_id = $1
+        `,
+        [requestId, rejectionReason ?? null],
+      );
+    } else if (newStatus === "Verified") {
+      if (!Number.isInteger(awardedPoints) || (awardedPoints ?? 0) < 0) {
+        throw new Error("awarded_points must be a non-negative integer");
+      }
+
+      const studentResult = await client.query<{
+        student_name: string;
+        roll_number: string;
+        email: string;
+      }>(
+        `
+          SELECT student_name, roll_number, email
+          FROM students
+          WHERE student_id = $1
+          LIMIT 1
+        `,
+        [requestContext.student_id],
+      );
+
+      const student = studentResult.rows[0];
+      if (!student) {
+        throw new Error("Student not found for verification request");
+      }
+
+      const categoryResult = await client.query<{ max_points: number }>(
+        `
+          SELECT max_points
+          FROM training_point_categories
+          WHERE category_id = $1
+          LIMIT 1
+        `,
+        [requestContext.category_id],
+      );
+
+      const category = categoryResult.rows[0];
+      if (!category) {
+        throw new Error("Category not found for verification request");
+      }
+
+      const currentTotalResult = await client.query<{ total: number }>(
+        `
+          SELECT COALESCE(SUM(points), 0)::int AS total
+          FROM training_points
+          WHERE bits_id = $1
+            AND category_id = $2
+            AND verification_status = 'Verified'
+            AND deleted_at IS NULL
+        `,
+        [student.roll_number, requestContext.category_id],
+      );
+
+      const currentTotal = currentTotalResult.rows[0]?.total ?? 0;
+      const remaining = Math.max(0, category.max_points - currentTotal);
+
+      if ((awardedPoints ?? 0) > remaining) {
+        throw new Error(`Assigned points exceed limit. Allowed range: 0-${remaining}`);
+      }
+
+      await client.query(
+        `
+          UPDATE hackathon_submissions
+          SET status = 'Verified',
+              awarded_points = $2,
+              rejection_reason = NULL,
+              updated_at = CURRENT_TIMESTAMP,
+              awarded_by = COALESCE($3::text, awarded_by)
+          WHERE request_id = $1
+        `,
+        [requestId, awardedPoints ?? 0, adminEmail ?? null],
+      );
+
+      await client.query(
         `
           INSERT INTO training_points (
             name,
@@ -501,19 +551,44 @@ export const updateVerificationRequestStatus = async (
             verification_status,
             points,
             awarded_by
-          ) VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, 'Verified', 0, $6)
+          ) VALUES ($1, $2, $3, CURRENT_DATE, $4, $5, 'Verified', $6, $7)
         `,
         [
           student.student_name,
           student.roll_number,
           student.email,
-          result.rows[0].category_id,
+          requestContext.category_id,
           "VERIFICATION_REQUEST",
+          awardedPoints ?? 0,
           adminEmail ?? null,
         ],
       );
+    } else {
+      await client.query(
+        `
+          UPDATE hackathon_submissions
+          SET status = $2::text,
+              awarded_points = NULL,
+              rejection_reason = NULL,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE request_id = $1
+        `,
+        [requestId, newStatus],
+      );
     }
-  }
 
-  return requestRow;
+    const finalRequest = await client.query<VerificationRequest>(
+      `${REQUEST_SELECT}
+       WHERE hs.request_id = $1`,
+      [requestId],
+    );
+
+    await client.query("COMMIT");
+    return finalRequest.rows[0] ?? null;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 };

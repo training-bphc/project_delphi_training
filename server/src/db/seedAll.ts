@@ -171,12 +171,13 @@ const seedData = async (): Promise<void> => {
     await client.query(
       `
         DELETE FROM training_points
-        WHERE added_by IN ($1, $2, $3)
+        WHERE added_by IN ($1, $2, $3, $4)
       `,
       [
         "admin@hyderabad.bits-pilani.ac.in",
         "madhavramini@gmail.com",
         "f20231106@hyderabad.bits-pilani.ac.in",
+        "VERIFICATION_REQUEST",
       ],
     );
 
@@ -195,8 +196,8 @@ const seedData = async (): Promise<void> => {
         )
         VALUES
           ('Viswa Somayajula', '2024A8PS0546H', 'f20240546@hyderabad.bits-pilani.ac.in', '2026-01-01', $1, 'admin@hyderabad.bits-pilani.ac.in', 'Verified', 5, 'admin@hyderabad.bits-pilani.ac.in'),
-          ('Vedant Barve', '2023A8PS1100H', 'f20231100@hyderabad.bits-pilani.ac.in', '2026-01-02', $2, 'madhavramini@gmail.com', 'Verified', 8, 'madhavramini@gmail.com'),
-          ('Madhav', '2023A8PS0046H', 'f20230046@hyderabad.bits-pilani.ac.in', '2026-02-20', $3, 'admin@hyderabad.bits-pilani.ac.in', 'Verified', 10, 'admin@hyderabad.bits-pilani.ac.in'),
+          ('Vedant Barve', '2023A8PS1100H', 'f20231100@hyderabad.bits-pilani.ac.in', '2026-01-02', $3, 'madhavramini@gmail.com', 'Verified', 6, 'madhavramini@gmail.com'),
+          ('Madhav', '2023A8PS0046H', 'f20230046@hyderabad.bits-pilani.ac.in', '2026-02-20', $2, 'admin@hyderabad.bits-pilani.ac.in', 'Verified', 2, 'admin@hyderabad.bits-pilani.ac.in'),
           ('Siddharth', '2023A8PS1106H', 'f20231106@hyderabad.bits-pilani.ac.in', '2026-02-21', $4, 'f20231106@hyderabad.bits-pilani.ac.in', 'Pending', 0, NULL)
       ;
       `,
@@ -219,12 +220,14 @@ const seedData = async (): Promise<void> => {
           description,
           proof_links,
           status,
+          rejection_reason,
+          awarded_points,
           awarded_by
         )
         VALUES
-          ($1, $4, 'HackerEarth Hackathon participation', ARRAY['https://hackerearth.com/challenges/hack2026'], 'Pending', NULL),
-          ($2, $5, 'Python workshop attended', ARRAY['https://example.com/workshop-cert'], 'Verified', 'admin@hyderabad.bits-pilani.ac.in'),
-          ($3, $6, 'Mock interview session', ARRAY['https://drive.google.com/file/d/example'], 'Pending', NULL)
+          ($1, $4, 'HackerEarth Hackathon participation', ARRAY['https://hackerearth.com/challenges/hack2026'], 'Pending', NULL, NULL, NULL),
+          ($2, $5, 'Python workshop attended', ARRAY['https://example.com/workshop-cert'], 'Verified', NULL, 6, 'admin@hyderabad.bits-pilani.ac.in'),
+          ($3, $6, 'Mock interview session', ARRAY['https://drive.google.com/file/d/example'], 'Pending', NULL, NULL, NULL)
       `,
       [
         student1Id,

@@ -127,13 +127,14 @@ function AddVerification() {
             <tr>
               <th>Date</th>
               <th>Proof Link</th>
+              <th>Points</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {pendingRequests.length === 0 ? (
               <tr>
-                <td colSpan={3}>No pending verification requests.</td>
+                <td colSpan={4}>No pending verification requests.</td>
               </tr>
             ) : (
               pendingRequests.map((request) => (
@@ -153,6 +154,7 @@ function AddVerification() {
                       "-"
                     )}
                   </td>
+                  <td>-</td>
                   <td>
                     <span className={`${styles.status} ${styles.pending}`}>
                       Pending
@@ -172,13 +174,14 @@ function AddVerification() {
             <tr>
               <th>Date</th>
               <th>Proof Link</th>
+              <th>Points</th>
               <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {verifiedRequests.length === 0 ? (
               <tr>
-                <td colSpan={3}>No verified requests yet.</td>
+                <td colSpan={4}>No verified requests yet.</td>
               </tr>
             ) : (
               verifiedRequests.map((request) => (
@@ -198,6 +201,7 @@ function AddVerification() {
                       "-"
                     )}
                   </td>
+                  <td>{request.awarded_points ?? 0}</td>
                   <td>
                     <span className={`${styles.status} ${styles.verified}`}>
                       Verified
@@ -217,6 +221,7 @@ function AddVerification() {
             <tr>
               <th>Date</th>
               <th>Proof Link</th>
+              <th>Points</th>
               <th>Status</th>
               <th>Reason</th>
             </tr>
@@ -224,7 +229,7 @@ function AddVerification() {
           <tbody>
             {rejectedRequests.length === 0 ? (
               <tr>
-                <td colSpan={4}>No rejected verification requests.</td>
+                <td colSpan={5}>No rejected verification requests.</td>
               </tr>
             ) : (
               rejectedRequests.map((request) => (
@@ -244,6 +249,7 @@ function AddVerification() {
                       "-"
                     )}
                   </td>
+                  <td>{request.awarded_points ?? 0}</td>
                   <td>
                     <span className={`${styles.status} ${styles.rejected}`}>
                       Rejected

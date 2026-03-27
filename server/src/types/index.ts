@@ -56,6 +56,7 @@ export interface VerificationRequest {
   description?: string;
   proof_links: string[];
   status: RequestStatus;
+  awarded_points?: number | null;
   rejection_reason?: string | null;
   awarded_by?: string | null;
   created_at: string;

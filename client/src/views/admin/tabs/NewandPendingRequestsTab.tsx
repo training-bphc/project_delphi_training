@@ -17,6 +17,8 @@ function NewandPendingRequestsTab() {
   );
   const [rejectRequestId, setRejectRequestId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [awardedPointsInput, setAwardedPointsInput] = useState("");
+  const [decisionError, setDecisionError] = useState("");
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
 
   // Filter pending verification requests
@@ -32,6 +34,25 @@ function NewandPendingRequestsTab() {
       (request) => request.request_id === decisionRequestId,
     ) || null;
 
+  const decisionCategoryMax = decisionRequest
+    ? context.categories.find(
+        (category) => category.category_id === decisionRequest.category_id,
+      )?.max_points || 0
+    : 0;
+
+  const decisionCurrentTotal = decisionRequest
+    ? context.records
+        .filter(
+          (record) =>
+            record.bits_id === decisionRequest.student_bits_id &&
+            record.category_id === decisionRequest.category_id &&
+            record.verification_status === "Verified",
+        )
+        .reduce((sum, record) => sum + (record.points || 0), 0)
+    : 0;
+
+  const decisionRemaining = Math.max(0, decisionCategoryMax - decisionCurrentTotal);
+
   const handleOpenReview = async (requestId: number) => {
     setProofRequestId(requestId);
   };
@@ -46,10 +67,29 @@ function NewandPendingRequestsTab() {
       return;
     }
 
+    const normalized = awardedPointsInput.trim();
+    const parsedPoints = Number(normalized);
+
+    if (normalized.length === 0 || !Number.isInteger(parsedPoints) || parsedPoints < 0) {
+      setDecisionError("Points must be a non-negative integer.");
+      return;
+    }
+
+    if (parsedPoints > decisionRemaining) {
+      setDecisionError(`Points exceed allowed limit. Allowed range: 0-${decisionRemaining}.`);
+      return;
+    }
+
     try {
+      setDecisionError("");
       setIsSubmittingAction(true);
-      await handleVerifyRequest(decisionRequest.request_id);
+      await handleVerifyRequest(decisionRequest.request_id, parsedPoints);
       setDecisionRequestId(null);
+      setAwardedPointsInput("");
+    } catch (error) {
+      setDecisionError(
+        error instanceof Error ? error.message : "Failed to verify request",
+      );
     } finally {
       setIsSubmittingAction(false);
     }
@@ -117,6 +157,8 @@ function NewandPendingRequestsTab() {
                 onClick={() => {
                   setDecisionRequestId(proofRequest.request_id);
                   setProofRequestId(null);
+                  setAwardedPointsInput("");
+                  setDecisionError("");
                 }}
               >
                 Continue to Decision
@@ -131,11 +173,36 @@ function NewandPendingRequestsTab() {
           <div className={styles.modal}>
             <h3>Verification Decision</h3>
             <p>Choose whether to accept or reject this verification request.</p>
+            <div className={styles.fieldGroup}>
+              <label htmlFor="awarded_points">Points to Assign</label>
+              <input
+                id="awarded_points"
+                className={styles.numberInput}
+                type="number"
+                min={0}
+                max={decisionRemaining}
+                step={1}
+                value={awardedPointsInput}
+                onChange={(event) => setAwardedPointsInput(event.target.value)}
+                placeholder="Enter integer points"
+                disabled={isSubmittingAction}
+              />
+              <p className={styles.limitHint}>
+                Allowed range: 0-{decisionRemaining} (Category max {decisionCategoryMax}, already awarded {decisionCurrentTotal})
+              </p>
+            </div>
+
+            {decisionError && <p className={styles.errorText}>{decisionError}</p>}
+
             <div className={styles.modalActions}>
               <button
                 type="button"
                 className={styles.secondaryBtn}
-                onClick={() => setDecisionRequestId(null)}
+                onClick={() => {
+                  setDecisionRequestId(null);
+                  setDecisionError("");
+                  setAwardedPointsInput("");
+                }}
                 disabled={isSubmittingAction}
               >
                 Cancel

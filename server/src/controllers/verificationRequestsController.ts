@@ -139,17 +139,44 @@ export const createVerificationRequestHandler = asyncHandler(
 export const verifyRequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     const requestId = Number(req.params.requestId);
+    const { points } = req.body as { points?: number };
 
     if (!Number.isInteger(requestId) || requestId <= 0) {
       res.status(400).json({ success: false, message: "Invalid request ID" });
       return;
     }
 
-    const updatedRequest = await updateVerificationRequestStatus(
-      requestId,
-      "Verified",
-      req.user?.email,
-    );
+    if (!Number.isInteger(points) || (points ?? -1) < 0) {
+      res.status(400).json({
+        success: false,
+        message: "points must be a non-negative integer",
+      });
+      return;
+    }
+
+    let updatedRequest;
+    try {
+      updatedRequest = await updateVerificationRequestStatus(
+        requestId,
+        "Verified",
+        req.user?.email,
+        undefined,
+        points,
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.message.includes("Assigned points exceed limit") ||
+          error.message.includes("exceed category limit") ||
+          error.message.includes("awarded_points must be a non-negative integer") ||
+          error.message.includes("not found"))
+      ) {
+        res.status(400).json({ success: false, message: error.message });
+        return;
+      }
+
+      throw error;
+    }
 
     if (!updatedRequest) {
       res.status(404).json({ success: false, message: "Request not found" });

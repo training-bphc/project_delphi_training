@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## v1.2.6 (27.03.2026, Madhav Ramini)
+
+### Added
+- Points-assignment step in admin verification flow:
+  - Verifying a student submission now requires entering points.
+  - Points input is integer-only and required before accept.
+  - Decision modal now shows live limits (`0` to remaining allowable points for that category).
+- Student verification history now displays assigned points for reviewed requests.
+- New migration `004_add_awarded_points_and_training_caps.sql`:
+  - Adds `awarded_points` to `hackathon_submissions`.
+  - Adds DB-level cap enforcement trigger so verified category totals cannot exceed category `max_points`.
+
+### Changed
+- Verification API contract updated to accept points during verify action.
+- Verification status updates now follow explicit status-specific decision paths with transactional handling.
+- Admin decision modal keeps context and surfaces inline validation/API errors without forcing the user to restart the review flow.
+- Seed data updated with non-zero verification points aligned to category limits.
+
 ## v1.2.5 (27.03.2026, Vishwa Somayajula)
 
 ### Added
