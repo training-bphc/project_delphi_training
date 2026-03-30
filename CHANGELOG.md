@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## v1.2.7 (?) (30.3.2026, Siddharth Bhatia)
+
+### Added 
+- Routing.tsx (what was initially in App.tsx has been moved to a separate dedicated file to declutter App.tsx)
+- Alongside the /client and /server directories, a /shared directory which has types. This is to avoid issues with client and server having different copies
+- Shadcn components under /client/src/components/ui. This is what we'll be proceeding with, integration will happen soon using a separate branch.
+
+### Changed
+- App.tsx is MASSIVELY decluttered. Routing has been moved to Routing.tsx, types have been moved to /shared/types and all API calls and handler functions have been moved inside the views that call them. This is to contain them only whatever calls them and not unnecessarily clutter other parts of the repo
+- Entire /client directory has been massively refactored to be more modular, clean, organised and segregated. Routing and imports have been fixed accordingly. 
+- Config files have been updated to match requirements of shadcn and other components.
+
+
 ## v1.2.6 (27.03.2026, Madhav Ramini)
 
 ### Added
