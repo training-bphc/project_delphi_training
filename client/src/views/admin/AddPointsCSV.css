@@ -1,0 +1,211 @@
+/* Add Points CSV View */
+
+.addPointsCSVContent {
+	width: 100%;
+	min-height: 100vh;
+	padding: 40px 20px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background: #fafafa;
+}
+
+.backButton {
+	align-self: flex-start;
+	background: none;
+	border: none;
+	font-size: 1rem;
+	color: #3b82f6;
+	cursor: pointer;
+	padding: 8px 0;
+	margin-bottom: 32px;
+	font-weight: 500;
+	transition: color 0.2s ease;
+}
+
+.backButton:hover {
+	color: #2563eb;
+}
+
+.formContainer {
+	width: 100%;
+	max-width: 600px;
+	background: #ffffff;
+	border-radius: 12px;
+	padding: 40px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.formContainer h1 {
+	margin: 0 0 8px 0;
+	font-size: 2rem;
+	font-weight: 700;
+	color: #111827;
+}
+
+.formSubtitle {
+	margin: 0 0 32px 0;
+	font-size: 0.95rem;
+	color: #6b7280;
+	line-height: 1.5;
+}
+
+.addPointsCSVForm {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+/* Uniform input heights */
+.addPointsCSVForm input,
+.addPointsCSVForm select,
+.addPointsCSVForm textarea {
+	height: 34px;
+	font-size: 0.95rem;
+	padding: 8px 12px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	font-family: inherit;
+	color: #111827;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.addPointsCSVForm textarea {
+	height: auto;
+	min-height: 120px;
+	resize: vertical;
+}
+
+.addPointsCSVForm input:hover,
+.addPointsCSVForm select:hover {
+	border-color: #d1d5db;
+}
+
+.addPointsCSVForm input:focus,
+.addPointsCSVForm select:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Form labels styling */
+.addPointsCSVForm label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: #111827;
+	font-size: 0.95rem;
+}
+
+.fileUploadContainer {
+	position: relative;
+}
+
+.fileInput {
+	display: none;
+}
+
+.fileLabel {
+	display: block;
+	padding: 12px 16px;
+	border: 2px dashed #d1d5db;
+	border-radius: 8px;
+	text-align: center;
+	cursor: pointer;
+	background: #f9fafb;
+	color: #6b7280;
+	font-weight: 500;
+	transition: all 0.2s ease;
+	height: 34px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.fileLabel:hover {
+	border-color: #9ca3af;
+	background: #f3f4f6;
+	color: #374151;
+}
+
+.fileInput:disabled ~ .fileLabel {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.categorySelect {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	font-size: 0.95rem;
+	background: #ffffff;
+	color: #111827;
+	cursor: pointer;
+	height: 34px;
+}
+
+.categorySelect:hover {
+	border-color: #d1d5db;
+}
+
+.categorySelect:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.descriptionTextarea {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	font-size: 0.95rem;
+	font-family: inherit;
+	color: #111827;
+	resize: vertical;
+	min-height: 120px;
+	height: auto;
+}
+
+.descriptionTextarea:hover {
+	border-color: #d1d5db;
+}
+
+.descriptionTextarea:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.errorMessage {
+	margin-top: 8px;
+	padding: 8px 12px;
+	background: #fee;
+	border: 1px solid #fca5a5;
+	border-radius: 6px;
+	color: #dc2626;
+	font-size: 0.875rem;
+}
+
+.submitButton {
+	margin-top: 8px;
+	padding: 12px 20px;
+	height: auto;
+	font-weight: 500;
+}
+
+@media (max-width: 768px) {
+	.addPointsCSVContent {
+		padding: 20px 16px;
+	}
+
+	.formContainer {
+		padding: 24px;
+	}
+
+	.formContainer h1 {
+		font-size: 1.5rem;
+	}
+}

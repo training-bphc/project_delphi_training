@@ -1,0 +1,125 @@
+/* Admin training points layout */
+
+.trainingPointsContent {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.trainingPointsHeading {
+	text-align: left;
+	font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+	margin: 30px 0 0 0;
+	padding: 0;
+}
+
+.studentTrainingPointsSection {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	padding: 0;
+	box-shadow: none;
+}
+
+.studentTrainingPointsHeaderRow {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	margin-bottom: 16px;
+}
+
+.studentTrainingPointsHeaderRow h2 {
+	margin: 0;
+	font-size: 1.1rem;
+	font-weight: 600;
+	color: #111827;
+}
+
+.studentTrainingPointsHeaderRow span {
+	font-size: 0.9rem;
+	color: #6b7280;
+}
+
+.studentTrainingPointsTableWrap {
+	overflow-x: auto;
+	border-radius: 8px;
+	border: 1px solid #e5e7eb;
+	background: #ffffff;
+}
+
+.studentTrainingPointsTable {
+	width: 100%;
+	min-width: 960px;
+	border-collapse: collapse;
+}
+
+.studentTrainingPointsTable th,
+.studentTrainingPointsTable td {
+	padding: 12px 16px;
+	border-bottom: 1px solid #9c96A6;
+	text-align: left;
+	font-size: 0.875rem;
+	vertical-align: middle;
+}
+
+.studentTrainingPointsTable th {
+	background: #fafafa;
+	font-weight: 600;
+	color: #374151;
+	font-size: 0.8rem;
+	text-transform: none;
+	letter-spacing: 0;
+	border-bottom: 1px solid #e5e7eb;
+}
+
+.studentTrainingPointsTable tbody tr {
+	transition: background-color 0.15s ease;
+}
+
+.studentTrainingPointsTable tbody tr:hover {
+	background-color: #fafafa;
+}
+
+.studentTrainingPointsTable tbody tr:last-child td {
+	border-bottom: 1px solid #eaeaea;
+}
+
+.addTrainingPointsButton {
+	padding: 12px 20px;
+	color: #ffffff;
+	height: auto;
+	width: auto;
+	background-color: #596373;
+	border: none;
+	border-radius: 6px;
+	font-size: 0.95rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	margin: 30px 0 0 0;
+}
+
+.addTrainingPointsButton:hover {
+	background-color: #374151;
+}
+
+.categoryBreakdown {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.categoryPill {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 6px 10px;
+	background: #f3f4f6;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	font-size: 0.8rem;
+	color: #374151;
+}
+

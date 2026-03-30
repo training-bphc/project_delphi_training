@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAuth } from "../../contexts/auth.tsx";
 import styles from "./resources.module.css";
 
@@ -93,7 +94,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || "Failed to create folder");
+      toast.error(err.message || "Failed to create folder");
     }
   };
 
@@ -110,7 +111,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || "Failed to rename folder");
+      toast.error(err.message || "Failed to rename folder");
     }
   };
 
@@ -123,7 +124,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
       await apiCall(`/api/resources/folders/${folderId}`, { method: "DELETE" });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || "Failed to delete folder");
+      toast.error(err.message || "Failed to delete folder");
     }
   };
 
@@ -149,7 +150,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || "Failed to create resource");
+      toast.error(err.message || "Failed to create resource");
     }
   };
 
@@ -166,7 +167,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || "Failed to rename resource");
+      toast.error(err.message || "Failed to rename resource");
     }
   };
 
@@ -183,7 +184,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || "Failed to update URL");
+      toast.error(err.message || "Failed to update URL");
     }
   };
 
@@ -196,7 +197,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
       await apiCall(`/api/resources/${resourceId}`, { method: "DELETE" });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || "Failed to delete resource");
+      toast.error(err.message || "Failed to delete resource");
     }
   };
 
