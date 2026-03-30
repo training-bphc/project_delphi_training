@@ -1,8 +1,8 @@
 import './Overview.css';
 import { useContext, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/auth';
-import CreateNewRecord from '../../components/layout/createNewRecord';
-import BulkUpload from '../../components/layout/BulkUpload';
+import CreateNewRecord from '../../components/training-points/createNewRecord';
+import BulkUpload from '../../components/training-points/BulkUpload';
 import { RecordsContext } from '../../App';
 
 interface StudentOverviewRow {

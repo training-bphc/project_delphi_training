@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '../../../contexts/auth';
-import styles from './resources.module.css';
+import { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/auth.tsx";
+import styles from "./resources.module.css";
 
 interface ResourceRecord {
   resource_id: number;
@@ -42,7 +42,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
     const response = await fetch(path, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
         ...(options.headers || {}),
       },
@@ -60,11 +60,11 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await apiCall('/api/resources/tree');
+      const data = await apiCall("/api/resources/tree");
       const payload = Array.isArray(data.data) ? data.data : [];
       setTree(payload);
     } catch (err: any) {
-      setError(err.message || 'Failed to load resources');
+      setError(err.message || "Failed to load resources");
       setTree([]);
     } finally {
       setIsLoading(false);
@@ -78,118 +78,125 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   }, [token]);
 
   const createFolder = async (parentFolderId: number | null) => {
-    const folderName = window.prompt('Folder name');
+    const folderName = window.prompt("Folder name");
     if (!folderName) {
       return;
     }
 
     try {
-      await apiCall('/api/resources/folders', {
-        method: 'POST',
-        body: JSON.stringify({ folder_name: folderName, parent_folder_id: parentFolderId }),
+      await apiCall("/api/resources/folders", {
+        method: "POST",
+        body: JSON.stringify({
+          folder_name: folderName,
+          parent_folder_id: parentFolderId,
+        }),
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || 'Failed to create folder');
+      alert(err.message || "Failed to create folder");
     }
   };
 
   const renameFolder = async (folderId: number, currentName: string) => {
-    const folderName = window.prompt('Rename folder', currentName);
+    const folderName = window.prompt("Rename folder", currentName);
     if (!folderName || folderName === currentName) {
       return;
     }
 
     try {
       await apiCall(`/api/resources/folders/${folderId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         body: JSON.stringify({ folder_name: folderName }),
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || 'Failed to rename folder');
+      alert(err.message || "Failed to rename folder");
     }
   };
 
   const deleteFolder = async (folderId: number) => {
-    if (!window.confirm('Delete this folder? It must be empty.')) {
+    if (!window.confirm("Delete this folder? It must be empty.")) {
       return;
     }
 
     try {
-      await apiCall(`/api/resources/folders/${folderId}`, { method: 'DELETE' });
+      await apiCall(`/api/resources/folders/${folderId}`, { method: "DELETE" });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete folder');
+      alert(err.message || "Failed to delete folder");
     }
   };
 
   const addResource = async (folderId: number) => {
-    const resourceName = window.prompt('Resource name');
+    const resourceName = window.prompt("Resource name");
     if (!resourceName) {
       return;
     }
 
-    const fileUrl = window.prompt('Resource URL (https://...)');
+    const fileUrl = window.prompt("Resource URL (https://...)");
     if (!fileUrl) {
       return;
     }
 
     try {
-      await apiCall('/api/resources', {
-        method: 'POST',
-        body: JSON.stringify({ resource_name: resourceName, file_url: fileUrl, folder_id: folderId }),
+      await apiCall("/api/resources", {
+        method: "POST",
+        body: JSON.stringify({
+          resource_name: resourceName,
+          file_url: fileUrl,
+          folder_id: folderId,
+        }),
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || 'Failed to create resource');
+      alert(err.message || "Failed to create resource");
     }
   };
 
   const renameResource = async (resourceId: number, currentName: string) => {
-    const resourceName = window.prompt('Rename resource', currentName);
+    const resourceName = window.prompt("Rename resource", currentName);
     if (!resourceName || resourceName === currentName) {
       return;
     }
 
     try {
       await apiCall(`/api/resources/${resourceId}/rename`, {
-        method: 'PATCH',
+        method: "PATCH",
         body: JSON.stringify({ resource_name: resourceName }),
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || 'Failed to rename resource');
+      alert(err.message || "Failed to rename resource");
     }
   };
 
   const updateResourceUrl = async (resourceId: number, currentUrl: string) => {
-    const fileUrl = window.prompt('Update resource URL', currentUrl);
+    const fileUrl = window.prompt("Update resource URL", currentUrl);
     if (!fileUrl || fileUrl === currentUrl) {
       return;
     }
 
     try {
       await apiCall(`/api/resources/${resourceId}/url`, {
-        method: 'PATCH',
+        method: "PATCH",
         body: JSON.stringify({ file_url: fileUrl }),
       });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || 'Failed to update URL');
+      alert(err.message || "Failed to update URL");
     }
   };
 
   const deleteResource = async (resourceId: number) => {
-    if (!window.confirm('Delete this resource?')) {
+    if (!window.confirm("Delete this resource?")) {
       return;
     }
 
     try {
-      await apiCall(`/api/resources/${resourceId}`, { method: 'DELETE' });
+      await apiCall(`/api/resources/${resourceId}`, { method: "DELETE" });
       await fetchTree();
     } catch (err: any) {
-      alert(err.message || 'Failed to delete resource');
+      alert(err.message || "Failed to delete resource");
     }
   };
 
@@ -200,10 +207,30 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
           <span className={styles.folderName}>📁 {node.folder_name}</span>
           {canManage && (
             <div className={styles.folderActions}>
-              <button className={styles.smallBtn} onClick={() => createFolder(node.folder_id)}>Add Subfolder</button>
-              <button className={styles.smallBtn} onClick={() => addResource(node.folder_id)}>Add Link</button>
-              <button className={styles.smallBtn} onClick={() => renameFolder(node.folder_id, node.folder_name)}>Rename</button>
-              <button className={styles.smallBtn} onClick={() => deleteFolder(node.folder_id)}>Delete</button>
+              <button
+                className={styles.smallBtn}
+                onClick={() => createFolder(node.folder_id)}
+              >
+                Add Subfolder
+              </button>
+              <button
+                className={styles.smallBtn}
+                onClick={() => addResource(node.folder_id)}
+              >
+                Add Link
+              </button>
+              <button
+                className={styles.smallBtn}
+                onClick={() => renameFolder(node.folder_id, node.folder_name)}
+              >
+                Rename
+              </button>
+              <button
+                className={styles.smallBtn}
+                onClick={() => deleteFolder(node.folder_id)}
+              >
+                Delete
+              </button>
             </div>
           )}
         </div>
@@ -226,9 +253,34 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
                 </span>
                 {canManage && (
                   <>
-                    <button className={styles.smallBtn} onClick={() => renameResource(resource.resource_id, resource.resource_name)}>Rename</button>
-                    <button className={styles.smallBtn} onClick={() => updateResourceUrl(resource.resource_id, resource.file_url)}>Update URL</button>
-                    <button className={styles.smallBtn} onClick={() => deleteResource(resource.resource_id)}>Delete</button>
+                    <button
+                      className={styles.smallBtn}
+                      onClick={() =>
+                        renameResource(
+                          resource.resource_id,
+                          resource.resource_name,
+                        )
+                      }
+                    >
+                      Rename
+                    </button>
+                    <button
+                      className={styles.smallBtn}
+                      onClick={() =>
+                        updateResourceUrl(
+                          resource.resource_id,
+                          resource.file_url,
+                        )
+                      }
+                    >
+                      Update URL
+                    </button>
+                    <button
+                      className={styles.smallBtn}
+                      onClick={() => deleteResource(resource.resource_id)}
+                    >
+                      Delete
+                    </button>
                   </>
                 )}
               </li>
@@ -237,7 +289,9 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
         )}
 
         {node.children.length > 0 && (
-          <div className={styles.children}>{node.children.map((child) => renderFolder(child))}</div>
+          <div className={styles.children}>
+            {node.children.map((child) => renderFolder(child))}
+          </div>
         )}
       </div>
     );
@@ -248,7 +302,10 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
       <div className={styles.header}>
         <h1 className={styles.title}>{title}</h1>
         {canManage && (
-          <button className={styles.actionBtn} onClick={() => createFolder(null)}>
+          <button
+            className={styles.actionBtn}
+            onClick={() => createFolder(null)}
+          >
             Add Root Folder
           </button>
         )}

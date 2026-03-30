@@ -1,9 +1,9 @@
 import { useContext } from 'react';
-import VerificationRequestsTable from '../../../components/VerificationRequestsTable';
-import styles from './PreviousVerificationsTab.module.css';
-import { RecordsContext } from '../../../App';
+import VerificationRequestsTable from '../../components/common/VerificationRequestsTable';
+import styles from './VerifiedRequests.module.css';
+import { RecordsContext } from '../../App';
 
-function PreviousVerificationsTab() {
+function VerifiedRequests() {
   const context = useContext(RecordsContext);
   if (!context) {
     return <div>Loading...</div>;
@@ -26,4 +26,4 @@ function PreviousVerificationsTab() {
   );
 }
 
-export default PreviousVerificationsTab;
+export default VerifiedRequests;

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/auth";
+import { useAuth } from "../../contexts/auth";
 import "./Sidebar.css";
 
 function Sidebar() {

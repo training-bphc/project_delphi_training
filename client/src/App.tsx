@@ -1,14 +1,13 @@
 import { createContext, useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/auth";
-import AppLayout from "./components/AppLayout";
-import Login from "./pages/Login";
+import AppLayout from "./components/layout/AppLayout";
+import Login from "./views/login/Login";
 import AdminOverview from "./views/admin/Overview";
-import NewandPendingRequestsTab from "./views/admin/tabs/NewandPendingRequestsTab";
-import PreviousVerificationsTab from "./views/admin/tabs/PreviousVerificationsTab";
+import PendingRequests from "./views/admin/PendingRequests";
+import VerifiedRequests from "./views/admin/VerifiedRequests";
 import AdminResources from "./views/admin/Resources";
 import StudentTrainingPoints from "./views/student/TrainingPoints";
-import AddTrainingPoints from "./views/student/AddTrainingPoints";
 import AddVerification from "./views/student/AddVerification";
 import StudentResources from "./views/student/Resources";
 import "./App.css";
@@ -417,11 +416,11 @@ function AppContent() {
               <Route path="/admin/overview" element={<AdminOverview />} />
               <Route
                 path="/admin/pending"
-                element={<NewandPendingRequestsTab />}
+                element={<PendingRequests />}
               />
               <Route
                 path="/admin/verified"
-                element={<PreviousVerificationsTab />}
+                element={<VerifiedRequests />}
               />
               <Route path="/admin/resources" element={<AdminResources />} />
               <Route
@@ -441,10 +440,6 @@ function AppContent() {
                     studentEmail={user.email}
                   />
                 }
-              />
-              <Route
-                path="/student/add"
-                element={<AddTrainingPoints studentId={user.id} />}
               />
               <Route
                 path="/student/verification"

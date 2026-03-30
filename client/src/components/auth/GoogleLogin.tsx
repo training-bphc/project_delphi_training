@@ -1,6 +1,6 @@
-import { GoogleLogin } from '@react-oauth/google';
-import { useAuth } from '../contexts/auth';
-import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "../../contexts/auth";
+import { useNavigate } from "react-router-dom";
 
 function GoogleLoginButton() {
   const { login } = useAuth();
@@ -9,8 +9,8 @@ function GoogleLoginButton() {
   const shouldFallbackFromAdminToStudent = (message: string): boolean => {
     const normalized = message.toLowerCase();
     return (
-      normalized.includes('not a registered admin') ||
-      normalized.includes('unauthorized: not a registered admin')
+      normalized.includes("not a registered admin") ||
+      normalized.includes("unauthorized: not a registered admin")
     );
   };
 
@@ -20,34 +20,37 @@ function GoogleLoginButton() {
 
       // Try admin first. If not an admin, fall back to student in the same attempt.
       try {
-        await login(idToken, 'admin');
-        navigate('/admin/overview');
+        await login(idToken, "admin");
+        navigate("/admin/overview");
         return;
       } catch (adminError: any) {
-        const adminMessage = adminError?.message || 'Unknown error';
+        const adminMessage = adminError?.message || "Unknown error";
 
         if (!shouldFallbackFromAdminToStudent(adminMessage)) {
           throw adminError;
         }
 
         try {
-          await login(idToken, 'student');
-          navigate('/student/training');
+          await login(idToken, "student");
+          navigate("/student/training");
           return;
         } catch (studentError: any) {
-          console.error('Both admin and student login failed:', studentError.message);
-          alert('Login failed: ' + (studentError.message || 'Unknown error'));
+          console.error(
+            "Both admin and student login failed:",
+            studentError.message,
+          );
+          alert("Login failed: " + (studentError.message || "Unknown error"));
         }
       }
     } catch (error: any) {
-      console.error('Google login error:', error);
-      alert('Login failed: ' + (error.message || 'Unknown error'));
+      console.error("Google login error:", error);
+      alert("Login failed: " + (error.message || "Unknown error"));
     }
   };
 
   const handleGoogleError = () => {
-    console.log('Google login failed');
-    alert('Google login failed. Please try again.');
+    console.log("Google login failed");
+    alert("Google login failed. Please try again.");
   };
 
   return (

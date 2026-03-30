@@ -1,7 +1,7 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
-import GoogleLoginButton from "../components/GoogleLogin";
-import { useAuth } from "../contexts/auth";
+import GoogleLoginButton from "../../components/auth/GoogleLogin";
+import { useAuth } from "../../contexts/auth";
 import styles from "./Login.module.css";
 
 function Login() {
@@ -36,7 +36,8 @@ function Login() {
     <GoogleOAuthProvider clientId={googleClientId || "dev-placeholder"}>
       <div className={styles.page}>
         <div className={styles.panel}>
-          <h1 className={styles.heading}>Project Delphi</h1>
+          <img src="/delphi.png" alt="project delphi logo" />
+          {/* <h1 className={styles.heading}>Project Delphi</h1> */}
           <p className={styles.subheading}>A Training Unit Website</p>
 
           {googleClientId ? (

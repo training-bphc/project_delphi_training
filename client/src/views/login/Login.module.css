@@ -1,3 +1,12 @@
+* {
+  font-family: 'Inter', 'Arial';
+}
+
+img {
+  width: 300px;
+  height: auto;
+}
+
 .page {
   min-height: 100vh;
   display: flex;
@@ -22,7 +31,6 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("/BITS%20Logo.jpg");
   background-repeat: no-repeat;
   background-size: 250px 250px;
   background-position: center center;
@@ -43,6 +51,7 @@
 .subheading {
   margin-top: 0;
   margin-bottom: 16px;
+  font-weight: 500;
 }
 
 .devNotice {
@@ -61,7 +70,6 @@
   border: 1px solid #b9b9b9;
   border-radius: 8px;
   background: #ffffff;
-  font-weight: 600;
   cursor: pointer;
   transition:
     background 0.2s ease,

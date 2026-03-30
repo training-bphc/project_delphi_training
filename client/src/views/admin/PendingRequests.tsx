@@ -1,9 +1,9 @@
 import { useContext, useState } from "react";
-import VerificationRequestsTable from "../../../components/VerificationRequestsTable";
-import styles from "./NewStudentRequestTab.module.css";
-import { RecordsContext } from "../../../App";
+import VerificationRequestsTable from "../../components/common/VerificationRequestsTable";
+import styles from "./PendingRequests.module.css";
+import { RecordsContext } from "../../App";
 
-function NewandPendingRequestsTab() {
+function PendingRequests() {
   const context = useContext(RecordsContext);
   if (!context) {
     return <div>Loading...</div>;
@@ -268,4 +268,4 @@ function NewandPendingRequestsTab() {
   );
 }
 
-export default NewandPendingRequestsTab;
+export default PendingRequests;
