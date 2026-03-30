@@ -1,46 +1,109 @@
-import { useContext, useMemo, useState } from "react";
-import { RecordsContext } from "../../App";
+import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "../../contexts/auth";
 import styles from "./addVerification.module.css";
-
 import type { FormEvent } from "react";
+import type { VerificationRequest, CreateVerificationRequestPayload } from "@/shared/types";
+
 function AddVerification() {
-  const context = useContext(RecordsContext);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [proofLink, setProofLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
 
-  if (!context || !user) {
-    return <div>Loading...</div>;
-  }
+  // Fetch data on mount
+  useEffect(() => {
+    fetchVerificationRequests();
+  }, [token]);
 
-  const studentName = user.name || "";
-  const studentEmail = user.email || "";
+  const fetchVerificationRequests = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/verification-requests", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch verification requests: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const requestsPayload: VerificationRequest[] = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.requests)
+          ? data.requests
+          : [];
+
+      setVerificationRequests(requestsPayload);
+    } catch (error) {
+      console.error("Failed to fetch verification requests:", error);
+      setVerificationRequests([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateVerificationRequest = async (
+    request: CreateVerificationRequestPayload,
+  ) => {
+    try {
+      const response = await fetch("/api/verification-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(request),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message ||
+            `Failed to create verification request: ${response.statusText}`,
+        );
+      }
+
+      await fetchVerificationRequests();
+    } catch (error) {
+      console.error("Failed to create verification request:", error);
+      throw error;
+    }
+  };
+
+  const studentName = user?.name || "";
+  const studentEmail = user?.email || "";
 
   const rejectedRequests = useMemo(
     () =>
-      context.verificationRequests.filter(
+      verificationRequests.filter(
         (request) => request.status === "Rejected",
       ),
-    [context.verificationRequests],
+    [verificationRequests],
   );
 
   const pendingRequests = useMemo(
     () =>
-      context.verificationRequests.filter(
+      verificationRequests.filter(
         (request) => request.status === "Pending",
       ),
-    [context.verificationRequests],
+    [verificationRequests],
   );
 
   const verifiedRequests = useMemo(
     () =>
-      context.verificationRequests.filter(
+      verificationRequests.filter(
         (request) => request.status === "Verified",
       ),
-    [context.verificationRequests],
+    [verificationRequests],
   );
+
+  if (isLoading || !user) {
+    return <div>Loading...</div>;
+  }
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -53,7 +116,7 @@ function AddVerification() {
 
     setIsSubmitting(true);
     try {
-      await context.handleCreateVerificationRequest({
+      await handleCreateVerificationRequest({
         student_name: studentName,
         student_email: studentEmail,
         proof_link: proofLink.trim(),
@@ -61,6 +124,12 @@ function AddVerification() {
 
       setProofLink("");
       setMessage("Verification request submitted successfully.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit verification request",
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import styles from './bulkUpload.module.css';
-import type { TrainingCategory } from '../../App';
+import type { TrainingCategory } from '@/../shared/types';
 
 interface BulkUploadProps {
   categories: TrainingCategory[];

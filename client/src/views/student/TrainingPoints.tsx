@@ -1,6 +1,7 @@
-import { useContext } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './trainingPoints.module.css';
-import { RecordsContext, type Record } from '../../App';
+import { useAuth } from '../../contexts/auth';
+import type { Record, TrainingCategory } from '@/shared/types';
 
 interface TrainingPointsProps {
   studentId?: string;
@@ -10,14 +11,74 @@ interface TrainingPointsProps {
 const CUTOFF_POINTS = 75;
 
 function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
-  const context = useContext(RecordsContext);
+  const { token } = useAuth();
+  const [records, setRecords] = useState<Record[]>([]);
+  const [categories, setCategories] = useState<TrainingCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  if (!context) {
-    return <div>Loading...</div>;
-  }
+  // Fetch data on mount
+  useEffect(() => {
+    fetchRecords();
+    fetchCategories();
+  }, [token]);
 
-  const categories = context.categories.map((cat) => {
-    const categoryRecords = context.records?.filter(
+  const fetchRecords = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/records', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch records: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const recordsPayload: Record[] = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.records)
+          ? data.records
+          : [];
+
+      setRecords(recordsPayload);
+    } catch (error) {
+      console.error('Failed to fetch records:', error);
+      setRecords([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const categoriesPayload: TrainingCategory[] = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.categories)
+          ? data.categories
+          : [];
+
+      setCategories(categoriesPayload);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      setCategories([]);
+    }
+  };
+
+  const categoryData = categories.map((cat) => {
+    const categoryRecords = records?.filter(
       (record: Record) =>
         record.category_id === cat.category_id &&
         record.verification_status === 'Verified' &&
@@ -42,7 +103,11 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
     };
   });
 
-  const totalPoints = categories.reduce((sum, cat) => sum + cat.currentPoints, 0);
+  const totalPoints = categoryData.reduce((sum, cat) => sum + cat.currentPoints, 0);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className={styles.page}>
@@ -57,7 +122,7 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
 
       <section className={styles.categoryWise}>
         <div className={styles.categoryGrid}>
-          {categories.map((category) => (
+          {categoryData.map((category) => (
             <div key={category.categoryId} className={styles.categoryCard}>
               <div className={styles.categoryHeadingRow}>
                 <span className={styles.categoryTitle}>{category.name}</span>

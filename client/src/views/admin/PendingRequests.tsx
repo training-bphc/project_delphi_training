@@ -1,25 +1,156 @@
-import { useContext, useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/auth";
 import VerificationRequestsTable from "../../components/common/VerificationRequestsTable";
 import styles from "./PendingRequests.module.css";
-import { RecordsContext } from "../../App";
+import type { VerificationRequest, Record as RecordType, TrainingCategory } from "@/shared/types";
 
 function PendingRequests() {
-  const context = useContext(RecordsContext);
-  if (!context) {
-    return <div>Loading...</div>;
-  }
-
-  const { verificationRequests, handleVerifyRequest, handleRejectRequest } =
-    context;
+  const { token } = useAuth();
+  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
+  const [records, setRecords] = useState<RecordType[]>([]);
+  const [categories, setCategories] = useState<TrainingCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [proofRequestId, setProofRequestId] = useState<number | null>(null);
-  const [decisionRequestId, setDecisionRequestId] = useState<number | null>(
-    null,
-  );
+  const [decisionRequestId, setDecisionRequestId] = useState<number | null>(null);
   const [rejectRequestId, setRejectRequestId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [awardedPointsInput, setAwardedPointsInput] = useState("");
   const [decisionError, setDecisionError] = useState("");
   const [isSubmittingAction, setIsSubmittingAction] = useState(false);
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchVerificationRequests();
+    fetchRecords();
+    fetchCategories();
+  }, [token]);
+
+  const fetchVerificationRequests = async () => {
+    try {
+      const response = await fetch("/api/verification-requests", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch verification requests: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const requestsPayload: VerificationRequest[] = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.requests)
+          ? data.requests
+          : [];
+
+      setVerificationRequests(requestsPayload);
+    } catch (error) {
+      console.error("Failed to fetch verification requests:", error);
+      setVerificationRequests([]);
+    }
+  };
+
+  const fetchRecords = async () => {
+    try {
+      const response = await fetch("/api/records", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch records: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const recordsPayload: RecordType[] = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.records)
+          ? data.records
+          : [];
+
+      setRecords(recordsPayload);
+    } catch (error) {
+      console.error("Failed to fetch records:", error);
+      setRecords([]);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("/api/categories", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const categoriesPayload: TrainingCategory[] = Array.isArray(data.data)
+        ? data.data
+        : Array.isArray(data.categories)
+          ? data.categories
+          : [];
+
+      setCategories(categoriesPayload);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+      setCategories([]);
+    }
+  };
+
+  const handleVerifyRequest = async (requestId: number, points: number) => {
+    try {
+      const response = await fetch(`/api/verification-requests/${requestId}/verify`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ points }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(
+          errorData?.message || `Failed to verify request: ${response.statusText}`,
+        );
+      }
+
+      await fetchRecords();
+      await fetchVerificationRequests();
+    } catch (error) {
+      console.error("Failed to verify request:", error);
+      throw error;
+    }
+  };
+
+  const handleRejectRequest = async (requestId: number, rejectionReason: string) => {
+    try {
+      const response = await fetch(`/api/verification-requests/${requestId}/reject`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rejection_reason: rejectionReason }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to reject request: ${response.statusText}`);
+      }
+
+      await fetchRecords();
+      await fetchVerificationRequests();
+    } catch (error) {
+      console.error("Failed to reject request:", error);
+      alert("Failed to reject request");
+    }
+  };
 
   // Filter pending verification requests
   const pendingRequests = verificationRequests.filter(
@@ -35,13 +166,13 @@ function PendingRequests() {
     ) || null;
 
   const decisionCategoryMax = decisionRequest
-    ? context.categories.find(
+    ? categories.find(
         (category) => category.category_id === decisionRequest.category_id,
       )?.max_points || 0
     : 0;
 
   const decisionCurrentTotal = decisionRequest
-    ? context.records
+    ? records
         .filter(
           (record) =>
             record.bits_id === decisionRequest.student_bits_id &&

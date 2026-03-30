@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/auth";
+import { Button } from "@/components/ui/button";
 import "./Sidebar.css";
 
 function Sidebar() {
@@ -91,9 +92,9 @@ function Sidebar() {
           </>
         )}
       </nav>
-      <button onClick={handleLogout} className="logout-btn">
+      <Button onClick={handleLogout} className="logout-btn">
         Logout
-      </button>
+      </Button>
     </aside>
   );
 }
