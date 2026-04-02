@@ -115,6 +115,11 @@ export const createRecordHandler = asyncHandler(async (req: Request, res: Respon
       return;
     }
 
+    if (error?.code === '23514') {
+      res.status(400).json({ success: false, message: error.message });
+      return;
+    }
+
     throw error;
   }
 });

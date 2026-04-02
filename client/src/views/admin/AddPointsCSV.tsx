@@ -216,7 +216,7 @@ function AddPointsCSV() {
                   </label>
                 </div>
               </FormControl>
-              <FormDescription>Upload a CSV or TXT file with one email address per line</FormDescription>
+              <FormDescription>Upload a CSV file with email addresses only.</FormDescription>
               {fileError && <div className="errorMessage">{fileError}</div>}
             </FormItem>
 

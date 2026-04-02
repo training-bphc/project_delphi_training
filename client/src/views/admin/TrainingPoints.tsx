@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Record, VerificationRequest, TrainingCategory } from '@/shared/types';
+import StudentCategoryPopup from '@/components/training-points/StudentCategoryPopup';
 
 interface StudentTrainingPointsRow {
   bitsId: string;
@@ -208,24 +209,9 @@ function TrainingPoints() {
                 <TableCell>{student.pendingCount}</TableCell>
                 <TableCell>{student.lastUpdated}</TableCell>
                 <TableCell>
-                  <details>
-                    <summary>View</summary>
-                    <div className="categoryBreakdown">
-                      {categories.map((category: TrainingCategory) => {
-                        const found = student.categoryPoints.find(
-                          (item) => item.category === category.category_name,
-                        );
-                        return (
-                          <div key={`${student.email}-${category.category_id}`} className="categoryPill">
-                            <span>{category.category_name}</span>
-                            <strong>{found?.points || 0}</strong>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </details>
+                  <StudentCategoryPopup studentName={student.name} categoryPoints={student.categoryPoints} allCategories={categories}/> 
                 </TableCell>
-              </TableRow>
+                </TableRow>
             ))}
           </TableBody>
         </Table>
