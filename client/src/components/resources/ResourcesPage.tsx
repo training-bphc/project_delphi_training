@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../contexts/auth.tsx";
+import ResourcesLayout from "./layout/ResourcesLayout";
+import FolderCardGrid from "./cards/FolderCardGrid";
+import ResourceCardGrid from "./cards/ResourceCardGrid";
 import styles from "./resources.module.css";
 
 interface ResourceRecord {
@@ -20,6 +23,11 @@ interface ResourceFolderNode {
   children: ResourceFolderNode[];
 }
 
+interface BreadcrumbItem {
+  folderId: number | null;
+  folderName: string;
+}
+
 interface ResourcesPageProps {
   canManage: boolean;
   title: string;
@@ -30,6 +38,12 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   const [tree, setTree] = useState<ResourceFolderNode[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
+    { folderId: null, folderName: "Resources" },
+  ]);
+  const [currentFolder, setCurrentFolder] = useState<ResourceFolderNode | null>(
+    null
+  );
 
   const getHostname = (url: string) => {
     try {
@@ -78,6 +92,46 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
     }
   }, [token]);
 
+  const findFolderById = (
+    folders: ResourceFolderNode[],
+    folderId: number
+  ): ResourceFolderNode | null => {
+    for (const folder of folders) {
+      if (folder.folder_id === folderId) {
+        return folder;
+      }
+      const found = findFolderById(folder.children, folderId);
+      if (found) {
+        return found;
+      }
+    }
+    return null;
+  };
+
+  const handleFolderClick = (folder: ResourceFolderNode) => {
+    setCurrentFolder(folder);
+    setBreadcrumbs([
+      ...breadcrumbs,
+      { folderId: folder.folder_id, folderName: folder.folder_name },
+    ]);
+  };
+
+  const handleBreadcrumbClick = (index: number) => {
+    if (index === 0) {
+      // Go back to root
+      setCurrentFolder(null);
+      setBreadcrumbs([{ folderId: null, folderName: "Resources" }]);
+    } else {
+      // Go to specific folder
+      const targetFolder = breadcrumbs[index];
+      if (targetFolder.folderId !== null) {
+        const folder = findFolderById(tree, targetFolder.folderId);
+        setCurrentFolder(folder);
+      }
+      setBreadcrumbs(breadcrumbs.slice(0, index + 1));
+    }
+  };
+
   const createFolder = async (parentFolderId: number | null) => {
     const folderName = window.prompt("Folder name");
     if (!folderName) {
@@ -92,6 +146,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
           parent_folder_id: parentFolderId,
         }),
       });
+      toast.success("Folder created successfully");
       await fetchTree();
     } catch (err: any) {
       toast.error(err.message || "Failed to create folder");
@@ -109,6 +164,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
         method: "PATCH",
         body: JSON.stringify({ folder_name: folderName }),
       });
+      toast.success("Folder renamed successfully");
       await fetchTree();
     } catch (err: any) {
       toast.error(err.message || "Failed to rename folder");
@@ -122,7 +178,12 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
 
     try {
       await apiCall(`/api/resources/folders/${folderId}`, { method: "DELETE" });
+      toast.success("Folder deleted successfully");
       await fetchTree();
+      // If we deleted the current folder, go back
+      if (currentFolder?.folder_id === folderId) {
+        handleBreadcrumbClick(breadcrumbs.length - 2);
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to delete folder");
     }
@@ -148,6 +209,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
           folder_id: folderId,
         }),
       });
+      toast.success("Resource added successfully");
       await fetchTree();
     } catch (err: any) {
       toast.error(err.message || "Failed to create resource");
@@ -165,6 +227,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
         method: "PATCH",
         body: JSON.stringify({ resource_name: resourceName }),
       });
+      toast.success("Resource renamed successfully");
       await fetchTree();
     } catch (err: any) {
       toast.error(err.message || "Failed to rename resource");
@@ -182,6 +245,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
         method: "PATCH",
         body: JSON.stringify({ file_url: fileUrl }),
       });
+      toast.success("Resource URL updated successfully");
       await fetchTree();
     } catch (err: any) {
       toast.error(err.message || "Failed to update URL");
@@ -195,135 +259,111 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
 
     try {
       await apiCall(`/api/resources/${resourceId}`, { method: "DELETE" });
+      toast.success("Resource deleted successfully");
       await fetchTree();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete resource");
     }
   };
 
-  const renderFolder = (node: ResourceFolderNode) => {
-    return (
-      <div key={node.folder_id}>
-        <div className={styles.folderRow}>
-          <span className={styles.folderName}>📁 {node.folder_name}</span>
+  const displayFolders = currentFolder ? currentFolder.children : tree;
+  const displayResources = currentFolder ? currentFolder.resources : [];
+  const currentFolderName = currentFolder ? currentFolder.folder_name : title;
+
+  return (
+    <ResourcesLayout>
+      <section className={styles.container}>
+        <div className={styles.header}>
+          <div>
+            <h1 className={styles.title}>{currentFolderName}</h1>
+            {breadcrumbs.length > 1 && (
+              <div className={styles.breadcrumbs}>
+                {breadcrumbs.map((crumb, index) => (
+                  <div key={index}>
+                    <button
+                      className={`${styles.breadcrumbItem} ${
+                        index === breadcrumbs.length - 1 ? styles.active : ""
+                      }`}
+                      onClick={() => handleBreadcrumbClick(index)}
+                    >
+                      {crumb.folderName}
+                    </button>
+                    {index < breadcrumbs.length - 1 && (
+                      <span className={styles.breadcrumbSeparator}>/</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           {canManage && (
-            <div className={styles.folderActions}>
+            <div className={styles.headerActions}>
               <button
-                className={styles.smallBtn}
-                onClick={() => createFolder(node.folder_id)}
+                className={styles.actionBtn}
+                onClick={() =>
+                  createFolder(currentFolder?.folder_id ?? null)
+                }
               >
-                Add Subfolder
-              </button>
-              <button
-                className={styles.smallBtn}
-                onClick={() => addResource(node.folder_id)}
-              >
-                Add Link
-              </button>
-              <button
-                className={styles.smallBtn}
-                onClick={() => renameFolder(node.folder_id, node.folder_name)}
-              >
-                Rename
-              </button>
-              <button
-                className={styles.smallBtn}
-                onClick={() => deleteFolder(node.folder_id)}
-              >
-                Delete
+                + Add Subfolder
               </button>
             </div>
           )}
         </div>
 
-        {node.resources.length > 0 && (
-          <ul className={styles.resourceList}>
-            {node.resources.map((resource) => (
-              <li key={resource.resource_id} className={styles.resourceItem}>
-                <a
-                  className={styles.resourceLink}
-                  href={resource.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={resource.file_url}
-                >
-                  {resource.resource_name}
-                </a>
-                <span className={styles.resourceHost} title={resource.file_url}>
-                  {getHostname(resource.file_url)}
-                </span>
-                {canManage && (
-                  <>
-                    <button
-                      className={styles.smallBtn}
-                      onClick={() =>
-                        renameResource(
-                          resource.resource_id,
-                          resource.resource_name,
-                        )
-                      }
-                    >
-                      Rename
-                    </button>
-                    <button
-                      className={styles.smallBtn}
-                      onClick={() =>
-                        updateResourceUrl(
-                          resource.resource_id,
-                          resource.file_url,
-                        )
-                      }
-                    >
-                      Update URL
-                    </button>
-                    <button
-                      className={styles.smallBtn}
-                      onClick={() => deleteResource(resource.resource_id)}
-                    >
-                      Delete
-                    </button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        {error && <div className={styles.error}>{error}</div>}
 
-        {node.children.length > 0 && (
-          <div className={styles.children}>
-            {node.children.map((child) => renderFolder(child))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <section className={styles.container}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>{title}</h1>
-        {canManage && (
-          <button
-            className={styles.actionBtn}
-            onClick={() => createFolder(null)}
-          >
-            Add Root Folder
-          </button>
-        )}
-      </div>
-
-      {error && <div className={styles.error}>{error}</div>}
-
-      <div className={styles.tree}>
         {isLoading ? (
-          <div className={styles.empty}>Loading resources...</div>
-        ) : tree.length === 0 ? (
-          <div className={styles.empty}>No resources available yet.</div>
+          <div className={styles.loading}>Loading resources...</div>
+        ) : displayFolders.length === 0 && displayResources.length === 0 ? (
+          <div className={styles.empty}>
+            {canManage
+              ? "No content yet. Create a folder or add a link to get started!"
+              : "No resources available yet."}
+          </div>
         ) : (
-          tree.map((node) => renderFolder(node))
+          <>
+            {displayResources.length > 0 && (
+              <div className={styles.resourcesContainer}>
+                <h2 className={styles.sectionLabel}>Resources</h2>
+                <ResourceCardGrid
+                  resources={displayResources}
+                  canManage={canManage}
+                  onRename={renameResource}
+                  onUpdateUrl={updateResourceUrl}
+                  onDelete={deleteResource}
+                  getHostname={getHostname}
+                />
+                {canManage && (
+                  <button
+                    className={styles.smallBtn}
+                    onClick={() =>
+                      addResource(
+                        currentFolder?.folder_id ?? (null as any as number)
+                      )
+                    }
+                  >
+                    + Add Link
+                  </button>
+                )}
+              </div>
+            )}
+
+            {displayFolders.length > 0 && (
+              <div>
+                <h2 className={styles.sectionLabel}>Folders</h2>
+                <FolderCardGrid
+                  folders={displayFolders}
+                  canManage={canManage}
+                  onRenameFolder={renameFolder}
+                  onDeleteFolder={deleteFolder}
+                  onFolderClick={handleFolderClick}
+                />
+              </div>
+            )}
+          </>
         )}
-      </div>
-    </section>
+      </section>
+    </ResourcesLayout>
   );
 }
 
