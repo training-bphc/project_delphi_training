@@ -1,0 +1,97 @@
+import pool from "../config/db";
+import { Student, SectorType } from "../types";
+
+export interface StudentInsertPayload {
+  email: string;
+  student_name: string;
+  roll_number: string;
+  start_year: number;
+  end_year: number;
+  cgpa: number;
+  sector: SectorType;
+}
+
+/**
+ * Find a single student by email
+ */
+export const findStudentByEmail = async (
+  email: string,
+): Promise<Student | null> => {
+  const result = await pool.query<Student>(
+    `
+      SELECT student_id, email, student_name, roll_number, start_year, end_year, cgpa, sector
+      FROM students
+      WHERE LOWER(email) = LOWER($1)
+      LIMIT 1
+    `,
+    [email],
+  );
+
+  return result.rows[0] ?? null;
+};
+
+/**
+ * Check for email uniqueness in the database
+ * Returns array of emails that already exist
+ */
+export const validateEmailUniqueness = async (
+  emails: string[],
+): Promise<string[]> => {
+  if (emails.length === 0) {
+    return [];
+  }
+
+  const result = await pool.query<{ email: string }>(
+    `
+      SELECT LOWER(email) as email FROM students
+      WHERE LOWER(email) = ANY($1::text[])
+    `,
+    [emails.map((e) => e.toLowerCase())],
+  );
+
+  return result.rows.map((row) => row.email);
+};
+
+/**
+ * Bulk insert students into the database
+ * Returns the inserted students or throws an error
+ */
+export const insertBulkStudents = async (
+  students: StudentInsertPayload[],
+): Promise<Student[]> => {
+  if (students.length === 0) {
+    return [];
+  }
+
+  const placeholders = students
+    .map(
+      (_, index) =>
+        `($${index * 7 + 1}, $${index * 7 + 2}, $${index * 7 + 3}, $${index * 7 + 4}, $${index * 7 + 5}, $${index * 7 + 6}, $${index * 7 + 7})`,
+    )
+    .join(",");
+
+  const values: any[] = [];
+  for (const student of students) {
+    values.push(
+      student.email,
+      student.student_name,
+      student.roll_number,
+      student.start_year,
+      student.end_year,
+      student.cgpa,
+      student.sector,
+    );
+  }
+
+  const result = await pool.query<Student>(
+    `
+      INSERT INTO students (email, student_name, roll_number, start_year, end_year, cgpa, sector)
+      VALUES ${placeholders}
+      ON CONFLICT (email) DO NOTHING
+      RETURNING student_id, email, student_name, roll_number, start_year, end_year, cgpa, sector
+    `,
+    values,
+  );
+
+  return result.rows;
+};

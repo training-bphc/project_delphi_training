@@ -1,6 +1,7 @@
 // USERS
 
 export type UserRole = "student" | "admin";
+export type SectorType = "IT" | "ET" | "Core" | "FinTech";
 
 export interface Student {
   student_id: number; // internal DB surrogate key — do NOT expose in API responses
@@ -9,6 +10,8 @@ export interface Student {
   email: string;
   start_year: number;
   end_year: number;
+  cgpa: number; // CGPA on a scale of 0-10
+  sector: SectorType;
 }
 
 export interface Admin {
