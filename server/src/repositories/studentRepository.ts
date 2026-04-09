@@ -97,7 +97,7 @@ export const insertBulkStudents = async (
     )
     .join(",");
 
-  const values: any[] = [];
+  const values: (string | number)[] = [];
   for (const student of students) {
     values.push(
       student.email,

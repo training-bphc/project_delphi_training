@@ -243,13 +243,19 @@ export const bulkInsertStudents = async (
   const existingEmailsList = await validateEmailUniqueness(emails);
   const existingEmailsSet = new Set(existingEmailsList.map((e) => e.toLowerCase()));
 
+  // Build email -> row-number map in O(n) so DB duplicate errors can be reported with correct rows
+  const emailRowMap = new Map<string, number>();
+  for (let i = 0; i < parsedRecords.length; i++) {
+    const normalizedEmail = parsedRecords[i].email?.toLowerCase();
+    if (normalizedEmail && !emailRowMap.has(normalizedEmail)) {
+      emailRowMap.set(normalizedEmail, i + 2);
+    }
+  }
+
   const duplicateErrors = validRecords
     .filter((record) => existingEmailsSet.has(record.email.toLowerCase()))
     .map((record) => ({
-      row:
-        parsedRecords.findIndex(
-          (r) => r.email?.toLowerCase() === record.email.toLowerCase(),
-        ) + 2,
+      row: emailRowMap.get(record.email.toLowerCase()) ?? 0,
       email: record.email,
       error: `Email already exists in database: ${record.email}`,
     }));
