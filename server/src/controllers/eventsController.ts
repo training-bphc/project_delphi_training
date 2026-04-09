@@ -188,8 +188,12 @@ export const bulkImportEventRegistrationsHandler = asyncHandler(async (req: Requ
 
   try {
     const result = await bulkImportEventRegistrations(eventId, csvContent);
-    res.status(201).json({
-      success: true,
+
+    // Return 422 when nothing was processed (empty CSV or all rows failed)
+    const isFullFailure = result.success === 0 && result.errors.length > 0;
+
+    res.status(isFullFailure ? 422 : 201).json({
+      success: !isFullFailure,
       message: `Bulk import completed. ${result.success} registrations processed, ${result.failed} failed.`,
       data: {
         summary: {

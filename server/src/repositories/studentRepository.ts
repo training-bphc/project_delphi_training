@@ -53,9 +53,33 @@ export const validateEmailUniqueness = async (
 };
 
 /**
- * Bulk insert students into the database
- * Returns the inserted students or throws an error
+ * Find multiple students by emails in a single query
+ * Returns a map of lowercase email -> Student
  */
+export const findStudentsByEmails = async (
+  emails: string[],
+): Promise<Map<string, Student>> => {
+  if (emails.length === 0) {
+    return new Map();
+  }
+
+  const result = await pool.query<Student>(
+    `
+      SELECT student_id, email, student_name, roll_number, start_year, end_year, cgpa, sector
+      FROM students
+      WHERE LOWER(email) = ANY($1::text[])
+    `,
+    [emails.map((e) => e.toLowerCase())],
+  );
+
+  const map = new Map<string, Student>();
+  for (const row of result.rows) {
+    map.set(row.email.toLowerCase(), row);
+  }
+  return map;
+};
+
+
 export const insertBulkStudents = async (
   students: StudentInsertPayload[],
 ): Promise<Student[]> => {

@@ -1,5 +1,5 @@
 import { parse } from "csv-parse/sync";
-import { findStudentByEmail } from "../repositories/studentRepository";
+import { findStudentsByEmails } from "../repositories/studentRepository";
 import {
   createEvent,
   findAllEvents,
@@ -96,8 +96,15 @@ const normalizeEventDate = (value: unknown): string => {
     throw new Error("event_date must be in YYYY-MM-DD format");
   }
 
-  const parsed = new Date(normalized);
-  if (Number.isNaN(parsed.getTime())) {
+  // Strict calendar date validation: re-parse and compare to detect overflow (e.g. 2026-02-30)
+  const [year, month, day] = normalized.split("-").map(Number);
+  const parsed = new Date(year, month - 1, day);
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() + 1 !== month ||
+    parsed.getDate() !== day
+  ) {
     throw new Error("event_date is invalid");
   }
 
@@ -285,12 +292,17 @@ export const bulkImportEventRegistrations = async (
   }
 
   const errors: Array<{ row: number; email?: string; error: string }> = [];
-  const validRows: Array<{
-    student_id: number;
-    is_registered: boolean;
-    has_attended: boolean;
-  }> = [];
   const seenEmails = new Set<string>();
+
+  // Pre-pass: collect valid emails and validate boolean fields before hitting the DB
+  interface PreValidatedRow {
+    rowNumber: number;
+    rawEmail: string;
+    normalizedEmail: string;
+    isRegistered: boolean;
+    hasAttended: boolean;
+  }
+  const preValidated: PreValidatedRow[] = [];
 
   for (let index = 0; index < parsedRecords.length; index += 1) {
     const rowNumber = index + 2;
@@ -337,20 +349,33 @@ export const bulkImportEventRegistrations = async (
       continue;
     }
 
-    const student = await findStudentByEmail(rawEmail);
+    preValidated.push({ rowNumber, rawEmail, normalizedEmail, isRegistered, hasAttended });
+  }
+
+  // Single DB query to resolve all emails to student IDs
+  const studentMap = await findStudentsByEmails(preValidated.map((r) => r.normalizedEmail));
+
+  const validRows: Array<{
+    student_id: number;
+    is_registered: boolean;
+    has_attended: boolean;
+  }> = [];
+
+  for (const row of preValidated) {
+    const student = studentMap.get(row.normalizedEmail);
     if (!student) {
       errors.push({
-        row: rowNumber,
-        email: rawEmail,
-        error: `Student not found for email: ${rawEmail}`,
+        row: row.rowNumber,
+        email: row.rawEmail,
+        error: `Student not found for email: ${row.rawEmail}`,
       });
       continue;
     }
 
     validRows.push({
       student_id: student.student_id,
-      is_registered: isRegistered,
-      has_attended: hasAttended,
+      is_registered: row.isRegistered,
+      has_attended: row.hasAttended,
     });
   }
 

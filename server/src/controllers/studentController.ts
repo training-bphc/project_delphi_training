@@ -55,8 +55,13 @@ export const bulkUploadStudentsHandler = asyncHandler(
     try {
       const result = await bulkInsertStudents(csvContent);
 
-      res.status(201).json({
-        success: true,
+      // Return 422 when nothing was inserted (parse/validation/CSV-level failure)
+      const isFullFailure = result.success === 0 && result.errors.length > 0;
+
+      const students = result.students.map(({ student_id: _id, ...rest }) => rest);
+
+      res.status(isFullFailure ? 422 : 201).json({
+        success: !isFullFailure,
         message: `Bulk upload completed. ${result.success} students added, ${result.failed} failed.`,
         data: {
           summary: {
@@ -64,7 +69,7 @@ export const bulkUploadStudentsHandler = asyncHandler(
             successful: result.success,
             failed: result.failed,
           },
-          students: result.students,
+          students,
           errors: result.errors,
         },
       });
