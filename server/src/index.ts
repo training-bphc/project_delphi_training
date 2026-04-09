@@ -6,8 +6,10 @@ import net from "net";
 
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import eventsRoutes from "./routes/eventsRoutes.js";
 import recordsRoutes from "./routes/recordsRoutes.js";
 import resourcesRoutes from "./routes/resourcesRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
 import { requestLogger } from "./middleware/logger";
 
 dotenv.config();
@@ -54,6 +56,8 @@ app.get("/api/health", (_req: Request, res: Response) => {
 app.use("/api/auth", authRoutes);
 app.use("/api", recordsRoutes);
 app.use("/api", resourcesRoutes);
+app.use("/api", eventsRoutes);
+app.use("/api/students", studentRoutes);
 
 // 404 Handler
 app.use((_req: Request, res: Response) => {
