@@ -79,7 +79,10 @@ export const findStudentsByEmails = async (
   return map;
 };
 
-
+/**
+ * Bulk insert students into the database
+ * Returns the inserted students or throws an error
+ */
 export const insertBulkStudents = async (
   students: StudentInsertPayload[],
 ): Promise<Student[]> => {
