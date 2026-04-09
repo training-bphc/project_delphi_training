@@ -148,6 +148,7 @@ const validateStudentRecord = (
 /**
  * Validate all student records
  * Returns array of valid records and array of errors
+ * Also detects duplicate emails within the CSV itself
  */
 export const validateRecords = (
   records: ParsedRecord[],
@@ -157,6 +158,7 @@ export const validateRecords = (
 } => {
   const validRecords: StudentInsertPayload[] = [];
   const errors: Array<{ row: number; email?: string; error: string }> = [];
+  const seenEmails = new Set<string>();
 
   for (let i = 0; i < records.length; i++) {
     const rowNumber = i + 2; // +2 because rows are 1-indexed and header is row 1
@@ -170,7 +172,17 @@ export const validateRecords = (
         error: validation.error,
       });
     } else {
-      validRecords.push(validation.student);
+      const normalizedEmail = validation.student.email.toLowerCase();
+      if (seenEmails.has(normalizedEmail)) {
+        errors.push({
+          row: rowNumber,
+          email: validation.student.email,
+          error: `Duplicate email in CSV: ${validation.student.email}`,
+        });
+      } else {
+        seenEmails.add(normalizedEmail);
+        validRecords.push(validation.student);
+      }
     }
   }
 
@@ -228,28 +240,25 @@ export const bulkInsertStudents = async (
 
   // Step 3: Check for duplicate emails in the database
   const emails = validRecords.map((r) => r.email);
-  const existingEmails = await validateEmailUniqueness(emails);
+  const existingEmailsList = await validateEmailUniqueness(emails);
+  const existingEmailsSet = new Set(existingEmailsList.map((e) => e.toLowerCase()));
 
   const duplicateErrors = validRecords
-    .map((record, index) => {
-      if (existingEmails.includes(record.email.toLowerCase())) {
-        return {
-          row: parsedRecords.findIndex(
-            (r) => r.email?.toLowerCase() === record.email.toLowerCase(),
-          ) + 2,
-          email: record.email,
-          error: `Email already exists in database: ${record.email}`,
-        };
-      }
-      return null;
-    })
-    .filter((item): item is { row: number; email: string; error: string } => item !== null);
+    .filter((record) => existingEmailsSet.has(record.email.toLowerCase()))
+    .map((record) => ({
+      row:
+        parsedRecords.findIndex(
+          (r) => r.email?.toLowerCase() === record.email.toLowerCase(),
+        ) + 2,
+      email: record.email,
+      error: `Email already exists in database: ${record.email}`,
+    }));
 
   errors.push(...duplicateErrors);
 
   // Filter out records with duplicate emails
   const recordsToInsert = validRecords.filter(
-    (record) => !existingEmails.includes(record.email.toLowerCase()),
+    (record) => !existingEmailsSet.has(record.email.toLowerCase()),
   );
 
   if (recordsToInsert.length === 0) {
@@ -274,7 +283,7 @@ export const bulkInsertStudents = async (
   } catch (error) {
     return {
       success: 0,
-      failed: recordsToInsert.length + validationErrors.length,
+      failed: errors.length + recordsToInsert.length,
       errors: [
         ...errors,
         {
