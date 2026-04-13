@@ -8,6 +8,7 @@ import {
   deleteRecordHandler,
   undoDeleteRecordHandler,
   bulkAddRecordsHandler,
+  getCGPABreakdownHandler,
 } from "../controllers/recordsController";
 import {
   createVerificationRequestHandler,
@@ -29,6 +30,11 @@ router.use(authenticate);
 router.get("/categories", getCategoriesHandler);
 router.get("/records", getRecordsHandler);
 router.get("/records/by-bits-id/:bitsId", getRecordByBitsIdHandler);
+router.get(
+  "/records/cgpa-breakdown",
+  authorize(["admin"]),
+  getCGPABreakdownHandler,
+);
 router.post("/records", createRecordHandler);
 router.patch("/records/:sNo/verify", authorize(["admin"]), verifyRecordHandler);
 router.delete("/records/:sNo", authorize(["admin"]), deleteRecordHandler);

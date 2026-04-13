@@ -523,7 +523,9 @@ export const updateVerificationRequestStatus = async (
       const remaining = Math.max(0, category.max_points - currentTotal);
 
       if ((awardedPoints ?? 0) > remaining) {
-        throw new Error(`Assigned points exceed limit. Allowed range: 0-${remaining}`);
+        throw new Error(
+          `Assigned points exceed limit. Allowed range: 0-${remaining}`,
+        );
       }
 
       await client.query(
@@ -591,4 +593,80 @@ export const updateVerificationRequestStatus = async (
   } finally {
     client.release();
   }
+};
+
+export const getCGPABreakdownData = async (): Promise<{
+  breakdown: Array<{
+    cgpaRange: string;
+    averagePoints: number;
+    studentCount: number;
+  }>;
+  studentsWithoutCGPA: string[];
+}> => {
+  const result = await pool.query<{
+    student_name: string;
+    cgpa: number | null;
+    average_points: string;
+  }>(
+    `
+      SELECT
+        s.student_name,
+        s.cgpa,
+        COALESCE(AVG(tp.points), 0)::numeric AS average_points
+      FROM students s
+      LEFT JOIN training_points tp ON s.roll_number = tp.bits_id
+        AND tp.deleted_at IS NULL
+      GROUP BY s.student_id, s.student_name, s.cgpa
+      ORDER BY s.student_name ASC
+    `,
+  );
+
+  const students = result.rows;
+  const studentsWithoutCGPA: string[] = [];
+  const cgpaRanges = {
+    "9-10": { min: 9.0, max: 10.0, totalPoints: 0, count: 0 },
+    "8-9": { min: 8.0, max: 9.0, totalPoints: 0, count: 0 },
+    "7-8": { min: 7.0, max: 8.0, totalPoints: 0, count: 0 },
+    "6-7": { min: 6.0, max: 7.0, totalPoints: 0, count: 0 },
+    "<6": { min: Number.NEGATIVE_INFINITY, max: 6.0, totalPoints: 0, count: 0 },
+  };
+
+  for (const student of students) {
+    if (student.cgpa === null) {
+      studentsWithoutCGPA.push(student.student_name);
+      continue;
+    }
+
+    const cgpa = Number(student.cgpa);
+    const avgPoints = Number(student.average_points);
+
+    if (cgpa >= 9 && cgpa <= 10) {
+      cgpaRanges["9-10"].count += 1;
+      cgpaRanges["9-10"].totalPoints += avgPoints;
+    } else if (cgpa >= 8 && cgpa < 9) {
+      cgpaRanges["8-9"].count += 1;
+      cgpaRanges["8-9"].totalPoints += avgPoints;
+    } else if (cgpa >= 7 && cgpa < 8) {
+      cgpaRanges["7-8"].count += 1;
+      cgpaRanges["7-8"].totalPoints += avgPoints;
+    } else if (cgpa >= 6 && cgpa < 7) {
+      cgpaRanges["6-7"].count += 1;
+      cgpaRanges["6-7"].totalPoints += avgPoints;
+    } else {
+      cgpaRanges["<6"].count += 1;
+      cgpaRanges["<6"].totalPoints += avgPoints;
+    }
+  }
+
+  const breakdown = ["9-10", "8-9", "7-8", "6-7", "<6"].map((range) => {
+    const item = cgpaRanges[range as keyof typeof cgpaRanges];
+    return {
+      cgpaRange: range,
+      averagePoints:
+        item.count > 0 ? Number((item.totalPoints / item.count).toFixed(2)) : 0,
+      studentCount: item.count,
+    };
+  });
+
+  return { breakdown, studentsWithoutCGPA };
 };

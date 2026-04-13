@@ -8,14 +8,15 @@ import {
   markRecordAsVerified,
   softDeleteRecord,
   restoreRecord,
-} from '../repositories/recordsRepository';
+  getCGPABreakdownData,
+} from "../repositories/recordsRepository";
 import {
   CreateTrainingRecordInput,
   ResolvedTrainingRecordInput,
   TrainingPointCategory,
   TrainingRecord,
   VerificationStatus,
-} from '../types';
+} from "../types";
 
 export const getRecords = async (
   status?: string,
@@ -28,11 +29,11 @@ export const getRecords = async (
     status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 
   if (
-    normalizedStatus !== 'Pending' &&
-    normalizedStatus !== 'Verified' &&
-    normalizedStatus !== 'Rejected'
+    normalizedStatus !== "Pending" &&
+    normalizedStatus !== "Verified" &&
+    normalizedStatus !== "Rejected"
   ) {
-    throw new Error('Invalid status filter');
+    throw new Error("Invalid status filter");
   }
 
   return findAllRecords(normalizedStatus as VerificationStatus);
@@ -53,7 +54,7 @@ export const addRecord = async (
   if (!resolvedName || !resolvedBitsId) {
     const student = await findStudentIdentityByEmail(payload.email_id);
     if (!student) {
-      throw new Error('Student not found for provided email');
+      throw new Error("Student not found for provided email");
     }
 
     resolvedName = resolvedName || student.student_name;
@@ -62,14 +63,14 @@ export const addRecord = async (
 
   const categoryExists = await findCategoryById(payload.category_id);
   if (!categoryExists) {
-    throw new Error('Invalid category_id');
+    throw new Error("Invalid category_id");
   }
 
   const resolvedPayload: ResolvedTrainingRecordInput = {
     ...payload,
     name: resolvedName,
     bits_id: resolvedBitsId,
-    verification_status: 'Verified',
+    verification_status: "Verified",
     points: payload.points ?? 0,
   };
 
@@ -100,6 +101,31 @@ export const undoDeleteRecord = async (
 };
 
 // ─────────────────────────────────────────────────────────────────
+// CGPA BREAKDOWN FUNCTIONALITY
+// ─────────────────────────────────────────────────────────────────
+
+export interface CGPABreakdownResponse {
+  breakdown: Array<{
+    cgpaRange: string;
+    averagePoints: number;
+    studentCount: number;
+  }>;
+  studentsWithoutCGPA: string[];
+}
+
+export const getCGPABreakdown = async (): Promise<CGPABreakdownResponse> => {
+  const data = await getCGPABreakdownData();
+
+  if (data.studentsWithoutCGPA.length > 0) {
+    throw new Error(
+      `${data.studentsWithoutCGPA.map((name) => `"${name}"`).join(", ")} student${data.studentsWithoutCGPA.length > 1 ? "s" : ""} doesn't have CGPA record`,
+    );
+  }
+
+  return { breakdown: data.breakdown, studentsWithoutCGPA: [] };
+};
+
+// ─────────────────────────────────────────────────────────────────
 // BULK OPERATIONS
 // ─────────────────────────────────────────────────────────────────
 
@@ -118,12 +144,14 @@ export interface BulkAddResult {
   records: TrainingRecord[];
 }
 
-export const bulkAddRecords = async (input: BulkAddInput): Promise<BulkAddResult> => {
+export const bulkAddRecords = async (
+  input: BulkAddInput,
+): Promise<BulkAddResult> => {
   const { emails, category_id, points, added_by, awarded_by } = input;
 
   const categoryExists = await findCategoryById(category_id);
   if (!categoryExists) {
-    throw new Error('Invalid category_id');
+    throw new Error("Invalid category_id");
   }
 
   const errors: Array<{ email: string; error: string }> = [];
@@ -134,7 +162,7 @@ export const bulkAddRecords = async (input: BulkAddInput): Promise<BulkAddResult
       // Look up student
       const student = await findStudentIdentityByEmail(email);
       if (!student) {
-        errors.push({ email, error: 'Student not found' });
+        errors.push({ email, error: "Student not found" });
         continue;
       }
 
@@ -143,11 +171,11 @@ export const bulkAddRecords = async (input: BulkAddInput): Promise<BulkAddResult
         name: student.student_name,
         bits_id: student.roll_number,
         email_id: email,
-        date: new Date().toISOString().split('T')[0], // Today's date
+        date: new Date().toISOString().split("T")[0], // Today's date
         category_id,
         added_by,
         awarded_by,
-        verification_status: 'Verified', // Auto-verified for admin bulk additions
+        verification_status: "Verified", // Auto-verified for admin bulk additions
         points,
       };
 
@@ -156,7 +184,7 @@ export const bulkAddRecords = async (input: BulkAddInput): Promise<BulkAddResult
     } catch (error: any) {
       errors.push({
         email,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
