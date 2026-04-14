@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useAuth } from "../../contexts/auth";
 import VerificationRequestsTable from "../../components/common/VerificationRequestsTable";
 import styles from "./PendingRequests.module.css";
@@ -148,7 +149,7 @@ function PendingRequests() {
       await fetchVerificationRequests();
     } catch (error) {
       console.error("Failed to reject request:", error);
-      alert("Failed to reject request");
+      toast.error("Failed to reject request");
     }
   };
 

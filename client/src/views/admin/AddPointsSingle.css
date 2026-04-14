@@ -1,0 +1,196 @@
+/* Add Points Single View */
+
+.addPointsSingleContent {
+	width: 100%;
+	min-height: 100vh;
+	padding: 40px 20px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background: #fafafa;
+}
+
+.backButton {
+	align-self: flex-start;
+	background: none;
+	border: none;
+	font-size: 1rem;
+	color: #3b82f6;
+	cursor: pointer;
+	padding: 8px 0;
+	margin-bottom: 32px;
+	font-weight: 500;
+	transition: color 0.2s ease;
+}
+
+.backButton:hover {
+	color: #2563eb;
+}
+
+.formContainer {
+	width: 100%;
+	max-width: 600px;
+	background: #ffffff;
+	border-radius: 12px;
+	padding: 40px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.formContainer h1 {
+	margin: 0 0 8px 0;
+	font-size: 2rem;
+	font-weight: 700;
+	color: #111827;
+}
+
+.formSubtitle {
+	margin: 0 0 32px 0;
+	font-size: 0.95rem;
+	color: #6b7280;
+	line-height: 1.5;
+}
+
+.addPointsSingleForm {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+/* Uniform input heights */
+.addPointsSingleForm input,
+.addPointsSingleForm select,
+.addPointsSingleForm textarea {
+	height: 34px;
+	font-size: 0.95rem;
+	padding: 8px 12px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	font-family: inherit;
+	color: #111827;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.addPointsSingleForm textarea {
+	height: auto;
+	min-height: 120px;
+	resize: vertical;
+}
+
+.addPointsSingleForm input:hover,
+.addPointsSingleForm select:hover {
+	border-color: #d1d5db;
+}
+
+.addPointsSingleForm input:focus,
+.addPointsSingleForm select:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Form labels styling */
+.addPointsSingleForm label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: #111827;
+	font-size: 0.95rem;
+}
+
+.emailInputGroup {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.emailInputGroup input {
+	flex: 1;
+	height: 34px;
+}
+
+.emailDomain {
+	color: #9ca3af;
+	font-size: 0.95rem;
+	white-space: nowrap;
+	padding: 8px 12px;
+	background: #f3f4f6;
+	border-radius: 6px;
+	height: 34px;
+	display: flex;
+	align-items: center;
+}
+
+.categorySelect {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	font-size: 0.95rem;
+	background: #ffffff;
+	color: #111827;
+	cursor: pointer;
+	height: 34px;
+}
+
+.categorySelect:hover {
+	border-color: #d1d5db;
+}
+
+.categorySelect:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.descriptionTextarea {
+	width: 100%;
+	padding: 8px 12px;
+	border: 1px solid #e5e7eb;
+	border-radius: 6px;
+	font-size: 0.95rem;
+	font-family: inherit;
+	color: #111827;
+	resize: vertical;
+	min-height: 120px;
+	height: auto;
+}
+
+.descriptionTextarea:hover {
+	border-color: #d1d5db;
+}
+
+.descriptionTextarea:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.submitButton {
+	margin-top: 8px;
+	padding: 12px 20px;
+	height: auto;
+	font-weight: 500;
+}
+
+@media (max-width: 768px) {
+	.addPointsSingleContent {
+		padding: 20px 16px;
+	}
+
+	.formContainer {
+		padding: 24px;
+	}
+
+	.formContainer h1 {
+		font-size: 1.5rem;
+	}
+}
+
+.studentNameDisplay {
+	font-size: 0.85rem;
+	color: #6b7280;
+	opacity: 0.7;
+	margin-top: 6px;
+	font-weight: 500;
+}

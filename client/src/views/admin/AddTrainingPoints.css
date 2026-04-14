@@ -1,0 +1,69 @@
+/* Add Training Points View */
+
+.addTrainingPointsViewContent {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+	padding: 0;
+}
+
+.addTrainingPointsViewHeading {
+	text-align: left;
+	font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+	margin: 0;
+	padding: 0;
+	color: #111827;
+	font-weight: 600;
+}
+
+.addTrainingPointsCardsContainer {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 24px;
+}
+
+.addTrainingPointsCard {
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	padding: 32px;
+	background: #ffffff;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+	min-height: 240px;
+}
+
+.addTrainingPointsCard:hover {
+	border-color: #474747;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	transform: translateY(-2px);
+}
+
+.addTrainingPointsCardContent {
+	width: 100%;
+}
+
+.addTrainingPointsCardContent h2 {
+	margin: 0 0 12px 0;
+	font-size: 1.3rem;
+	font-weight: 600;
+	color: #111827;
+}
+
+.addTrainingPointsCardContent p {
+	margin: 0;
+	font-size: 0.95rem;
+	color: #6b7280;
+	line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.addTrainingPointsCardsContainer {
+		grid-template-columns: 1fr;
+	}
+}

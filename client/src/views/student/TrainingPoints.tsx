@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import styles from './trainingPoints.module.css';
 import { useAuth } from '../../contexts/auth';
+import TrainingPointsInfo from '@/components/training-points/TrainingPointsInfo';
 import type { Record, TrainingCategory } from '@/shared/types';
 
 interface TrainingPointsProps {
@@ -15,6 +16,7 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
   const [records, setRecords] = useState<Record[]>([]);
   const [categories, setCategories] = useState<TrainingCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showFAQ, setShowFAQ] = useState(false);
 
   // Fetch data on mount
   useEffect(() => {
@@ -116,9 +118,17 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
           <div className={styles.pointsCard}>
             <span className={styles.pointsValue}>{totalPoints} / {CUTOFF_POINTS}</span>
           </div>
-          <span className={styles.infoText}>What are Training Points?</span>
+          <button
+            className={styles.infoText}
+            onClick={() => setShowFAQ(true)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            Some common FAQ
+          </button>
         </div>
       </section>
+
+      {showFAQ && <TrainingPointsInfo onClose={() => setShowFAQ(false)} />}
 
       <section className={styles.categoryWise}>
         <div className={styles.categoryGrid}>
@@ -126,7 +136,6 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
             <div key={category.categoryId} className={styles.categoryCard}>
               <div className={styles.categoryHeadingRow}>
                 <span className={styles.categoryTitle}>{category.name}</span>
-                <span className={styles.categoryInfo} title={category.description}>i</span>
               </div>
               <span className={styles.categoryPoints}>{category.currentPoints} / {category.targetPoints}</span>
               <div className={styles.progressTrack}>

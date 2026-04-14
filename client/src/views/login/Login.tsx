@@ -1,8 +1,10 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import GoogleLoginButton from "../../components/auth/GoogleLogin";
 import { useAuth } from "../../contexts/auth";
 import styles from "./Login.module.css";
+import { Button } from "@/components/ui/button";
 
 function Login() {
   const { devLogin, isLoading } = useAuth();
@@ -14,9 +16,9 @@ function Login() {
   const handleDevLogin = async (email: string, role: "student" | "admin") => {
     try {
       await devLogin(email, role);
-      navigate(role === "admin" ? "/admin/overview" : "/student/training");
+      navigate(role === "admin" ? "/admin/training-points" : "/student/training");
     } catch (error: any) {
-      alert("Dev login failed: " + (error.message || "Unknown error"));
+      toast.error("Dev login failed: " + (error.message || "Unknown error"));
     }
   };
 
@@ -50,9 +52,8 @@ function Login() {
 
           {isDev && enableDevLogin && (
             <div className={styles.devActions}>
-              <button
-                className={styles.devButton}
-                type="button"
+              <Button
+              className={styles.devButton}
                 disabled={isLoading}
                 onClick={() =>
                   handleDevLogin(
@@ -62,17 +63,17 @@ function Login() {
                 }
               >
                 Dev Login as Student
-              </button>
-              <button
+              </Button>
+
+              <Button
                 className={styles.devButton}
-                type="button"
                 disabled={isLoading}
                 onClick={() =>
                   handleDevLogin("admin@hyderabad.bits-pilani.ac.in", "admin")
                 }
               >
                 Dev Login as Admin
-              </button>
+              </Button>
             </div>
           )}
         </div>

@@ -31,12 +31,12 @@ function Sidebar() {
         {user?.role === "admin" ? (
           <>
             <NavLink
-              to="/admin/overview"
+              to="/admin/training-points"
               className={({ isActive }) =>
                 isActive ? "nav-link active" : "nav-link"
               }
             >
-              Overview
+              Training Points 
             </NavLink>
             <NavLink
               to="/admin/pending"

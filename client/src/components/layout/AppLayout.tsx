@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import Sidebar from './Sidebar';
 import './AppLayout.css';
 
@@ -9,6 +10,7 @@ function AppLayout() {
       <main className="content">
         <Outlet />
       </main>
+      <Toaster />
     </div>
   );
 }

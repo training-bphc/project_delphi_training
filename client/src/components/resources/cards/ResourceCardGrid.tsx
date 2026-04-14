@@ -1,0 +1,54 @@
+import ResourceCard from "./ResourceCard";
+import styles from "../resources.module.css";
+
+interface ResourceRecord {
+  resource_id: number;
+  resource_name: string;
+  resource_type: string;
+  file_url: string;
+  folder_id: number;
+  uploaded_by: string;
+}
+
+interface ResourceCardGridProps {
+  resources: ResourceRecord[];
+  canManage: boolean;
+  onRename: (resourceId: number, currentName: string) => void;
+  onUpdateUrl: (resourceId: number, currentUrl: string) => void;
+  onDelete: (resourceId: number) => void;
+  getHostname: (url: string) => string;
+}
+
+function ResourceCardGrid({
+  resources,
+  canManage,
+  onRename,
+  onUpdateUrl,
+  onDelete,
+  getHostname,
+}: ResourceCardGridProps) {
+  if (resources.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={styles.resourcesSection}>
+      <h4 className={styles.sectionLabel}>Resources</h4>
+      <div className={styles.resourceCardGrid}>
+        {resources.map((resource) => (
+          <ResourceCard
+            key={resource.resource_id}
+            resource={resource}
+            canManage={canManage}
+            onRename={onRename}
+            onUpdateUrl={onUpdateUrl}
+            onDelete={onDelete}
+            getHostname={getHostname}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default ResourceCardGrid;

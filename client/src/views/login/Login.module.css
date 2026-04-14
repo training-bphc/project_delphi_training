@@ -71,6 +71,8 @@ img {
   border-radius: 8px;
   background: #ffffff;
   cursor: pointer;
+  color: black;
+  font-weight: 200;
   transition:
     background 0.2s ease,
     transform 0.12s ease,

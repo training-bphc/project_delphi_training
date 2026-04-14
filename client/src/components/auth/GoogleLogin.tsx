@@ -1,4 +1,5 @@
 import { GoogleLogin } from "@react-oauth/google";
+import { toast } from "sonner";
 import { useAuth } from "../../contexts/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -21,7 +22,7 @@ function GoogleLoginButton() {
       // Try admin first. If not an admin, fall back to student in the same attempt.
       try {
         await login(idToken, "admin");
-        navigate("/admin/overview");
+        navigate("/admin/training-points");
         return;
       } catch (adminError: any) {
         const adminMessage = adminError?.message || "Unknown error";
@@ -39,18 +40,18 @@ function GoogleLoginButton() {
             "Both admin and student login failed:",
             studentError.message,
           );
-          alert("Login failed: " + (studentError.message || "Unknown error"));
+          toast.error("Login failed: " + (studentError.message || "Unknown error"));
         }
       }
     } catch (error: any) {
       console.error("Google login error:", error);
-      alert("Login failed: " + (error.message || "Unknown error"));
+      toast.error("Login failed: " + (error.message || "Unknown error"));
     }
   };
 
   const handleGoogleError = () => {
     console.log("Google login failed");
-    alert("Google login failed. Please try again.");
+    toast.error("Google login failed. Please try again.");
   };
 
   return (

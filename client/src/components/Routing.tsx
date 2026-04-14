@@ -2,7 +2,10 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import AppLayout from "./layout/AppLayout";
 import Login from "@/views/login/Login";
-import AdminOverview from "@/views/admin/Overview";
+import AdminOverview from "@/views/admin/TrainingPoints";
+import AddTrainingPoints from "@/views/admin/AddTrainingPoints";
+import AddPointsSingle from "@/views/admin/AddPointsSingle";
+import AddPointsCSV from "@/views/admin/AddPointsCSV";
 import PendingRequests from "@/views/admin/PendingRequests";
 import VerifiedRequests from "@/views/admin/VerifiedRequests";
 import AdminResources from "@/views/admin/Resources";
@@ -35,7 +38,7 @@ function RoutingContent() {
       {user.role === "admin" ? (
         <>
           <Route element={<AppLayout />}>
-            <Route path="/admin/overview" element={<AdminOverview />} />
+            <Route path="/admin/training-points" element={<AdminOverview />} />
             <Route
               path="/admin/pending"
               element={<PendingRequests />}
@@ -44,10 +47,22 @@ function RoutingContent() {
               path="/admin/verified"
               element={<VerifiedRequests />}
             />
+            <Route 
+              path="/admin/add-training-points"
+              element={<AddTrainingPoints />} 
+            />
+            <Route 
+              path="/admin/add-training-points/single"
+              element={<AddPointsSingle />} 
+            />
+            <Route 
+              path="/admin/add-training-points/csv"
+              element={<AddPointsCSV />} 
+            />
             <Route path="/admin/resources" element={<AdminResources />} />
             <Route
               path="*"
-              element={<Navigate to="/admin/overview" replace />}
+              element={<Navigate to="/admin/training-points" replace />}
             />
           </Route>
         </>
