@@ -48,8 +48,8 @@ const seedData = async (): Promise<void> => {
 
     // ── Seed students ───────────────────────────────────────────
     const studentResult1 = await client.query(
-      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, cgpa, sector)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (email) DO NOTHING
        RETURNING student_id`,
       [
@@ -58,7 +58,8 @@ const seedData = async (): Promise<void> => {
         "2024A8PS0546H",
         2024,
         2025,
-        true,
+        8.5,
+        "IT",
       ],
     );
     const student1Id =
@@ -66,8 +67,8 @@ const seedData = async (): Promise<void> => {
       (await getStudentIdByEmail(client, "f20240546@hyderabad.bits-pilani.ac.in"));
 
     const studentResult2 = await client.query(
-      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, cgpa, sector)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (email) DO NOTHING
        RETURNING student_id`,
       [
@@ -76,7 +77,8 @@ const seedData = async (): Promise<void> => {
         "2023A8PS1100H",
         2023,
         2027,
-        true,
+        7.8,
+        "Core",
       ],
     );
     const student2Id =
@@ -84,8 +86,8 @@ const seedData = async (): Promise<void> => {
       (await getStudentIdByEmail(client, "f20231100@hyderabad.bits-pilani.ac.in"));
 
     const studentResult3 = await client.query(
-      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, cgpa, sector)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (email) DO NOTHING
        RETURNING student_id`,
       [
@@ -94,7 +96,8 @@ const seedData = async (): Promise<void> => {
         "2023A8PS1106H",
         2023,
         2027,
-        true,
+        9.2,
+        "FinTech",
       ],
     );
     const student3Id =
@@ -102,8 +105,8 @@ const seedData = async (): Promise<void> => {
       (await getStudentIdByEmail(client, "f20231106@hyderabad.bits-pilani.ac.in"));
 
     const studentResult4 = await client.query(
-      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO students (email, student_name, roll_number, start_year, end_year, cgpa, sector)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (email) DO NOTHING
        RETURNING student_id`,
       [
@@ -112,7 +115,8 @@ const seedData = async (): Promise<void> => {
         "2023A8PS0046H",
         2023,
         2027,
-        true,
+        8.1,
+        "ET",
       ],
     );
     const student4Id =
@@ -132,12 +136,16 @@ const seedData = async (): Promise<void> => {
       { email: "f20250010@hyderabad.bits-pilani.ac.in", name: "Bulk Student 10", roll: "2025A8PS0010H" },
     ];
 
-    for (const student of bulkTestStudents) {
+    for (let i = 0; i < bulkTestStudents.length; i++) {
+      const student = bulkTestStudents[i];
+      const sectors = ['IT', 'Core', 'ET', 'FinTech'];
+      const sector = sectors[i % sectors.length];
+      const cgpa = 7.0 + (i * 0.2);
       await client.query(
-        `INSERT INTO students (email, student_name, roll_number, start_year, end_year, is_active)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO students (email, student_name, roll_number, start_year, end_year, cgpa, sector)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (email) DO NOTHING`,
-        [student.email, student.name, student.roll, 2025, 2029, true],
+        [student.email, student.name, student.roll, 2025, 2029, cgpa, sector],
       );
     }
 

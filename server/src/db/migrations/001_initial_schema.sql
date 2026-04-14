@@ -1,5 +1,11 @@
 -- Consolidated baseline schema for Project Delphi.
 
+-- Create ENUM type for sector
+DO $$ BEGIN
+  CREATE TYPE sector_enum AS ENUM ('IT', 'ET', 'Core', 'FinTech');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
 -- Students
 CREATE TABLE IF NOT EXISTS students (
   student_id   SERIAL PRIMARY KEY,
@@ -8,7 +14,8 @@ CREATE TABLE IF NOT EXISTS students (
   roll_number  VARCHAR(50)  NOT NULL UNIQUE,
   start_year   INTEGER      NOT NULL,
   end_year     INTEGER      NOT NULL,
-  is_active    BOOLEAN      NOT NULL DEFAULT true,
+  cgpa         NUMERIC(4, 2) NOT NULL,
+  sector       sector_enum  NOT NULL,
   CONSTRAINT students_year_order_chk CHECK (start_year <= end_year),
   CONSTRAINT students_roll_email_uk UNIQUE (roll_number, email)
 );
@@ -23,8 +30,10 @@ CREATE TABLE IF NOT EXISTS admins (
   is_super_admin BOOLEAN      NOT NULL DEFAULT false
 );
 
--- Indexes for faster lookups
+-- Indexes for students table
 CREATE INDEX IF NOT EXISTS idx_students_email ON students(email);
+CREATE INDEX IF NOT EXISTS idx_students_sector ON students(sector);
+CREATE INDEX IF NOT EXISTS idx_students_cgpa ON students(cgpa);
 
 -- Training point categories are now the single source of truth.
 CREATE TABLE IF NOT EXISTS training_point_categories (

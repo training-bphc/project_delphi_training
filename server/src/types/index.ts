@@ -1,6 +1,7 @@
 // USERS
 
 export type UserRole = "student" | "admin";
+export type SectorType = "IT" | "ET" | "Core" | "FinTech";
 
 export interface Student {
   student_id: number; // internal DB surrogate key — do NOT expose in API responses
@@ -9,12 +10,74 @@ export interface Student {
   email: string;
   start_year: number;
   end_year: number;
+  cgpa: number; // CGPA on a scale of 0-10
+  sector: SectorType;
 }
 
 export interface Admin {
   admin_id: number; // internal DB surrogate key
   admin_name: string;
   email: string;
+}
+
+// EVENTS
+
+export interface Event {
+  event_id: number;
+  title: string;
+  event_type: string;
+  event_date: string;
+  venue: string;
+  url?: string | null;
+  is_mandatory: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+}
+
+export interface CreateEventInput {
+  title: string;
+  event_type: string;
+  event_date: string;
+  venue: string;
+  url?: string | null;
+  is_mandatory?: boolean;
+}
+
+export interface UpdateEventInput {
+  title?: string;
+  event_type?: string;
+  event_date?: string;
+  venue?: string;
+  url?: string | null;
+  is_mandatory?: boolean;
+}
+
+export interface EventRegistration {
+  registration_id: number;
+  event_id: number;
+  student_id: number;
+  is_registered: boolean;
+  has_attended: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+}
+
+export interface EventRegistrationWithStudent extends EventRegistration {
+  student_name: string;
+  student_email: string;
+  roll_number: string;
+}
+
+export interface StudentEventStatus extends Event {
+  registration_id?: number | null;
+  is_registered?: boolean | null;
+  has_attended?: boolean | null;
+  registration_created_at?: string | null;
+  registration_updated_at?: string | null;
+  registration_deleted_at?: string | null;
 }
 
 // JWT PAYLOAD
