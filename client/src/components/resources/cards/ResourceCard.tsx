@@ -1,5 +1,14 @@
-import { useState, useRef, useEffect } from "react";
-import styles from "../resources.module.css";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface ResourceRecord {
   resource_id: number;
@@ -27,88 +36,66 @@ function ResourceCard({
   onDelete,
   getHostname,
 }: ResourceCardProps) {
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-
-    if (showMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showMenu]);
-
   return (
-    <div className={styles.resourceCard}>
-      <div className={styles.resourceHeader}>
-        <div className={styles.resourceLinkWrapper}>
-          <a
-            className={styles.resourceLink}
-            href={resource.file_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={resource.resource_name}
-          >
-            �� {resource.resource_name}
-          </a>
-          <span className={styles.resourceHost} title={resource.file_url}>
-            {getHostname(resource.file_url)}
-          </span>
-        </div>
-
-        {canManage && (
-          <div className={styles.relative} ref={menuRef}>
-            <button
-              className={styles.iconBtn}
-              onClick={() => setShowMenu(!showMenu)}
-              title="More options"
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="pt-6 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <a
+              href={resource.file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-sm text-primary hover:underline break-words line-clamp-2"
+              title={resource.resource_name}
             >
-              ⋮
-            </button>
+              {resource.resource_name}
+            </a>
+            <p
+              className="text-xs text-muted-foreground mt-2 truncate"
+              title={resource.file_url}
+            >
+              {getHostname(resource.file_url)}
+            </p>
+          </div>
 
-            {showMenu && (
-              <div className={styles.contextMenu}>
-                <button
-                  className={styles.contextMenuItem}
-                  onClick={() => {
-                    onRename(resource.resource_id, resource.resource_name);
-                    setShowMenu(false);
-                  }}
+          {canManage && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon-xs"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  ⋮
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() =>
+                    onRename(resource.resource_id, resource.resource_name)
+                  }
                 >
                   Rename
-                </button>
-                <button
-                  className={styles.contextMenuItem}
-                  onClick={() => {
-                    onUpdateUrl(resource.resource_id, resource.file_url);
-                    setShowMenu(false);
-                  }}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    onUpdateUrl(resource.resource_id, resource.file_url)
+                  }
                 >
                   Update URL
-                </button>
-                <button
-                  className={`${styles.contextMenuItem} ${styles.destructive}`}
-                  onClick={() => {
-                    onDelete(resource.resource_id);
-                    setShowMenu(false);
-                  }}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => onDelete(resource.resource_id)}
                 >
                   Delete
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

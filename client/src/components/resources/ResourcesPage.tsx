@@ -4,7 +4,16 @@ import { useAuth } from "../../contexts/auth.tsx";
 import ResourcesLayout from "./layout/ResourcesLayout";
 import FolderCardGrid from "./cards/FolderCardGrid";
 import ResourceCardGrid from "./cards/ResourceCardGrid";
-import styles from "./resources.module.css";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface ResourceRecord {
   resource_id: number;
@@ -33,6 +42,8 @@ interface ResourcesPageProps {
   title: string;
 }
 
+type DialogMode = "folder" | "resource" | "url";
+
 function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   const { token } = useAuth();
   const [tree, setTree] = useState<ResourceFolderNode[]>([]);
@@ -44,6 +55,14 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   const [currentFolder, setCurrentFolder] = useState<ResourceFolderNode | null>(
     null
   );
+
+  // Dialog states
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<DialogMode>("folder");
+  const [dialogValue, setDialogValue] = useState("");
+  const [dialogFolderId, setDialogFolderId] = useState<number | null>(null);
+  const [dialogResourceId, setDialogResourceId] = useState<number | null>(null);
+  const [resourceNameForUrl, setResourceNameForUrl] = useState("");
 
   const getHostname = (url: string) => {
     try {
@@ -132,9 +151,19 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
     }
   };
 
+  // Create/Rename Folder
   const createFolder = async (parentFolderId: number | null) => {
-    const folderName = window.prompt("Folder name");
+    setDialogMode("folder");
+    setDialogValue("");
+    setDialogFolderId(parentFolderId);
+    setDialogResourceId(null);
+    setDialogOpen(true);
+  };
+
+  const handleFolderDialogSubmit = async () => {
+    const folderName = dialogValue.trim();
     if (!folderName) {
+      toast.error("Folder name cannot be empty");
       return;
     }
 
@@ -143,29 +172,47 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
         method: "POST",
         body: JSON.stringify({
           folder_name: folderName,
-          parent_folder_id: parentFolderId,
+          parent_folder_id: dialogFolderId,
         }),
       });
       toast.success("Folder created successfully");
       await fetchTree();
+      setDialogOpen(false);
+      setDialogValue("");
     } catch (err: any) {
       toast.error(err.message || "Failed to create folder");
     }
   };
 
   const renameFolder = async (folderId: number, currentName: string) => {
-    const folderName = window.prompt("Rename folder", currentName);
-    if (!folderName || folderName === currentName) {
+    setDialogMode("folder");
+    setDialogValue(currentName);
+    setDialogFolderId(folderId);
+    setDialogResourceId(null);
+    setDialogOpen(true);
+  };
+
+  const handleRenameFolderDialogSubmit = async () => {
+    const folderName = dialogValue.trim();
+    if (!folderName) {
+      toast.error("Folder name cannot be empty");
+      return;
+    }
+
+    if (folderName === dialogValue) {
+      setDialogOpen(false);
       return;
     }
 
     try {
-      await apiCall(`/api/resources/folders/${folderId}`, {
+      await apiCall(`/api/resources/folders/${dialogFolderId}`, {
         method: "PATCH",
         body: JSON.stringify({ folder_name: folderName }),
       });
       toast.success("Folder renamed successfully");
       await fetchTree();
+      setDialogOpen(false);
+      setDialogValue("");
     } catch (err: any) {
       toast.error(err.message || "Failed to rename folder");
     }
@@ -189,69 +236,125 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
     }
   };
 
+  // Add Resource (2-step: name then URL)
   const addResource = async (folderId: number) => {
-    const resourceName = window.prompt("Resource name");
-    if (!resourceName) {
-      return;
-    }
+    setDialogMode("resource");
+    setDialogValue("");
+    setResourceNameForUrl("");
+    setDialogFolderId(folderId);
+    setDialogResourceId(null);
+    setDialogOpen(true);
+  };
 
-    const fileUrl = window.prompt("Resource URL (https://...)");
-    if (!fileUrl) {
-      return;
-    }
+  const handleAddResourceStep = async () => {
+    if (dialogMode === "resource") {
+      const resourceName = dialogValue.trim();
+      if (!resourceName) {
+        toast.error("Resource name cannot be empty");
+        return;
+      }
+      // Move to URL step
+      setResourceNameForUrl(resourceName);
+      setDialogMode("url");
+      setDialogValue("");
+    } else if (dialogMode === "url") {
+      const fileUrl = dialogValue.trim();
+      if (!fileUrl) {
+        toast.error("URL cannot be empty");
+        return;
+      }
+      if (!fileUrl.startsWith("https://")) {
+        toast.error("Please enter a valid HTTPS URL");
+        return;
+      }
 
-    try {
-      await apiCall("/api/resources", {
-        method: "POST",
-        body: JSON.stringify({
-          resource_name: resourceName,
-          file_url: fileUrl,
-          folder_id: folderId,
-        }),
-      });
-      toast.success("Resource added successfully");
-      await fetchTree();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create resource");
+      try {
+        await apiCall("/api/resources", {
+          method: "POST",
+          body: JSON.stringify({
+            resource_name: resourceNameForUrl,
+            file_url: fileUrl,
+            folder_id: dialogFolderId,
+          }),
+        });
+        toast.success("Resource added successfully");
+        await fetchTree();
+        setDialogOpen(false);
+        setDialogValue("");
+        setResourceNameForUrl("");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to create resource");
+      }
     }
   };
 
+  // Rename Resource
   const renameResource = async (resourceId: number, currentName: string) => {
-    const resourceName = window.prompt("Rename resource", currentName);
-    if (!resourceName || resourceName === currentName) {
+    setDialogMode("resource");
+    setDialogValue(currentName);
+    setResourceNameForUrl(currentName);
+    setDialogResourceId(resourceId);
+    setDialogFolderId(null);
+    setDialogOpen(true);
+  };
+
+  const handleRenameResourceDialogSubmit = async () => {
+    const resourceName = dialogValue.trim();
+    if (!resourceName) {
+      toast.error("Resource name cannot be empty");
       return;
     }
 
     try {
-      await apiCall(`/api/resources/${resourceId}/rename`, {
+      await apiCall(`/api/resources/${dialogResourceId}/rename`, {
         method: "PATCH",
         body: JSON.stringify({ resource_name: resourceName }),
       });
       toast.success("Resource renamed successfully");
       await fetchTree();
+      setDialogOpen(false);
+      setDialogValue("");
     } catch (err: any) {
       toast.error(err.message || "Failed to rename resource");
     }
   };
 
+  // Update Resource URL
   const updateResourceUrl = async (resourceId: number, currentUrl: string) => {
-    const fileUrl = window.prompt("Update resource URL", currentUrl);
-    if (!fileUrl || fileUrl === currentUrl) {
+    setDialogMode("url");
+    setDialogValue(currentUrl);
+    setResourceNameForUrl("");
+    setDialogResourceId(resourceId);
+    setDialogFolderId(null);
+    setDialogOpen(true);
+  };
+
+  const handleUpdateUrlDialogSubmit = async () => {
+    const fileUrl = dialogValue.trim();
+    if (!fileUrl) {
+      toast.error("URL cannot be empty");
+      return;
+    }
+    if (!fileUrl.startsWith("https://")) {
+      toast.error("Please enter a valid HTTPS URL");
       return;
     }
 
     try {
-      await apiCall(`/api/resources/${resourceId}/url`, {
+      await apiCall(`/api/resources/${dialogResourceId}/url`, {
         method: "PATCH",
         body: JSON.stringify({ file_url: fileUrl }),
       });
       toast.success("Resource URL updated successfully");
       await fetchTree();
+      setDialogOpen(false);
+      setDialogValue("");
     } catch (err: any) {
       toast.error(err.message || "Failed to update URL");
     }
   };
 
+  // Delete Resource
   const deleteResource = async (resourceId: number) => {
     if (!window.confirm("Delete this resource?")) {
       return;
@@ -270,26 +373,71 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   const displayResources = currentFolder ? currentFolder.resources : [];
   const currentFolderName = currentFolder ? currentFolder.folder_name : title;
 
+  const handleDialogSubmit = () => {
+    if (dialogMode === "folder") {
+      // Check if renaming (dialogFolderId will be set) or creating
+      if (dialogFolderId && !Array.isArray(displayFolders.find(f => f.folder_id === dialogFolderId))) {
+        handleRenameFolderDialogSubmit();
+      } else {
+        handleFolderDialogSubmit();
+      }
+    } else if (dialogMode === "resource") {
+      handleAddResourceStep();
+    } else if (dialogMode === "url") {
+      // Check if updating URL or adding new resource
+      if (dialogResourceId && resourceNameForUrl === "") {
+        handleUpdateUrlDialogSubmit();
+      } else if (resourceNameForUrl) {
+        handleAddResourceStep();
+      } else {
+        handleUpdateUrlDialogSubmit();
+      }
+    }
+  };
+
+  const getDialogTitle = () => {
+    if (dialogMode === "folder") {
+      return dialogFolderId && !Array.isArray(displayFolders.find(f => f.folder_id === dialogFolderId)) ? "Rename Folder" : "Create Folder";
+    } else if (dialogMode === "resource") {
+      return "Add Resource";
+    } else {
+      return "Add URL";
+    }
+  };
+
+  const getDialogPlaceholder = () => {
+    if (dialogMode === "folder") {
+      return "Folder name";
+    } else if (dialogMode === "resource") {
+      return "Resource name";
+    } else {
+      return "https://example.com";
+    }
+  };
+
   return (
     <ResourcesLayout>
-      <section className={styles.container}>
-        <div className={styles.header}>
+      <section className="container mx-auto px-4 py-6">
+        <div className="flex flex-col gap-4 mb-6">
           <div>
-            <h1 className={styles.title}>{currentFolderName}</h1>
+            <h1 className="text-3xl font-bold">{currentFolderName}</h1>
             {breadcrumbs.length > 1 && (
-              <div className={styles.breadcrumbs}>
+              <div className="flex items-center gap-2 mt-2 text-sm">
                 {breadcrumbs.map((crumb, index) => (
-                  <div key={index}>
+                  <div key={index} className="flex items-center gap-2">
                     <button
-                      className={`${styles.breadcrumbItem} ${
-                        index === breadcrumbs.length - 1 ? styles.active : ""
+                      className={`${
+                        index === breadcrumbs.length - 1
+                          ? "text-muted-foreground cursor-default"
+                          : "text-primary hover:underline"
                       }`}
                       onClick={() => handleBreadcrumbClick(index)}
+                      disabled={index === breadcrumbs.length - 1}
                     >
                       {crumb.folderName}
                     </button>
                     {index < breadcrumbs.length - 1 && (
-                      <span className={styles.breadcrumbSeparator}>/</span>
+                      <span className="text-muted-foreground">/</span>
                     )}
                   </div>
                 ))}
@@ -297,25 +445,30 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
             )}
           </div>
           {canManage && (
-            <div className={styles.headerActions}>
-              <button
-                className={styles.actionBtn}
+            <div>
+              <Button
                 onClick={() =>
                   createFolder(currentFolder?.folder_id ?? null)
                 }
               >
                 + Add Subfolder
-              </button>
+              </Button>
             </div>
           )}
         </div>
 
-        {error && <div className={styles.error}>{error}</div>}
+        {error && (
+          <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
+            {error}
+          </div>
+        )}
 
         {isLoading ? (
-          <div className={styles.loading}>Loading resources...</div>
+          <div className="text-center text-muted-foreground py-8">
+            Loading resources...
+          </div>
         ) : displayFolders.length === 0 && displayResources.length === 0 ? (
-          <div className={styles.empty}>
+          <div className="text-center text-muted-foreground py-8">
             {canManage
               ? "No content yet. Create a folder or add a link to get started!"
               : "No resources available yet."}
@@ -323,8 +476,10 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
         ) : (
           <>
             {displayResources.length > 0 && (
-              <div className={styles.resourcesContainer}>
-                <h2 className={styles.sectionLabel}>Resources</h2>
+              <div className="mb-8">
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                  Resources
+                </h2>
                 <ResourceCardGrid
                   resources={displayResources}
                   canManage={canManage}
@@ -334,8 +489,9 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
                   getHostname={getHostname}
                 />
                 {canManage && (
-                  <button
-                    className={styles.smallBtn}
+                  <Button
+                    variant="outline"
+                    className="mt-4"
                     onClick={() =>
                       addResource(
                         currentFolder?.folder_id ?? (null as any as number)
@@ -343,17 +499,20 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
                     }
                   >
                     + Add Link
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
 
             {displayFolders.length > 0 && (
               <div>
-                <h2 className={styles.sectionLabel}>Folders</h2>
+                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                  Folders
+                </h2>
                 <FolderCardGrid
                   folders={displayFolders}
                   canManage={canManage}
+                  onAddResource={addResource}
                   onRenameFolder={renameFolder}
                   onDeleteFolder={deleteFolder}
                   onFolderClick={handleFolderClick}
@@ -363,6 +522,54 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
           </>
         )}
       </section>
+
+      {/* Dialog for Folder/Resource/URL input */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{getDialogTitle()}</DialogTitle>
+            {(dialogMode === "resource" || dialogMode === "url") && (
+              <DialogDescription>
+                {dialogMode === "resource"
+                  ? "Enter the name of the resource"
+                  : "Enter the HTTPS URL for the resource"}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder={getDialogPlaceholder()}
+              value={dialogValue}
+              onChange={(e) => setDialogValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleDialogSubmit();
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDialogOpen(false);
+                setDialogValue("");
+                setResourceNameForUrl("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleDialogSubmit}>
+              {dialogMode === "resource" && dialogValue
+                ? "Next"
+                : dialogMode === "url" && resourceNameForUrl
+                  ? "Create"
+                  : "Submit"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ResourcesLayout>
   );
 }

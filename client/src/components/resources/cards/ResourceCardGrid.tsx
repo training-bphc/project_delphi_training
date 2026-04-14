@@ -1,5 +1,4 @@
 import ResourceCard from "./ResourceCard";
-import styles from "../resources.module.css";
 
 interface ResourceRecord {
   resource_id: number;
@@ -32,21 +31,18 @@ function ResourceCardGrid({
   }
 
   return (
-    <div className={styles.resourcesSection}>
-      <h4 className={styles.sectionLabel}>Resources</h4>
-      <div className={styles.resourceCardGrid}>
-        {resources.map((resource) => (
-          <ResourceCard
-            key={resource.resource_id}
-            resource={resource}
-            canManage={canManage}
-            onRename={onRename}
-            onUpdateUrl={onUpdateUrl}
-            onDelete={onDelete}
-            getHostname={getHostname}
-          />
-        ))}
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {resources.map((resource) => (
+        <ResourceCard
+          key={resource.resource_id}
+          resource={resource}
+          canManage={canManage}
+          onRename={onRename}
+          onUpdateUrl={onUpdateUrl}
+          onDelete={onDelete}
+          getHostname={getHostname}
+        />
+      ))}
     </div>
   );
 }
