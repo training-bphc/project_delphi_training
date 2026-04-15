@@ -417,115 +417,135 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
 
   return (
     <ResourcesLayout>
-      <section className="container mx-auto px-4 py-6">
-        <div className="flex flex-col gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">{currentFolderName}</h1>
-            {breadcrumbs.length > 1 && (
-              <div className="flex items-center gap-2 mt-2 text-sm">
-                {breadcrumbs.map((crumb, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <button
-                      className={`${
-                        index === breadcrumbs.length - 1
-                          ? "text-muted-foreground cursor-default"
-                          : "text-primary hover:underline"
-                      }`}
-                      onClick={() => handleBreadcrumbClick(index)}
-                      disabled={index === breadcrumbs.length - 1}
-                    >
-                      {crumb.folderName}
-                    </button>
-                    {index < breadcrumbs.length - 1 && (
-                      <span className="text-muted-foreground">/</span>
-                    )}
+      <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          {/* Header Section */}
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight">{currentFolderName}</h1>
+                {breadcrumbs.length > 1 && (
+                  <div className="flex items-center gap-2 mt-3 text-sm flex-wrap">
+                    {breadcrumbs.map((crumb, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <button
+                          className={`transition-colors ${
+                            index === breadcrumbs.length - 1
+                              ? "text-muted-foreground"
+                              : "text-primary hover:text-primary/80 hover:underline"
+                          }`}
+                          onClick={() => handleBreadcrumbClick(index)}
+                          disabled={index === breadcrumbs.length - 1}
+                        >
+                          {crumb.folderName}
+                        </button>
+                        {index < breadcrumbs.length - 1 && (
+                          <span className="text-muted-foreground">/</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-          {canManage && (
-            <div>
-              <Button
-                onClick={() =>
-                  createFolder(currentFolder?.folder_id ?? null)
-                }
-              >
-                + Add Subfolder
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        {isLoading ? (
-          <div className="text-center text-muted-foreground py-8">
-            Loading resources...
-          </div>
-        ) : displayFolders.length === 0 && displayResources.length === 0 ? (
-          <div className="text-center text-muted-foreground py-8">
-            {canManage
-              ? "No content yet. Create a folder or add a link to get started!"
-              : "No resources available yet."}
-          </div>
-        ) : (
-          <>
-            {displayResources.length > 0 && (
-              <div className="mb-8">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                  Resources
-                </h2>
-                <ResourceCardGrid
-                  resources={displayResources}
-                  canManage={canManage}
-                  onRename={renameResource}
-                  onUpdateUrl={updateResourceUrl}
-                  onDelete={deleteResource}
-                  getHostname={getHostname}
-                />
-                {canManage && (
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() =>
-                      addResource(
-                        currentFolder?.folder_id ?? (null as any as number)
-                      )
-                    }
-                  >
-                    + Add Link
-                  </Button>
                 )}
               </div>
-            )}
+              {canManage && (
+                <Button
+                  onClick={() => createFolder(currentFolder?.folder_id ?? null)}
+                  size="lg"
+                  className="gap-2"
+                >
+                  + Add Subfolder
+                </Button>
+              )}
+            </div>
+          </div>
 
-            {displayFolders.length > 0 && (
-              <div>
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                  Folders
-                </h2>
-                <FolderCardGrid
-                  folders={displayFolders}
-                  canManage={canManage}
-                  onAddResource={addResource}
-                  onRenameFolder={renameFolder}
-                  onDeleteFolder={deleteFolder}
-                  onFolderClick={handleFolderClick}
-                />
+          {/* Error State */}
+          {error && (
+            <div className="mb-6 p-4 bg-destructive/10 text-destructive rounded-lg text-sm border border-destructive/20">
+              {error}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-16">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading resources...</p>
               </div>
-            )}
-          </>
-        )}
-      </section>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && displayFolders.length === 0 && displayResources.length === 0 && (
+            <div className="flex items-center justify-center py-20">
+              <div className="text-center">
+                <p className="text-lg text-muted-foreground">
+                  {canManage
+                    ? "No resources yet. Create a folder to get started!"
+                    : "No resources available yet."}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Content */}
+          {!isLoading && (displayFolders.length > 0 || displayResources.length > 0) && (
+            <>
+              {/* Resources Section */}
+              {displayResources.length > 0 && (
+                <div className="mb-10">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-semibold text-foreground">Resources</h2>
+                    <span className="text-sm text-muted-foreground">{displayResources.length} items</span>
+                  </div>
+                  <ResourceCardGrid
+                    resources={displayResources}
+                    canManage={canManage}
+                    onRename={renameResource}
+                    onUpdateUrl={updateResourceUrl}
+                    onDelete={deleteResource}
+                    getHostname={getHostname}
+                  />
+                  {canManage && (
+                    <Button
+                      variant="outline"
+                      className="mt-5 gap-2"
+                      onClick={() =>
+                        addResource(currentFolder?.folder_id ?? (null as any as number))
+                      }
+                    >
+                      + Add Link
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Folders Section */}
+              {displayFolders.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-xl font-semibold text-foreground">Folders</h2>
+                    <span className="text-sm text-muted-foreground">{displayFolders.length} folders</span>
+                  </div>
+                  <FolderCardGrid
+                    folders={displayFolders}
+                    canManage={canManage}
+                    onAddResource={addResource}
+                    onRenameFolder={renameFolder}
+                    onDeleteFolder={deleteFolder}
+                    onFolderClick={handleFolderClick}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
 
       {/* Dialog for Folder/Resource/URL input */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{getDialogTitle()}</DialogTitle>
             {(dialogMode === "resource" || dialogMode === "url") && (
@@ -549,7 +569,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
               autoFocus
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => {

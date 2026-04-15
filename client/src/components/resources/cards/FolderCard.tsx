@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Folder, MoreVertical } from "lucide-react";
 
 interface ResourceFolderNode {
   folder_id: number;
@@ -38,43 +39,52 @@ function FolderCard({
   onFolderClick,
 }: FolderCardProps) {
   return (
-    <Card className="flex flex-col h-full hover:shadow-lg transition-shadow cursor-pointer">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle
-          className="text-lg hover:opacity-80 transition-opacity"
-          onClick={() => onFolderClick(folder)}
-        >
-          {folder.folder_name}
-        </CardTitle>
+    <Card 
+      className="hover:shadow-lg transition-all duration-200 cursor-pointer group flex flex-col h-full border-l-4 border-l-primary"
+      onClick={() => onFolderClick(folder)}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Folder className="w-5 h-5 text-primary flex-shrink-0 group-hover:scale-110 transition-transform" />
+            <CardTitle className="text-base line-clamp-2 group-hover:text-primary transition-colors">
+              {folder.folder_name}
+            </CardTitle>
+          </div>
 
-        {canManage && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon-sm"
-                onClick={(e) => e.stopPropagation()}
-              >
-                ⋮
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() =>
-                  onRenameFolder(folder.folder_id, folder.folder_name)
-                }
-              >
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => onDeleteFolder(folder.folder_id)}
-              >
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+          {canManage && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button 
+                  variant="ghost" 
+                  size="icon-sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRenameFolder(folder.folder_id, folder.folder_name);
+                  }}
+                >
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteFolder(folder.folder_id);
+                  }}
+                >
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </CardHeader>
 
       {canManage && (
@@ -83,7 +93,10 @@ function FolderCard({
             variant="outline"
             size="sm"
             className="w-full"
-            onClick={() => onAddResource(folder.folder_id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddResource(folder.folder_id);
+            }}
           >
             + Add Link
           </Button>

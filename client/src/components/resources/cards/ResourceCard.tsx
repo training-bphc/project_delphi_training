@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Link as LinkIcon, MoreVertical } from "lucide-react";
 
 interface ResourceRecord {
   resource_id: number;
@@ -37,25 +38,28 @@ function ResourceCard({
   getHostname,
 }: ResourceCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-all duration-200 group border-l-4 border-l-blue-500">
       <CardContent className="pt-6 pb-4">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <a
-              href={resource.file_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-sm text-primary hover:underline break-words line-clamp-2"
-              title={resource.resource_name}
-            >
-              {resource.resource_name}
-            </a>
-            <p
-              className="text-xs text-muted-foreground mt-2 truncate"
-              title={resource.file_url}
-            >
-              {getHostname(resource.file_url)}
-            </p>
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <LinkIcon className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+            <div className="flex-1 min-w-0">
+              <a
+                href={resource.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-sm text-primary hover:underline break-words line-clamp-2 block"
+                title={resource.resource_name}
+              >
+                {resource.resource_name}
+              </a>
+              <p
+                className="text-xs text-muted-foreground mt-1.5 truncate"
+                title={resource.file_url}
+              >
+                {getHostname(resource.file_url)}
+              </p>
+            </div>
           </div>
 
           {canManage && (
@@ -64,9 +68,9 @@ function ResourceCard({
                 <Button 
                   variant="ghost" 
                   size="icon-xs"
-                  onClick={(e) => e.stopPropagation()}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                 >
-                  ⋮
+                  <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
