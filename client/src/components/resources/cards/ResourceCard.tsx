@@ -1,5 +1,15 @@
-import { useState, useRef, useEffect } from "react";
-import styles from "../resources.module.css";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Link as LinkIcon, MoreVertical } from "lucide-react";
 
 interface ResourceRecord {
   resource_id: number;
@@ -27,88 +37,69 @@ function ResourceCard({
   onDelete,
   getHostname,
 }: ResourceCardProps) {
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    };
-
-    if (showMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showMenu]);
-
   return (
-    <div className={styles.resourceCard}>
-      <div className={styles.resourceHeader}>
-        <div className={styles.resourceLinkWrapper}>
-          <a
-            className={styles.resourceLink}
-            href={resource.file_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={resource.resource_name}
-          >
-            �� {resource.resource_name}
-          </a>
-          <span className={styles.resourceHost} title={resource.file_url}>
-            {getHostname(resource.file_url)}
-          </span>
-        </div>
+    <Card className="hover:shadow-md transition-all duration-200 group border-l-4 border-l-blue-500">
+      <CardContent className="pt-6 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            <LinkIcon className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+            <div className="flex-1 min-w-0">
+              <a
+                href={resource.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-sm text-primary hover:underline break-words line-clamp-2 block"
+                title={resource.resource_name}
+              >
+                {resource.resource_name}
+              </a>
+              <p
+                className="text-xs text-muted-foreground mt-1.5 truncate"
+                title={resource.file_url}
+              >
+                {getHostname(resource.file_url)}
+              </p>
+            </div>
+          </div>
 
-        {canManage && (
-          <div className={styles.relative} ref={menuRef}>
-            <button
-              className={styles.iconBtn}
-              onClick={() => setShowMenu(!showMenu)}
-              title="More options"
-            >
-              ⋮
-            </button>
-
-            {showMenu && (
-              <div className={styles.contextMenu}>
-                <button
-                  className={styles.contextMenuItem}
-                  onClick={() => {
-                    onRename(resource.resource_id, resource.resource_name);
-                    setShowMenu(false);
-                  }}
+          {canManage && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon-xs"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() =>
+                    onRename(resource.resource_id, resource.resource_name)
+                  }
                 >
                   Rename
-                </button>
-                <button
-                  className={styles.contextMenuItem}
-                  onClick={() => {
-                    onUpdateUrl(resource.resource_id, resource.file_url);
-                    setShowMenu(false);
-                  }}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() =>
+                    onUpdateUrl(resource.resource_id, resource.file_url)
+                  }
                 >
                   Update URL
-                </button>
-                <button
-                  className={`${styles.contextMenuItem} ${styles.destructive}`}
-                  onClick={() => {
-                    onDelete(resource.resource_id);
-                    setShowMenu(false);
-                  }}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => onDelete(resource.resource_id)}
                 >
                   Delete
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
