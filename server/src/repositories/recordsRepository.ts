@@ -108,7 +108,7 @@ export const findCategoryById = async (
 ): Promise<TrainingPointCategory | null> => {
   const result = await pool.query<TrainingPointCategory>(
     `
-      SELECT category_id, category_name, description, max_points, is_mythology
+      SELECT category_id, category_name, description, max_points
       FROM training_point_categories
       WHERE category_id = $1
       LIMIT 1
@@ -122,7 +122,7 @@ export const findCategoryById = async (
 export const findAllCategories = async (): Promise<TrainingPointCategory[]> => {
   const result = await pool.query<TrainingPointCategory>(
     `
-      SELECT category_id, category_name, description, max_points, is_mythology
+      SELECT category_id, category_name, description, max_points
       FROM training_point_categories
       ORDER BY category_name ASC
     `,

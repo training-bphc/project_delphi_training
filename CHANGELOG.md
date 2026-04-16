@@ -125,7 +125,7 @@ All notable changes to this project are documented in this file.
 
 ### Added
 - New normalized category model with `training_point_categories` as the single source of truth.
-  - Added fields: `category_name`, `description`, `max_points`, `is_mythology`.
+  - Added fields: `category_name`, `description`, `max_points`.
   - Seeded default category rows in baseline migration.
 - New endpoint: `GET /api/categories` for client-driven category dropdowns and dashboards.
 - Admin attribution support (`awarded_by`) on both training points and verification submissions, with foreign key to `admins.email`.

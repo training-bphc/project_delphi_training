@@ -41,7 +41,6 @@ export interface TrainingCategory {
   category_name: string;
   description?: string | null;
   max_points: number;
-  is_mythology: boolean;
 }
 
 export interface CreateRecordPayload {

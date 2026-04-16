@@ -41,7 +41,6 @@ CREATE TABLE IF NOT EXISTS training_point_categories (
   category_name  VARCHAR(100) NOT NULL UNIQUE,
   description    TEXT,
   max_points     INTEGER      NOT NULL DEFAULT 0,
-  is_mythology   BOOLEAN      NOT NULL DEFAULT false,
   created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT training_point_categories_max_points_chk CHECK (max_points >= 0)
@@ -106,16 +105,16 @@ CREATE INDEX IF NOT EXISTS idx_hs_student_id ON hackathon_submissions(student_id
 CREATE INDEX IF NOT EXISTS idx_hs_status ON hackathon_submissions(status);
 CREATE INDEX IF NOT EXISTS idx_hs_created_at ON hackathon_submissions(created_at);
 
-INSERT INTO training_point_categories (category_name, description, max_points, is_mythology)
+INSERT INTO training_point_categories (category_name, description, max_points)
 VALUES
-  ('Sectorial Briefs', 'Sector-focused training briefs', 8, false),
-  ('Mock Assessments', 'Practice assessments for readiness', 8, false),
-  ('Mock Interviews', 'Interview simulation sessions', 12, false),
-  ('Mini Assessments', 'Short formative assessments', 2, false),
-  ('NT-Excel', 'NT Excel module completion', 3, false),
-  ('NT-SQL', 'NT SQL module completion', 3, false),
-  ('NT-Python', 'NT Python module completion', 5, false),
-  ('Guest Lectures / Workshops', 'Verified external/internal workshop participation', 10, false),
-  ('Hackathons/Competitions', 'Hackathon and competition participation', 10, false),
-  ('Bonus Points', 'Additional points awarded under approved policy', 15, false)
+  ('Sectorial Briefs', 'Sector-focused training briefs', 8),
+  ('Mock Assessments', 'Practice assessments for readiness', 8),
+  ('Mock Interviews', 'Interview simulation sessions', 12),
+  ('Mini Assessments', 'Short formative assessments', 2),
+  ('NT-Excel', 'NT Excel module completion', 3),
+  ('NT-SQL', 'NT SQL module completion', 3),
+  ('NT-Python', 'NT Python module completion', 5),
+  ('Guest Lectures / Workshops', 'Verified external/internal workshop participation', 10),
+  ('Hackathons/Competitions', 'Hackathon and competition participation', 10),
+  ('Bonus Points', 'Additional points awarded under approved policy', 15)
 ON CONFLICT (category_name) DO NOTHING;
