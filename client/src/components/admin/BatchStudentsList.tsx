@@ -7,8 +7,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import TrainingPointsChart from "./TrainingPointsChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Student } from "@/shared/types/index";
+import SectorBreakdownChart from "./SectorBreakdownChart";
 
 interface BatchStudentsListProps {
   studentsByBatch: { [batch: number]: Student[] };
@@ -35,6 +37,7 @@ export default function BatchStudentsList({
   }, []);
 
   const [selectedBatch, setSelectedBatch] = useState<string>("2027");
+  const [selectedSector, setSelectedSector] = useState<string>("IT");
 
   const students = selectedBatch
     ? studentsByBatch[parseInt(selectedBatch)]
@@ -82,6 +85,21 @@ export default function BatchStudentsList({
             ))}
           </select>
         </div>
+         <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Select Sector:
+            </label>
+            <select
+              value={selectedSector}
+              onChange={(e) => setSelectedSector(e.target.value)}
+              className="w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="IT">IT</option>
+              <option value="ET">ET</option>
+              <option value="Core">Core</option>
+              <option value="FinTech">FinTech</option>
+            </select>
+          </div>
         <div className="text-xl font-bold text-indigo-600">
           {students?.length || 0} students
         </div>
@@ -89,6 +107,12 @@ export default function BatchStudentsList({
 
       {/* Table section with scrolling */}
       <Card>
+        {students && students.length > 0 && (
+          <TrainingPointsChart 
+            students={students} 
+            selectedSector={selectedSector}
+          />
+        )}
         <CardContent className="pt-6">
           {!students || students.length === 0 ? (
             <div className="flex items-center justify-center py-12 text-gray-500">
@@ -145,6 +169,10 @@ export default function BatchStudentsList({
           )}
         </CardContent>
       </Card>
+      <SectorBreakdownChart 
+        students={students} 
+        trainingPointsMap={{}}
+      />
     </div>
   );
 }
