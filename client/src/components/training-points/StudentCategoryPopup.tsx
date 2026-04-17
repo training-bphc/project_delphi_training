@@ -5,7 +5,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { TrainingCategory } from "@/shared/types";
+import type { TrainingCategory } from "@/shared/types/index";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import styles from "./studentCategoryPopup.module.css";

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { bulkUploadStudentsHandler } from "../controllers/studentController";
+import { bulkUploadStudentsHandler, getStudentsByBatchHandler } from "../controllers/studentController";
 import { authenticate, authorize } from "../middleware/auth";
 
 const router = Router();
@@ -26,5 +26,8 @@ router.post(
   upload.single("file"),
   bulkUploadStudentsHandler,
 );
+
+router.get("/by-batch", authorize(["admin"]), getStudentsByBatchHandler);
+
 
 export default router;

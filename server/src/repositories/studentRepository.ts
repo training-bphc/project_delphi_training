@@ -122,3 +122,39 @@ export const insertBulkStudents = async (
 
   return result.rows;
 };
+
+/**
+ * Get all students grouped by graduating batch (end_year)
+ */
+export const getStudentsByGraduatingBatch = async (): Promise<{
+  [batch: number]: Student[];
+}> => {
+  const result = await pool.query<Student & { end_year: number }>(
+    `
+      SELECT student_id, email, student_name, roll_number, start_year, end_year, cgpa, sector
+      FROM students
+      ORDER BY end_year DESC, student_name ASC
+    `,
+  );
+
+  const grouped: { [batch: number]: Student[] } = {};
+
+  for (const student of result.rows) {
+    const batch = student.end_year;
+    if (!grouped[batch]) {
+      grouped[batch] = [];
+    }
+    grouped[batch].push({
+      student_id: student.student_id,
+      email: student.email,
+      student_name: student.student_name,
+      roll_number: student.roll_number,
+      start_year: student.start_year,
+      end_year: student.end_year,
+      cgpa: student.cgpa,
+      sector: student.sector,
+    });
+  }
+
+  return grouped;
+};
