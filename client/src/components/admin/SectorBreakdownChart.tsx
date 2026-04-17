@@ -116,26 +116,26 @@ export default function SectorBreakdownChart({
               <PieChart>
                 {/* Outer Ring - Sectors */}
                 <Pie
-                  data={outerData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percentage, value }) => 
-                    `${name}: ${percentage}% (${value})`
-                  }
-                  outerRadius={120}
-                  innerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  paddingAngle={2}
-                >
-                  {outerData.map((entry) => (
-                    <Cell 
-                      key={`outer-${entry.name}`} 
-                      fill={SECTOR_COLORS[entry.name]}
-                    />
-                  ))}
-                </Pie>
+                    data={outerData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(entry: any) => 
+                        `${entry.name}: ${entry.percentage}% (${entry.value})`
+                    }
+                    outerRadius={120}
+                    innerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    paddingAngle={2}
+                    >
+                    {outerData.map((entry) => (
+                        <Cell 
+                        key={`outer-${entry.name}`} 
+                        fill={SECTOR_COLORS[entry.name]}
+                        />
+                    ))}
+                    </Pie>
 
                 {/* Inner Ring - High Points vs Others */}
                 <Pie
