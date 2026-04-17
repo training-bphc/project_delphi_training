@@ -36,18 +36,19 @@ function Overview() {
     loadStudents();
   };
 
-  return (
+    return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Admin Overview</h1>
-          <p className="text-indigo-100">Manage students and training points</p>
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Admin Overview</h1>
+            {/* <p className="text-indigo-100">Manage students and training points</p> */}
+          </div>
+          <BulkUploadStudents token={token!} onUploadComplete={handleUploadComplete} />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-        <BulkUploadStudents token={token!} onUploadComplete={handleUploadComplete} />
-
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <BatchStudentsList
           studentsByBatch={studentsByBatch}
           isLoading={isLoading}
