@@ -22,80 +22,219 @@ const SECTOR_COLORS: { [key: string]: string } = {
   FinTech: "#f59e0b",
 };
 
+const HIGH_POINTS_COLORS: { [key: string]: string } = {
+  IT: "#1e40af",
+  ET: "#6d28d9",
+  Core: "#065f46",
+  FinTech: "#92400e",
+};
+
 export default function SectorBreakdownChart({
   students,
   trainingPointsMap = {},
 }: SectorBreakdownChartProps) {
-  const sectorData = useMemo(() => {
+  // Outer ring data - by sector
+  const outerData = useMemo(() => {
+    if (!students || students.length === 0) return [];
+
     const sectors = ["IT", "ET", "Core", "FinTech"];
     
-    const data = sectors.map((sector) => {
-      const sectorStudents = students.filter((s) => s.sector === sector);
-      const totalInSector = sectorStudents.length;
-      
-      const studentsWithHighPoints = sectorStudents.filter(
-        (s) => (trainingPointsMap[s.email] || 0) > 60
-      ).length;
+    return sectors
+      .map((sector) => {
+        const sectorStudents = students.filter((s) => s.sector === sector);
+        const totalInSector = sectorStudents.length;
+        
+        const studentsWithHighPoints = sectorStudents.filter(
+          (s) => (trainingPointsMap[s.email] || 0) > 60
+        ).length;
 
-      const percentage = students.length > 0 
-        ? ((totalInSector / students.length) * 100).toFixed(1)
-        : "0";
+        const percentage = students.length > 0 
+          ? ((totalInSector / students.length) * 100).toFixed(1)
+          : "0";
 
-      const highPointsPercentage = totalInSector > 0
-        ? ((studentsWithHighPoints / totalInSector) * 100).toFixed(1)
-        : "0";
+        const highPointsPercentage = totalInSector > 0
+          ? ((studentsWithHighPoints / totalInSector) * 100).toFixed(1)
+          : "0";
 
-      return {
-        name: sector,
-        value: totalInSector,
-        percentage: parseFloat(percentage),
-        studentsWithHighPoints,
-        highPointsPercentage: parseFloat(highPointsPercentage),
-      };
-    });
-
-    return data;
+        return {
+          name: sector,
+          value: totalInSector,
+          percentage: parseFloat(percentage),
+          studentsWithHighPoints,
+          highPointsPercentage: parseFloat(highPointsPercentage),
+        };
+      })
+      .filter((item) => item.value > 0);
   }, [students, trainingPointsMap]);
+
+  // Inner ring data - high points vs others for each sector
+  const innerData = useMemo(() => {
+    return outerData.flatMap((sector) => [
+      {
+        name: `${sector.name} (>60)`,
+        value: sector.studentsWithHighPoints,
+        sector: sector.name,
+        type: "high",
+      },
+      {
+        name: `${sector.name} (≤60)`,
+        value: sector.value - sector.studentsWithHighPoints,
+        sector: sector.name,
+        type: "low",
+      },
+    ]);
+  }, [outerData]);
+
+  if (!students || students.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-12 text-gray-500">
+            No students to display
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const totalStudents = students.length;
 
   return (
     <div className="space-y-6">
-      {/* Pie Chart */}
+      {/* Donut Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Sector-wise Breakdown</CardTitle>
+          <CardTitle>Sector-wise Breakdown with Training Points Distribution</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
+          {outerData.length === 0 ? (
+            <div className="flex items-center justify-center py-12 text-gray-500">
+              No sector data available
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={400}>
+              <PieChart>
+                {/* Outer Ring - Sectors */}
                 <Pie
-                    data={sectorData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name }) => name}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
+                  data={outerData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percentage, value }) => 
+                    `${name}: ${percentage}% (${value})`
+                  }
+                  outerRadius={120}
+                  innerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  paddingAngle={2}
                 >
-                    {sectorData.map((entry) => (
-                    <Cell key={`cell-${entry.name}`} fill={SECTOR_COLORS[entry.name]} />
-                    ))}
+                  {outerData.map((entry) => (
+                    <Cell 
+                      key={`outer-${entry.name}`} 
+                      fill={SECTOR_COLORS[entry.name]}
+                    />
+                  ))}
                 </Pie>
+
+                {/* Inner Ring - High Points vs Others */}
+                <Pie
+                  data={innerData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ value }) => value > 0 ? value : ""}
+                  innerRadius={20}
+                  outerRadius={75}
+                  fill="#8884d8"
+                  dataKey="value"
+                  paddingAngle={1}
+                >
+                  {innerData.map((entry) => {
+                    const color = entry.type === "high" 
+                      ? HIGH_POINTS_COLORS[entry.sector]
+                      : SECTOR_COLORS[entry.sector];
+                    const opacity = entry.type === "high" ? 1 : 0.5;
+                    return (
+                      <Cell 
+                        key={`inner-${entry.name}`} 
+                        fill={color}
+                        fillOpacity={opacity}
+                      />
+                    );
+                  })}
+                </Pie>
+
                 <Tooltip 
-                    formatter={(value: number, name: string) => {
-                    const percentage = ((value / students.length) * 100).toFixed(1);
-                    return [`${value} students (${percentage}%)`, name];
-                    }}
+                  formatter={(value) => `${value} students`}
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #ccc",
+                    borderRadius: "4px",
+                  }}
                 />
-                <Legend />
-                </PieChart>
-          </ResponsiveContainer>
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+          
+          {/* Legend */}
+          <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div>
+              <h3 style={{ fontWeight: "600", marginBottom: "12px", fontSize: "0.875rem" }}>
+                Sectors (Outer Ring)
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {Object.entries(SECTOR_COLORS).map(([sector, color]) => (
+                  <div key={sector} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div
+                      style={{
+                        width: "12px",
+                        height: "12px",
+                        backgroundColor: color,
+                        borderRadius: "2px",
+                      }}
+                    />
+                    <span style={{ fontSize: "0.875rem" }}>{sector}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h3 style={{ fontWeight: "600", marginBottom: "12px", fontSize: "0.875rem" }}>
+                Training Points (Inner Ring)
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div
+                    style={{
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: "#1e40af",
+                      borderRadius: "2px",
+                    }}
+                  />
+                  <span style={{ fontSize: "0.875rem" }}>{">"} 60 Points (Dark)</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div
+                    style={{
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: "#3b82f6",
+                      borderRadius: "2px",
+                      opacity: 0.5,
+                    }}
+                  />
+                  <span style={{ fontSize: "0.875rem" }}>{"≤"} 60 Points (Light)</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Sector Statistics Table */}
+      {/* Detailed Statistics Table */}
       <Card>
         <CardHeader>
           <CardTitle>Detailed Sector Statistics</CardTitle>
@@ -123,7 +262,7 @@ export default function SectorBreakdownChart({
                 </tr>
               </thead>
               <tbody>
-                {sectorData.map((sector) => (
+                {outerData.map((sector) => (
                   <tr key={sector.name} style={{ borderBottom: "1px solid #e5e7eb" }}>
                     <td style={{ padding: "12px", fontWeight: "500" }}>
                       <span
@@ -159,11 +298,11 @@ export default function SectorBreakdownChart({
                   <td style={{ padding: "12px" }}>{totalStudents}</td>
                   <td style={{ padding: "12px" }}>100%</td>
                   <td style={{ padding: "12px" }}>
-                    {sectorData.reduce((sum, s) => sum + s.studentsWithHighPoints, 0)}
+                    {outerData.reduce((sum, s) => sum + s.studentsWithHighPoints, 0)}
                   </td>
                   <td style={{ padding: "12px" }}>
                     {totalStudents > 0 
-                      ? ((sectorData.reduce((sum, s) => sum + s.studentsWithHighPoints, 0) / totalStudents) * 100).toFixed(1)
+                      ? ((outerData.reduce((sum, s) => sum + s.studentsWithHighPoints, 0) / totalStudents) * 100).toFixed(1)
                       : "0"}%
                   </td>
                 </tr>
