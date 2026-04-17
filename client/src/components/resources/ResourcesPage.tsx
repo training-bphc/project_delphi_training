@@ -1,20 +1,15 @@
 import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../../contexts/auth.tsx";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft, Plus } from "lucide-react";
-import FolderCardGrid from "./cards/FolderCardGrid";
-import ResourceCardGrid from "./cards/ResourceCardGrid";
+import { Button } from "../ui/button.tsx";
+import { Card } from "../ui/card.tsx";
+import { MoreVertical, Folder } from "lucide-react";
+import { createFolderSlug, extractFolderIdFromSlug } from "../../lib/utils.ts";
+import AddResourceModal from "./AddResourceModal.tsx";
+import ResourceModal from "./ResourceModal.tsx";
+import FolderModal from "./FolderModal.tsx";
+import styles from "./resources.module.css";
 
 interface ResourceRecord {
   resource_id: number;
@@ -43,10 +38,10 @@ interface ResourcesPageProps {
   title: string;
 }
 
-type DialogMode = "folder" | "resource" | "url";
-
 function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   const { token } = useAuth();
+  const { folderSlug } = useParams<{ folderSlug?: string }>();
+  const navigate = useNavigate();
   const [tree, setTree] = useState<ResourceFolderNode[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,17 +49,47 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
     { folderId: null, folderName: "Resources" },
   ]);
   const [currentFolder, setCurrentFolder] = useState<ResourceFolderNode | null>(
-    null
+    null,
   );
-  const [showBrowser, setShowBrowser] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    type: "folder" | "resource" | null;
+    parentFolderId: number | null;
+  }>({
+    isOpen: false,
+    type: null,
+    parentFolderId: null,
+  });
+  const [resourceOpModal, setResourceOpModal] = useState<{
+    isOpen: boolean;
+    type: "rename" | "url" | "delete" | null;
+    resourceId: number | null;
+    currentValue: string;
+  }>(
+    {
+    isOpen: false,
+    type: null,
+    resourceId: null,
+    currentValue: "",
+  });
 
-  // Dialog states
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<DialogMode>("folder");
-  const [dialogValue, setDialogValue] = useState("");
-  const [dialogFolderId, setDialogFolderId] = useState<number | null>(null);
-  const [dialogResourceId, setDialogResourceId] = useState<number | null>(null);
-  const [resourceNameForUrl, setResourceNameForUrl] = useState("");
+  const [folderOpModal, setFolderOpModal] = useState<{
+    isOpen: boolean;
+    type: "rename" | "delete" | null;
+    folderId: number | null;
+    currentValue: string;
+  }>({
+    isOpen: false,
+    type: null,
+    folderId: null,
+    currentValue: "",
+  });
+
+  // Extract folderId from slug
+  const currentFolderId = folderSlug
+    ? extractFolderIdFromSlug(folderSlug)
+    : null;
 
   const getHostname = (url: string) => {
     try {
@@ -113,9 +138,68 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
     }
   }, [token]);
 
+  useEffect(() => {
+    // Update currentFolder based on URL parameter
+    if (currentFolderId) {
+      const folder = findFolderById(tree, currentFolderId);
+      if (folder) {
+        setCurrentFolder(folder);
+        // Rebuild breadcrumbs by traversing up
+        const newBreadcrumbs: BreadcrumbItem[] = [
+          { folderId: null, folderName: "Resources" },
+        ];
+        // Build breadcrumb path
+        const buildPath = (
+          folders: ResourceFolderNode[],
+          targetId: number,
+          path: BreadcrumbItem[],
+        ): BreadcrumbItem[] | null => {
+          for (const f of folders) {
+            if (f.folder_id === targetId) {
+              return [
+                ...path,
+                { folderId: f.folder_id, folderName: f.folder_name },
+              ];
+            }
+            const result = buildPath(f.children, targetId, [
+              ...path,
+              { folderId: f.folder_id, folderName: f.folder_name },
+            ]);
+            if (result) return result;
+          }
+          return null;
+        };
+        const path = buildPath(tree, currentFolderId, newBreadcrumbs);
+        if (path) {
+          setBreadcrumbs(path);
+        }
+      }
+    } else {
+      setCurrentFolder(null);
+      setBreadcrumbs([{ folderId: null, folderName: "Resources" }]);
+    }
+  }, [currentFolderId, tree]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-menu-trigger]")) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId !== null) {
+      document.addEventListener("click", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [openMenuId]);
+
   const findFolderById = (
     folders: ResourceFolderNode[],
-    folderId: number
+    folderId: number,
   ): ResourceFolderNode | null => {
     for (const folder of folders) {
       if (folder.folder_id === folderId) {
@@ -130,236 +214,192 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   };
 
   const handleFolderClick = (folder: ResourceFolderNode) => {
-    setCurrentFolder(folder);
-    setBreadcrumbs([
-      ...breadcrumbs,
-      { folderId: folder.folder_id, folderName: folder.folder_name },
-    ]);
+    // Navigate to folder using slug
+    const basePath = canManage ? "/admin/resources" : "/student/resources";
+    const slug = createFolderSlug(folder.folder_name, folder.folder_id);
+    navigate(`${basePath}/${slug}`);
   };
 
   const handleBreadcrumbClick = (index: number) => {
+    const basePath = canManage ? "/admin/resources" : "/student/resources";
     if (index === 0) {
-      setCurrentFolder(null);
-      setBreadcrumbs([{ folderId: null, folderName: "Resources" }]);
+      // Go back to root
+      navigate(basePath);
     } else {
+      // Go to specific folder
       const targetFolder = breadcrumbs[index];
       if (targetFolder.folderId !== null) {
-        const folder = findFolderById(tree, targetFolder.folderId);
-        setCurrentFolder(folder);
+        const slug = createFolderSlug(
+          targetFolder.folderName,
+          targetFolder.folderId,
+        );
+        navigate(`${basePath}/${slug}`);
       }
-      setBreadcrumbs(breadcrumbs.slice(0, index + 1));
     }
   };
 
-  // Create/Rename Folder
   const createFolder = async (parentFolderId: number | null) => {
-    setDialogMode("folder");
-    setDialogValue("");
-    setDialogFolderId(parentFolderId);
-    setDialogResourceId(null);
-    setDialogOpen(true);
+    setModalState({
+      isOpen: true,
+      type: "folder",
+      parentFolderId,
+    });
   };
 
-  const handleFolderDialogSubmit = async () => {
-    const folderName = dialogValue.trim();
-    if (!folderName) {
-      toast.error("Folder name cannot be empty");
-      return;
-    }
-
+  const handleCreateFolder = async (data: { name: string }) => {
     try {
       await apiCall("/api/resources/folders", {
         method: "POST",
         body: JSON.stringify({
-          folder_name: folderName,
-          parent_folder_id: dialogFolderId,
+          folder_name: data.name,
+          parent_folder_id: modalState.parentFolderId,
         }),
       });
-      toast.success("Folder created successfully");
+      toast.success("Folder created successfully!");
       await fetchTree();
-      setDialogOpen(false);
-      setDialogValue("");
     } catch (err: any) {
-      toast.error(err.message || "Failed to create folder");
+      toast.error(err.message || "Failed to create folder.");
     }
   };
 
   const renameFolder = async (folderId: number, currentName: string) => {
-    setDialogMode("folder");
-    setDialogValue(currentName);
-    setDialogFolderId(folderId);
-    setDialogResourceId(null);
-    setDialogOpen(true);
+    setFolderOpModal({
+      isOpen: true,
+      type: "rename",
+      folderId,
+      currentValue: currentName,
+    });
   };
 
-  const handleRenameFolderDialogSubmit = async () => {
-    const folderName = dialogValue.trim();
-    if (!folderName) {
-      toast.error("Folder name cannot be empty");
-      return;
-    }
-
-    if (folderName === dialogValue) {
-      setDialogOpen(false);
-      return;
-    }
-
+  const handleRenameFolderSubmit = async (newName: string) => {
+    if (!folderOpModal.folderId) return;
     try {
-      await apiCall(`/api/resources/folders/${dialogFolderId}`, {
+      await apiCall(`/api/resources/folders/${folderOpModal.folderId}`, {
         method: "PATCH",
-        body: JSON.stringify({ folder_name: folderName }),
+        body: JSON.stringify({ folder_name: newName }),
       });
       toast.success("Folder renamed successfully");
       await fetchTree();
-      setDialogOpen(false);
-      setDialogValue("");
     } catch (err: any) {
       toast.error(err.message || "Failed to rename folder");
     }
   };
 
   const deleteFolder = async (folderId: number) => {
-    if (!window.confirm("Delete this folder? It must be empty.")) {
-      return;
-    }
+    setFolderOpModal({
+      isOpen: true,
+      type: "delete",
+      folderId,
+      currentValue: "",
+    });
+  };
 
+  const handleDeleteFolderSubmit = async () => {
+    if (!folderOpModal.folderId) return;
     try {
-      await apiCall(`/api/resources/folders/${folderId}`, { method: "DELETE" });
+      await apiCall(`/api/resources/folders/${folderOpModal.folderId}`, {
+        method: "DELETE",
+      });
       toast.success("Folder deleted successfully");
       await fetchTree();
-      if (currentFolder?.folder_id === folderId) {
-        handleBreadcrumbClick(breadcrumbs.length - 2);
+      // If we deleted the current folder, go back
+      if (currentFolder?.folder_id === folderOpModal.folderId) {
+        const basePath = canManage ? "/admin/resources" : "/student/resources";
+        navigate(basePath);
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to delete folder");
     }
   };
 
-  // Add Resource (2-step: name then URL)
   const addResource = async (folderId: number) => {
-    setDialogMode("resource");
-    setDialogValue("");
-    setResourceNameForUrl("");
-    setDialogFolderId(folderId);
-    setDialogResourceId(null);
-    setDialogOpen(true);
+    setModalState({
+      isOpen: true,
+      type: "resource",
+      parentFolderId: folderId,
+    });
   };
 
-  const handleAddResourceStep = async () => {
-    if (dialogMode === "resource") {
-      const resourceName = dialogValue.trim();
-      if (!resourceName) {
-        toast.error("Resource name cannot be empty");
-        return;
-      }
-      setResourceNameForUrl(resourceName);
-      setDialogMode("url");
-      setDialogValue("");
-    } else if (dialogMode === "url") {
-      const fileUrl = dialogValue.trim();
-      if (!fileUrl) {
-        toast.error("URL cannot be empty");
-        return;
-      }
-      if (!fileUrl.startsWith("https://")) {
-        toast.error("Please enter a valid HTTPS URL");
-        return;
-      }
-
-      try {
-        await apiCall("/api/resources", {
-          method: "POST",
-          body: JSON.stringify({
-            resource_name: resourceNameForUrl,
-            file_url: fileUrl,
-            folder_id: dialogFolderId,
-          }),
-        });
-        toast.success("Resource added successfully");
-        await fetchTree();
-        setDialogOpen(false);
-        setDialogValue("");
-        setResourceNameForUrl("");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to create resource");
-      }
-    }
-  };
-
-  // Rename Resource
-  const renameResource = async (resourceId: number, currentName: string) => {
-    setDialogMode("resource");
-    setDialogValue(currentName);
-    setResourceNameForUrl(currentName);
-    setDialogResourceId(resourceId);
-    setDialogFolderId(null);
-    setDialogOpen(true);
-  };
-
-  const handleRenameResourceDialogSubmit = async () => {
-    const resourceName = dialogValue.trim();
-    if (!resourceName) {
-      toast.error("Resource name cannot be empty");
-      return;
-    }
-
+  const handleAddResource = async (data: {
+    name: string;
+    url?: string | undefined;
+  }) => {
     try {
-      await apiCall(`/api/resources/${dialogResourceId}/rename`, {
+      await apiCall("/api/resources", {
+        method: "POST",
+        body: JSON.stringify({
+          resource_name: data.name,
+          file_url: data.url,
+          folder_id: modalState.parentFolderId,
+        }),
+      });
+      toast.success("Resource added successfully!");
+      await fetchTree();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create resource");
+    }
+  };
+  const renameResource = async (resourceId: number, currentName: string) => {
+    setResourceOpModal({
+      isOpen: true,
+      type: "rename",
+      resourceId,
+      currentValue: currentName,
+    });
+  };
+
+  const handleRenameResource = async (newName: string) => {
+    if (!resourceOpModal.resourceId) return;
+    try {
+      await apiCall(`/api/resources/${resourceOpModal.resourceId}/rename`, {
         method: "PATCH",
-        body: JSON.stringify({ resource_name: resourceName }),
+        body: JSON.stringify({ resource_name: newName }),
       });
       toast.success("Resource renamed successfully");
       await fetchTree();
-      setDialogOpen(false);
-      setDialogValue("");
     } catch (err: any) {
       toast.error(err.message || "Failed to rename resource");
     }
   };
 
-  // Update Resource URL
   const updateResourceUrl = async (resourceId: number, currentUrl: string) => {
-    setDialogMode("url");
-    setDialogValue(currentUrl);
-    setResourceNameForUrl("");
-    setDialogResourceId(resourceId);
-    setDialogFolderId(null);
-    setDialogOpen(true);
+    setResourceOpModal({
+      isOpen: true,
+      type: "url",
+      resourceId,
+      currentValue: currentUrl,
+    });
   };
 
-  const handleUpdateUrlDialogSubmit = async () => {
-    const fileUrl = dialogValue.trim();
-    if (!fileUrl) {
-      toast.error("URL cannot be empty");
-      return;
-    }
-    if (!fileUrl.startsWith("https://")) {
-      toast.error("Please enter a valid HTTPS URL");
-      return;
-    }
-
+  const handleUpdateResourceUrl = async (newUrl: string) => {
+    if (!resourceOpModal.resourceId) return;
     try {
-      await apiCall(`/api/resources/${dialogResourceId}/url`, {
+      await apiCall(`/api/resources/${resourceOpModal.resourceId}/url`, {
         method: "PATCH",
-        body: JSON.stringify({ file_url: fileUrl }),
+        body: JSON.stringify({ file_url: newUrl }),
       });
       toast.success("Resource URL updated successfully");
       await fetchTree();
-      setDialogOpen(false);
-      setDialogValue("");
     } catch (err: any) {
       toast.error(err.message || "Failed to update URL");
     }
   };
 
-  // Delete Resource
   const deleteResource = async (resourceId: number) => {
-    if (!window.confirm("Delete this resource?")) {
-      return;
-    }
+    setResourceOpModal({
+      isOpen: true,
+      type: "delete",
+      resourceId,
+      currentValue: "",
+    });
+  };
 
+  const handleDeleteResource = async () => {
+    if (!resourceOpModal.resourceId) return;
     try {
-      await apiCall(`/api/resources/${resourceId}`, { method: "DELETE" });
+      await apiCall(`/api/resources/${resourceOpModal.resourceId}`, {
+        method: "DELETE",
+      });
       toast.success("Resource deleted successfully");
       await fetchTree();
     } catch (err: any) {
@@ -370,301 +410,334 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   const displayFolders = currentFolder ? currentFolder.children : tree;
   const displayResources = currentFolder ? currentFolder.resources : [];
   const currentFolderName = currentFolder ? currentFolder.folder_name : title;
-  const isRootLevel = currentFolder === null;
 
-  const handleDialogSubmit = () => {
-    if (dialogMode === "folder") {
-      if (dialogFolderId && !Array.isArray(displayFolders.find(f => f.folder_id === dialogFolderId))) {
-        handleRenameFolderDialogSubmit();
-      } else {
-        handleFolderDialogSubmit();
-      }
-    } else if (dialogMode === "resource") {
-      handleAddResourceStep();
-    } else if (dialogMode === "url") {
-      if (dialogResourceId && resourceNameForUrl === "") {
-        handleUpdateUrlDialogSubmit();
-      } else if (resourceNameForUrl) {
-        handleAddResourceStep();
-      } else {
-        handleUpdateUrlDialogSubmit();
-      }
-    }
-  };
-
-  const getDialogTitle = () => {
-    if (dialogMode === "folder") {
-      return dialogFolderId && !Array.isArray(displayFolders.find(f => f.folder_id === dialogFolderId)) ? "Rename Folder" : "Create Folder";
-    } else if (dialogMode === "resource") {
-      return "Add Resource";
-    } else {
-      return "Add URL";
-    }
-  };
-
-  const getDialogPlaceholder = () => {
-    if (dialogMode === "folder") {
-      return "Folder name";
-    } else if (dialogMode === "resource") {
-      return "Resource name";
-    } else {
-      return "https://example.com";
-    }
-  };
-
-  // LANDING PAGE - Show single card at root level when no folders/resources exist
-  if (isRootLevel && !isLoading && displayFolders.length === 0 && displayResources.length === 0 && canManage && !showBrowser) {
-    return (
-      <main className="w-full flex flex-col gap-8 py-6">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            Resources
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Organize and manage your training resources
-          </p>
-        </div>
-
-        <div className="max-w-xl">
-          <Card 
-            className="border border-border rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-foreground/30 cursor-pointer"
-            onClick={() => setShowBrowser(true)}
-          >
-            <CardContent className="p-12 flex flex-col justify-center min-h-64">
-              <h2 className="text-2xl font-semibold text-foreground mb-4">
-                Browse & Manage Resources
-              </h2>
-              <p className="text-base text-muted-foreground">
-                Create folders and organize your training resources. Build a structured library of links and documents for your students.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-    );
-  }
-
-  // BROWSER VIEW - Show traditional folder/resource browser
   return (
-    <main className="w-full">
-      <div className="flex flex-col gap-8 py-6">
-        {/* Back Button - Show when in browser view and nested */}
-        {!isRootLevel && (
-          <Button
-            variant="outline"
-            onClick={() => handleBreadcrumbClick(breadcrumbs.length - 2)}
-            className="w-fit gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
-          </Button>
-        )}
-
-        {/* Back to Landing Button - Show when at root but came from landing */}
-        {isRootLevel && showBrowser && canManage && displayFolders.length === 0 && displayResources.length === 0 && (
-          <Button
-            variant="outline"
-            onClick={() => setShowBrowser(false)}
-            className="w-fit gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Landing
-          </Button>
-        )}
-
-        {/* Title Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className={styles.mainContent}>
+      <section className={styles.container}>
+        <div className={styles.header}>
           <div>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">
-              {currentFolderName}
-            </h1>
+            <h1 className={styles.title}>{currentFolderName}</h1>
             {breadcrumbs.length > 1 && (
-              <div className="flex items-center gap-2 mt-3 text-sm flex-wrap">
+              <div className={styles.breadcrumbs}>
                 {breadcrumbs.map((crumb, index) => (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={index}>
                     <button
-                      className={`transition-colors ${
-                        index === breadcrumbs.length - 1
-                          ? "text-muted-foreground"
-                          : "text-primary hover:text-primary/80 hover:underline"
+                      className={`${styles.breadcrumbItem} ${
+                        index === breadcrumbs.length - 1 ? styles.active : ""
                       }`}
                       onClick={() => handleBreadcrumbClick(index)}
-                      disabled={index === breadcrumbs.length - 1}
                     >
                       {crumb.folderName}
                     </button>
                     {index < breadcrumbs.length - 1 && (
-                      <span className="text-muted-foreground">/</span>
+                      <span className={styles.breadcrumbSeparator}>/</span>
                     )}
                   </div>
                 ))}
               </div>
             )}
           </div>
+          {canManage && (
+            <div className={styles.headerActions}>
+              <Button
+                onClick={() => createFolder(currentFolder?.folder_id ?? null)}
+              >
+                + Add Subfolder
+              </Button>
+              <Button
+                onClick={() =>
+                  addResource(
+                    currentFolder?.folder_id ?? (null as any as number),
+                  )
+                }
+              >
+                + Add Link
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm border border-destructive/20">
-            {error}
+        {error && <div className={styles.error}>{error}</div>}
+
+        {isLoading ? (
+          <div className={styles.loading}>Loading resources...</div>
+        ) : displayFolders.length === 0 && displayResources.length === 0 ? (
+          <div className={styles.empty}>
+            {canManage
+              ? "No content yet. Create a folder or add a link to get started!"
+              : "No resources available yet."}
           </div>
-        )}
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading resources...</p>
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && displayFolders.length === 0 && displayResources.length === 0 && (
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <p className="text-lg text-muted-foreground">
-                {canManage
-                  ? "No resources yet. Create a folder to get started!"
-                  : "No resources available yet."}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Content */}
-        {!isLoading && (displayFolders.length > 0 || displayResources.length > 0) && (
-          <div className="space-y-10">
-            {/* Resources Section */}
-            {displayResources.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-xl font-semibold text-foreground">Resources</h2>
-                  <span className="text-sm text-muted-foreground">{displayResources.length} items</span>
-                </div>
-                <ResourceCardGrid
-                  resources={displayResources}
-                  canManage={canManage}
-                  onRename={renameResource}
-                  onUpdateUrl={updateResourceUrl}
-                  onDelete={deleteResource}
-                  getHostname={getHostname}
-                />
-              </div>
-            )}
-
-            {/* Folders Grid - No title, no count */}
+        ) : (
+          <>
             {displayFolders.length > 0 && (
               <div>
-                {/* Action Buttons Only - Moved to the right */}
-                <div className="flex justify-end gap-2 mb-5">
-                  {canManage && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={() => createFolder(currentFolder?.folder_id ?? null)}
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Folder
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={() => addResource(currentFolder?.folder_id ?? (null as any as number))}
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Resource
-                      </Button>
-                    </>
-                  )}
+                <h2 className={styles.sectionLabel}>Folders</h2>
+                <div className={styles.cardGrid}>
+                  {displayFolders.map((folder) => (
+                    <Card
+                      key={folder.folder_id}
+                      className={styles.folderCard}
+                      onClick={() => handleFolderClick(folder)}
+                    >
+                      <div className={styles.folderCardHeader}>
+                        <div className={styles.folderNameWrapper}>
+                          <Folder className="size-4" />
+                          <span className={styles.folderName}>
+                            {folder.folder_name}
+                          </span>
+                        </div>
+
+                        {canManage && (
+                          <div
+                            style={{ position: "relative", zIndex: 50 }}
+                            data-menu-trigger
+                          >
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              className={styles.optionsButton}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMenuId(
+                                  openMenuId === folder.folder_id
+                                    ? null
+                                    : folder.folder_id,
+                                );
+                              }}
+                            >
+                              <MoreVertical className="size-4" />
+                            </Button>
+                            {openMenuId === folder.folder_id && (
+                              <div
+                                className={styles.popoverMenu}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  className={styles.popoverMenuItem}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    renameFolder(
+                                      folder.folder_id,
+                                      folder.folder_name,
+                                    );
+                                    setOpenMenuId(null);
+                                  }}
+                                >
+                                  Rename
+                                </button>
+                                <button
+                                  className={`${styles.popoverMenuItem} ${styles.destructive}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteFolder(folder.folder_id);
+                                    setOpenMenuId(null);
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
                 </div>
-                <FolderCardGrid
-                  folders={displayFolders}
-                  canManage={canManage}
-                  onRenameFolder={renameFolder}
-                  onDeleteFolder={deleteFolder}
-                  onFolderClick={handleFolderClick}
-                />
               </div>
             )}
 
-            {/* Add Buttons when only resources exist (no folders) */}
-            {displayResources.length > 0 && displayFolders.length === 0 && canManage && (
-              <div className="flex gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => createFolder(currentFolder?.folder_id ?? null)}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Folder
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => addResource(currentFolder?.folder_id ?? (null as any as number))}
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Resource
-                </Button>
+            {displayResources.length > 0 && (
+              <div className={styles.resourcesContainer}>
+                <h2 className={styles.sectionLabel}>Resources</h2>
+                <div className={styles.resourceCardGrid}>
+                  {displayResources.map((resource) => (
+                    <Card
+                      key={resource.resource_id}
+                      className={styles.resourceCard}
+                      onClick={() => {
+                        window.open(resource.file_url, "_blank");
+                      }}
+                    >
+                      {canManage && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "8px",
+                            right: "8px",
+                            zIndex: 50,
+                          }}
+                          data-menu-trigger
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className={styles.optionsButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(
+                                openMenuId === resource.resource_id
+                                  ? null
+                                  : resource.resource_id,
+                              );
+                            }}
+                          >
+                            <MoreVertical className="size-4" />
+                          </Button>
+                          {openMenuId === resource.resource_id && (
+                            <div
+                              className={styles.popoverMenu}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                className={styles.popoverMenuItem}
+                                onClick={() => {
+                                  renameResource(
+                                    resource.resource_id,
+                                    resource.resource_name,
+                                  );
+                                  setOpenMenuId(null);
+                                }}
+                              >
+                                Rename
+                              </button>
+                              <button
+                                className={styles.popoverMenuItem}
+                                onClick={() => {
+                                  updateResourceUrl(
+                                    resource.resource_id,
+                                    resource.file_url,
+                                  );
+                                  setOpenMenuId(null);
+                                }}
+                              >
+                                Update URL
+                              </button>
+                              <button
+                                className={`${styles.popoverMenuItem} ${styles.destructive}`}
+                                onClick={() => {
+                                  deleteResource(resource.resource_id);
+                                  setOpenMenuId(null);
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className={styles.resourceHeader}>
+                        <div className={styles.resourceLinkWrapper}>
+                          <a
+                            className={styles.resourceLink}
+                            href={resource.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={resource.resource_name}
+                          >
+                            {resource.resource_name}
+                          </a>
+                          <span
+                            className={styles.resourceHost}
+                            title={resource.file_url}
+                          >
+                            {getHostname(resource.file_url)}
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
               </div>
             )}
-          </div>
+          </>
         )}
-      </div>
-
-      {/* Dialog for Folder/Resource/URL input */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{getDialogTitle()}</DialogTitle>
-            {(dialogMode === "resource" || dialogMode === "url") && (
-              <DialogDescription>
-                {dialogMode === "resource"
-                  ? "Enter the name of the resource"
-                  : "Enter the HTTPS URL for the resource"}
-              </DialogDescription>
-            )}
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input
-              placeholder={getDialogPlaceholder()}
-              value={dialogValue}
-              onChange={(e) => setDialogValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleDialogSubmit();
-                }
-              }}
-              autoFocus
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setDialogOpen(false);
-                setDialogValue("");
-                setResourceNameForUrl("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleDialogSubmit}>
-              {dialogMode === "resource" && dialogValue
-                ? "Next"
-                : dialogMode === "url" && resourceNameForUrl
-                  ? "Create"
-                  : "Submit"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </main>
+      </section>
+      <AddResourceModal
+        isOpen={modalState.isOpen}
+        onClose={() =>
+          setModalState({
+            isOpen: false,
+            type: null,
+            parentFolderId: null,
+          })
+        }
+        onSubmit={
+          modalState.type === "folder" ? handleCreateFolder : handleAddResource
+        }
+        title={
+          modalState.type === "folder"
+            ? "Create New Folder"
+            : "Add Resource Link"
+        }
+        isFolder={modalState.type === "folder"}
+      />
+      <ResourceModal
+        isOpen={resourceOpModal.isOpen}
+        onClose={() =>
+          setResourceOpModal({
+            isOpen: false,
+            type: null,
+            resourceId: null,
+            currentValue: "",
+          })
+        }
+        onSubmit={
+          resourceOpModal.type === "rename"
+            ? handleRenameResource
+            : resourceOpModal.type === "url"
+              ? handleUpdateResourceUrl
+              : handleDeleteResource
+        }
+        title={
+          resourceOpModal.type === "rename"
+            ? "Rename Resource"
+            : resourceOpModal.type === "url"
+              ? "Update Resource URL"
+              : "Delete Resource"
+        }
+        placeholder={
+          resourceOpModal.type === "rename"
+            ? "New resource name"
+            : resourceOpModal.type === "url"
+              ? "New URL"
+              : undefined
+        }
+        defaultValue={
+          resourceOpModal.type === "delete"
+            ? ""
+            : resourceOpModal.currentValue || ""
+        }
+        isDangerous={resourceOpModal.type === "delete"}
+        isDeleteConfirmation={resourceOpModal.type === "delete"}
+      />
+      <FolderModal
+        isOpen={folderOpModal.isOpen}
+        onClose={() =>
+          setFolderOpModal({
+            isOpen: false,
+            type: null,
+            folderId: null,
+            currentValue: "",
+          })
+        }
+        onSubmit={
+          folderOpModal.type === "rename"
+            ? handleRenameFolderSubmit
+            : handleDeleteFolderSubmit
+        }
+        title={
+          folderOpModal.type === "rename"
+            ? "Rename Folder"
+            : "Delete Folder"
+        }
+        placeholder={
+          folderOpModal.type === "rename" ? "New folder name" : undefined
+        }
+        defaultValue={folderOpModal.currentValue || ""}
+        isDangerous={folderOpModal.type === "delete"}
+        isDeleteConfirmation={folderOpModal.type === "delete"}
+      />
+    </div>
   );
 }
 
