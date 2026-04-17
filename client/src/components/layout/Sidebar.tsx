@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/auth";
 import { Button } from "@/components/ui/button";
 import "./Sidebar.css";
@@ -6,6 +6,7 @@ import "./Sidebar.css";
 function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const identityLines =
     user?.role === "admin"
@@ -15,6 +16,21 @@ function Sidebar() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleNavigation = (path: string, sectionPath: string) => {
+    // If already in this section, navigate to its default page
+    if (location.pathname.startsWith(sectionPath)) {
+      navigate(path);
+    } else {
+      navigate(path);
+    }
+  };
+
+  const isActive = (path: string) => {
+    const pathname = location.pathname;
+    // Exact match or starts with path/ (for nested routes)
+    return pathname === path || pathname.startsWith(path + "/");
   };
 
   return (
@@ -30,65 +46,51 @@ function Sidebar() {
       <nav className="sidebar-nav">
         {user?.role === "admin" ? (
           <>
-            <NavLink
-              to="/admin/training-points"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
+            <button
+              onClick={() => handleNavigation("/admin/training-points", "/admin/training-points")}
+              className={isActive("/admin/training-points") ? "nav-link active" : "nav-link"}
             >
               Training Points 
-            </NavLink>
-            <NavLink
-              to="/admin/pending"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
+            </button>
+            <button
+              onClick={() => handleNavigation("/admin/pending", "/admin/pending")}
+              className={isActive("/admin/pending") ? "nav-link active" : "nav-link"}
             >
               Pending Requests
-            </NavLink>
-            <NavLink
-              to="/admin/verified"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
+            </button>
+            <button
+              onClick={() => handleNavigation("/admin/verified", "/admin/verified")}
+              className={isActive("/admin/verified") ? "nav-link active" : "nav-link"}
             >
               Previous Verifications
-            </NavLink>
-            <NavLink
-              to="/admin/resources"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
+            </button>
+            <button
+              onClick={() => handleNavigation("/admin/resources", "/admin/resources")}
+              className={isActive("/admin/resources") ? "nav-link active" : "nav-link"}
             >
               Resources
-            </NavLink>
+            </button>
           </>
         ) : (
           <>
-            <NavLink
-              to="/student/training"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
+            <button
+              onClick={() => handleNavigation("/student/training", "/student/training")}
+              className={isActive("/student/training") ? "nav-link active" : "nav-link"}
             >
               Training Points
-            </NavLink>
-            <NavLink
-              to="/student/verification"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
+            </button>
+            <button
+              onClick={() => handleNavigation("/student/verification", "/student/verification")}
+              className={isActive("/student/verification") ? "nav-link active" : "nav-link"}
             >
               Verification Requests
-            </NavLink>
-            <NavLink
-              to="/student/resources"
-              className={({ isActive }) =>
-                isActive ? "nav-link active" : "nav-link"
-              }
+            </button>
+            <button
+              onClick={() => handleNavigation("/student/resources", "/student/resources")}
+              className={isActive("/student/resources") ? "nav-link active" : "nav-link"}
             >
               Resources
-            </NavLink>
+            </button>
           </>
         )}
       </nav>

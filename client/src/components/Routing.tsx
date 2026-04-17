@@ -60,6 +60,7 @@ function RoutingContent() {
               element={<AddPointsCSV />} 
             />
             <Route path="/admin/resources" element={<AdminResources />} />
+            <Route path="/admin/resources/:folderSlug" element={<AdminResources />} />
             <Route
               path="*"
               element={<Navigate to="/admin/training-points" replace />}
@@ -83,6 +84,7 @@ function RoutingContent() {
               element={<AddVerification />}
             />
             <Route path="/student/resources" element={<StudentResources />} />
+            <Route path="/student/resources/:folderSlug" element={<StudentResources />} />
             <Route
               path="*"
               element={<Navigate to="/student/training" replace />}
