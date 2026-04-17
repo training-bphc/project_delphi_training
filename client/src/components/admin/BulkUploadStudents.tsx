@@ -4,14 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { bulkUploadStudents } from "@/lib/api/studentApi";
 import type { BulkUploadResult } from "@/lib/api/studentApi";
-import { Upload, CheckCircle, AlertCircle } from "lucide-react";
+import { Upload, CheckCircle, AlertCircle, X } from "lucide-react";
 
 interface BulkUploadStudentsProps {
   token: string;
@@ -119,13 +118,16 @@ export default function BulkUploadStudents({
           Add Students
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-9l">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="w-[70vw] max-w-2xl shadow-2xl" showCloseButton={false}>
+        <div className="flex items-center justify-center mb-4 relative">
+          <div className="flex items-center gap-2 justify-center">
             <Upload className="h-5 w-5" />
-            Bulk Upload Students
-          </DialogTitle>
-        </DialogHeader>
+            <h2 className="text-lg font-semibold">Bulk Upload Students</h2>
+          </div>
+          <DialogClose className="absolute right-0 p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-50 transition-colors">
+            <X className="h-4 w-4" />
+          </DialogClose>
+        </div>
 
         <div className="space-y-4">
           <div
@@ -152,7 +154,7 @@ export default function BulkUploadStudents({
                   disabled={isLoading}
                   className="hidden"
                 />
-                <span className="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700 disabled:bg-gray-400">
+                <span className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-gray-400">
                   Browse Files
                 </span>
               </label>
@@ -160,7 +162,7 @@ export default function BulkUploadStudents({
           </div>
 
           {file && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
               <p className="text-sm font-medium text-green-900">
                 Selected: {file.name}
               </p>
@@ -181,7 +183,7 @@ export default function BulkUploadStudents({
 
           {result && (
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
                 <h4 className="font-semibold text-blue-900 mb-2">Upload Result</h4>
                 <div className="space-y-1 text-sm">
                   <p className="text-blue-800">
@@ -198,7 +200,7 @@ export default function BulkUploadStudents({
 
               {result.data.errors.length > 0 && (
                 <div className="space-y-2">
-                  <h5 className="font-semibold text-red-900 flex items-center gap-2">
+                  <h5 className="font-semibold text-red-900 flex items-center justify-center gap-2">
                     <AlertCircle className="h-4 w-4" />
                     Errors ({result.data.errors.length})
                   </h5>
@@ -208,11 +210,11 @@ export default function BulkUploadStudents({
                         key={index}
                         className="bg-red-50 border-l-4 border-red-500 p-3 text-sm"
                       >
-                        <p className="text-red-900 font-medium">
+                        <p className="text-red-900 font-medium text-center">
                           Row {error.row}: {error.error}
                         </p>
                         {error.email && (
-                          <p className="text-red-700 text-xs mt-1">{error.email}</p>
+                          <p className="text-red-700 text-xs mt-1 text-center">{error.email}</p>
                         )}
                       </div>
                     ))}
@@ -222,18 +224,18 @@ export default function BulkUploadStudents({
 
               {result.data.students.length > 0 && (
                 <div className="space-y-2">
-                  <h5 className="font-semibold text-green-900 flex items-center gap-2">
+                  <h5 className="font-semibold text-green-900 flex items-center justify-center gap-2">
                     <CheckCircle className="h-4 w-4" />
                     Successfully Uploaded Students
                   </h5>
                   <div className="space-y-2">
                     {result.data.students.map((student, index) => (
-                      <div key={index} className="bg-green-50 border-l-4 border-green-500 p-3 text-sm">
+                      <div key={index} className="bg-green-50 border-l-4 border-green-500 p-3 text-sm text-center">
                         <p className="text-green-900 font-medium">
                           {student.student_name} ({student.roll_number})
                         </p>
                         <p className="text-green-700 text-xs">{student.email}</p>
-                        <div className="flex gap-2 mt-2">
+                        <div className="flex gap-2 mt-2 justify-center">
                           <span className={`text-xs px-2 py-1 rounded-full ${getSectorColor(student.sector)}`}>
                             {student.sector}
                           </span>
@@ -249,13 +251,15 @@ export default function BulkUploadStudents({
             </div>
           )}
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-900">
-            <p className="font-semibold mb-1">CSV Format Required:</p>
-            <p className="font-mono text-xs mb-2">
-              email, student_name, roll_number, start_year, end_year, cgpa, sector
+          <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 text-center">
+            <p className="font-semibold text-amber-900 mb-3 flex items-center justify-center gap-2">
+              ⚠️ Important to Note
             </p>
-            <p>
-              <strong>Sectors:</strong> IT, ET, Core, FinTech
+            <p className="font-mono text-xs text-amber-900 mb-3 bg-white p-2 rounded border border-amber-200">
+              email, student_name, roll_number, start_year, end_year, cgpa
+            </p>
+            <p className="text-sm text-amber-800">
+              Ensure your CSV file follows the exact format above with these columns in order.
             </p>
           </div>
         </div>

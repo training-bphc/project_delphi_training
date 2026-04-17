@@ -45,7 +45,7 @@ export default function SectorBreakdownChart({
         const totalInSector = sectorStudents.length;
         
         const studentsWithHighPoints = sectorStudents.filter(
-          (s) => (trainingPointsMap[s.email] || 0) > 60
+          (s) => (trainingPointsMap[s.email] || 0) > 20
         ).length;
 
         const percentage = students.length > 0 

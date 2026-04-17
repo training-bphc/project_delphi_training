@@ -40,7 +40,7 @@ function Login() {
         <div className={styles.panel}>
           <img src="/delphi.png" alt="project delphi logo" />
           {/* <h1 className={styles.heading}>Project Delphi</h1> */}
-          <p className={styles.subheading}>A Training Unit Website</p>
+          <p className={styles.subheading}>The Training Unit Website</p>
 
           {googleClientId ? (
             <GoogleLoginButton />
