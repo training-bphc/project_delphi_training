@@ -55,9 +55,9 @@ const seedData = async (): Promise<void> => {
       [
         "f20240546@hyderabad.bits-pilani.ac.in",
         "Viswa Somayajula",
-        "2024A8PS0546H",
+        "2024B3A80546H",
         2024,
-        2025,
+        2029,
         8.5,
         "IT",
       ],
