@@ -448,7 +448,7 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
   return (
     <main className="w-full">
       <div className="flex flex-col gap-8 py-6">
-        {/* Back Button - Show when in browser view and at root level from landing */}
+        {/* Back Button - Show when in browser view and nested */}
         {!isRootLevel && (
           <Button
             variant="outline"
@@ -554,36 +554,33 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
               </div>
             )}
 
-            {/* Add Buttons - Moved to right side with Folders header */}
+            {/* Folders Grid - No title, no count */}
             {displayFolders.length > 0 && (
               <div>
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-xl font-semibold text-foreground">Folders</h2>
-                  <div className="flex gap-2">
-                    {canManage && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => createFolder(currentFolder?.folder_id ?? null)}
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Folder
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => addResource(currentFolder?.folder_id ?? (null as any as number))}
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Resource
-                        </Button>
-                      </>
-                    )}
-                    <span className="text-sm text-muted-foreground ml-auto">{displayFolders.length} folders</span>
-                  </div>
+                {/* Action Buttons Only - Moved to the right */}
+                <div className="flex justify-end gap-2 mb-5">
+                  {canManage && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => createFolder(currentFolder?.folder_id ?? null)}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Folder
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                        onClick={() => addResource(currentFolder?.folder_id ?? (null as any as number))}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Resource
+                      </Button>
+                    </>
+                  )}
                 </div>
                 <FolderCardGrid
                   folders={displayFolders}
@@ -595,8 +592,8 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
               </div>
             )}
 
-            {/* Add Buttons at root level when no folders exist */}
-            {canManage && displayFolders.length === 0 && displayResources.length === 0 && (
+            {/* Add Buttons when only resources exist (no folders) */}
+            {displayResources.length > 0 && displayFolders.length === 0 && canManage && (
               <div className="flex gap-2 justify-end">
                 <Button
                   variant="outline"
@@ -614,23 +611,6 @@ function ResourcesPage({ canManage, title }: ResourcesPageProps) {
                   <Plus className="w-4 h-4" />
                   Add Resource
                 </Button>
-              </div>
-            )}
-
-            {/* Folders Section */}
-            {displayFolders.length > 0 && (
-              <div>
-                <div className="flex items-center justify-between mb-5">
-                  <h2 className="text-xl font-semibold text-foreground">Folders</h2>
-                  <span className="text-sm text-muted-foreground">{displayFolders.length} folders</span>
-                </div>
-                <FolderCardGrid
-                  folders={displayFolders}
-                  canManage={canManage}
-                  onRenameFolder={renameFolder}
-                  onDeleteFolder={deleteFolder}
-                  onFolderClick={handleFolderClick}
-                />
               </div>
             )}
           </div>
