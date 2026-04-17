@@ -35,6 +35,7 @@ export default function BatchStudentsList({
   }, []);
 
   const [selectedBatch, setSelectedBatch] = useState<string>("2027");
+
   const students = selectedBatch
     ? studentsByBatch[parseInt(selectedBatch)]
     : [];
@@ -86,7 +87,7 @@ export default function BatchStudentsList({
         </div>
       </div>
 
-      {/* Table section */}
+      {/* Table section with scrolling */}
       <Card>
         <CardContent className="pt-6">
           {!students || students.length === 0 ? (
@@ -94,49 +95,52 @@ export default function BatchStudentsList({
               No students found for Batch {selectedBatch}
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="max-h-96 overflow-y-auto border rounded-lg">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-white z-10">
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Roll Number</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Sector</TableHead>
-                      <TableHead>CGPA</TableHead>
-                      <TableHead>Start Year</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.map((student) => (
-                      <TableRow key={student.student_id}>
-                        <TableCell className="font-medium">
-                          {student.student_name}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {student.roll_number}
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-600">
-                          {student.email}
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getSectorColor(
-                              student.sector,
-                            )}`}
-                          >
-                            {student.sector}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {student.cgpa ? Number(student.cgpa).toFixed(2) : "N/A"}
-                        </TableCell>
-                        <TableCell>{student.start_year}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+            <div style={{ maxHeight: "500px", overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead style={{ position: "sticky", top: 0, backgroundColor: "white", zIndex: 10 }}>
+                  <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Name</th>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Roll Number</th>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Email</th>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Sector</th>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>CGPA</th>
+                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Start Year</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((student) => (
+                    <tr key={student.student_id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                      <td style={{ padding: "12px", fontWeight: "500" }}>
+                        {student.student_name}
+                      </td>
+                      <td style={{ padding: "12px", fontFamily: "monospace", fontSize: "0.875rem" }}>
+                        {student.roll_number}
+                      </td>
+                      <td style={{ padding: "12px", fontSize: "0.875rem", color: "#4b5563" }}>
+                        {student.email}
+                      </td>
+                      <td style={{ padding: "12px" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "4px 8px",
+                            borderRadius: "9999px",
+                            fontSize: "0.75rem",
+                            fontWeight: "600",
+                          }}
+                          className={getSectorColor(student.sector)}
+                        >
+                          {student.sector}
+                        </span>
+                      </td>
+                      <td style={{ padding: "12px" }}>
+                        {student.cgpa ? Number(student.cgpa).toFixed(2) : "N/A"}
+                      </td>
+                      <td style={{ padding: "12px" }}>{student.start_year}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
