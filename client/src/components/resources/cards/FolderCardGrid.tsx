@@ -11,7 +11,6 @@ interface ResourceFolderNode {
 interface FolderCardGridProps {
   folders: ResourceFolderNode[];
   canManage: boolean;
-  onAddResource: (folderId: number) => void;
   onRenameFolder: (folderId: number, currentName: string) => void;
   onDeleteFolder: (folderId: number) => void;
   onFolderClick: (folder: ResourceFolderNode) => void;
@@ -20,7 +19,6 @@ interface FolderCardGridProps {
 function FolderCardGrid({
   folders,
   canManage,
-  onAddResource,
   onRenameFolder,
   onDeleteFolder,
   onFolderClick,
@@ -30,13 +28,12 @@ function FolderCardGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {folders.map((folder) => (
         <FolderCard
           key={folder.folder_id}
           folder={folder}
           canManage={canManage}
-          onAddResource={onAddResource}
           onRenameFolder={onRenameFolder}
           onDeleteFolder={onDeleteFolder}
           onFolderClick={onFolderClick}

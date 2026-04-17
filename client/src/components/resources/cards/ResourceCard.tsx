@@ -38,23 +38,23 @@ function ResourceCard({
   getHostname,
 }: ResourceCardProps) {
   return (
-    <Card className="hover:shadow-md transition-all duration-200 group border-l-4 border-l-blue-500">
-      <CardContent className="pt-6 pb-4">
-        <div className="flex items-start justify-between gap-3">
+    <Card className="hover:shadow-md transition-all duration-200 group border-l-4 border-l-blue-500 h-48 flex flex-col justify-between">
+      <CardContent className="pt-6 pb-4 flex flex-col h-full">
+        <div className="flex items-start justify-between gap-3 flex-1">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <LinkIcon className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+            <LinkIcon className="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
             <div className="flex-1 min-w-0">
               <a
                 href={resource.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-semibold text-sm text-primary hover:underline break-words line-clamp-2 block"
+                className="font-semibold text-base text-primary hover:underline break-words line-clamp-3 block"
                 title={resource.resource_name}
               >
                 {resource.resource_name}
               </a>
               <p
-                className="text-xs text-muted-foreground mt-1.5 truncate"
+                className="text-xs text-muted-foreground mt-2 truncate"
                 title={resource.file_url}
               >
                 {getHostname(resource.file_url)}
