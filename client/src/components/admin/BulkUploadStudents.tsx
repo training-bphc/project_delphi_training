@@ -118,15 +118,9 @@ export default function BulkUploadStudents({
           Add Students
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[70vw] max-w-2xl shadow-2xl" showCloseButton={false}>
-        <div className="flex items-center justify-center mb-4 relative">
-          <div className="flex items-center gap-2 justify-center">
-            <Upload className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">Bulk Upload Students</h2>
-          </div>
-          <DialogClose className="absolute right-0 p-2 rounded-full hover:bg-gray-200 hover:bg-opacity-50 transition-colors">
-            <X className="h-4 w-4" />
-          </DialogClose>
+      <DialogContent className="w-[70vw] max-w-2xl shadow-2xl" showCloseButton={true} >
+        <div className="flex items-center justify-evenly mb-4">
+          <h2 className="text-lg font-semibold">Bulk Upload Students</h2>
         </div>
 
         <div className="space-y-4">
@@ -154,9 +148,12 @@ export default function BulkUploadStudents({
                   disabled={isLoading}
                   className="hidden"
                 />
-                <span className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-gray-400">
+                <span className="inline-block px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-red-400">
                   Browse Files
                 </span>
+                {/* <Button className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-gray-400">
+                  Browse Files
+                </Button> */}
               </label>
             </div>
           </div>
@@ -172,10 +169,22 @@ export default function BulkUploadStudents({
             </div>
           )}
 
+          <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 text-center">
+            <p className="font-semibold text-amber-900 mb-3 flex items-center justify-center gap-2">
+              ⚠️ Important to Note
+            </p>
+            <p className="font-mono text-xs text-amber-900 mb-3 bg-white p-2 rounded border border-amber-200">
+              email, student_name, roll_number, start_year, end_year, cgpa
+            </p>
+            <p className="text-sm text-amber-800">
+              Ensure your CSV file follows the exact format above with these columns in order.
+            </p>
+          </div>
+
           <Button
             onClick={handleUpload}
             disabled={!file || isLoading}
-            className="w-full"
+            className="w-full h-"
             size="lg"
           >
             {isLoading ? "Uploading..." : "Upload CSV"}
@@ -250,18 +259,6 @@ export default function BulkUploadStudents({
               )}
             </div>
           )}
-
-          <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 text-center">
-            <p className="font-semibold text-amber-900 mb-3 flex items-center justify-center gap-2">
-              ⚠️ Important to Note
-            </p>
-            <p className="font-mono text-xs text-amber-900 mb-3 bg-white p-2 rounded border border-amber-200">
-              email, student_name, roll_number, start_year, end_year, cgpa
-            </p>
-            <p className="text-sm text-amber-800">
-              Ensure your CSV file follows the exact format above with these columns in order.
-            </p>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
