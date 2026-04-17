@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import "../admin/TrainingPoints.css";
 import styles from "./addVerification.module.css";
 import type { FormEvent } from "react";
 import type { VerificationRequest, CreateVerificationRequestPayload } from "@/shared/types";
@@ -190,15 +191,14 @@ function AddVerification() {
         )}
       </Card>
 
-      <Card className={styles.tableCard}>
-        <div className={styles.tableHeader}>
-          <h3 className={styles.tableTitle}>
-            Your Pending Requests
-          </h3>
+      <div className={styles.tableWrapper}>
+        <div className={styles.tableHeaderSection}>
+          <h2 className={styles.tableHeading}>Your Pending Requests</h2>
+          <p className={styles.tableDescription}>Submissions waiting for admin review and decision.</p>
         </div>
 
-        <div className={styles.tableWrapper}>
-          <Table>
+        <div className="studentTrainingPointsTableWrap">
+          <Table className="studentTrainingPointsTable">
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
@@ -255,7 +255,7 @@ function AddVerification() {
             </TableBody>
           </Table>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

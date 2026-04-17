@@ -136,66 +136,26 @@
   border: 1px solid #fecaca;
 }
 
-/* Table Card */
-.tableCard {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 24px;
-}
-
-.tableHeader {
-  margin-bottom: 20px;
-}
-
-.tableTitle {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.tableSubtitle {
-  font-size: 14px;
-  color: #9ca3af;
-  font-weight: 400;
-}
-
+/* Table Section */
 .tableWrapper {
-  overflow-x: auto;
+  background: transparent;
 }
 
-.tableWrapper table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+.tableHeaderSection {
+  margin-bottom: 16px;
 }
 
-.tableWrapper thead {
-  background-color: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.tableWrapper th {
-  padding: 12px 16px;
-  text-align: left;
+.tableHeading {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #374151;
+  color: #111827;
 }
 
-.tableWrapper td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.tableWrapper tbody tr:hover {
-  background-color: #fafafa;
-}
-
-.emptyState {
-  text-align: center;
-  color: #9ca3af;
-  padding: 32px 16px !important;
+.tableDescription {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
 }
 
 .link {
@@ -208,6 +168,12 @@
 .link:hover {
   color: #2563eb;
   text-decoration: underline;
+}
+
+.emptyState {
+  text-align: center;
+  color: #9ca3af;
+  padding: 32px 16px !important;
 }
 
 .status {
