@@ -148,8 +148,8 @@ export default function BulkUploadStudents({
                   disabled={isLoading}
                   className="hidden"
                 />
-                <span className="inline-block px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-red-400">
-                  Browse Files
+                <span className="inline-block px-4 py-2 bg-gray-1000 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-red-400">
+                  Click here to select the file
                 </span>
                 {/* <Button className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-gray-400">
                   Browse Files
@@ -171,13 +171,8 @@ export default function BulkUploadStudents({
 
           <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 text-center">
             <p className="font-semibold text-amber-900 mb-3 flex items-center justify-center gap-2">
-              ⚠️ Important to Note
-            </p>
-            <p className="font-mono text-xs text-amber-900 mb-3 bg-white p-2 rounded border border-amber-200">
-              email, student_name, roll_number, start_year, end_year, cgpa
-            </p>
-            <p className="text-sm text-amber-800">
-              Ensure your CSV file follows the exact format above with these columns in order.
+              ⚠️ Important to Note : Ensure your CSV file follows the exact format above with these columns in order.</p>
+             <p> email, student_name, roll_number, start_year, end_year, cgpa
             </p>
           </div>
 
