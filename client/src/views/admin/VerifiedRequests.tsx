@@ -52,13 +52,23 @@ function VerifiedRequests() {
   }
 
   return (
-    <section className={styles.container}>
-      <h2>Previous Verifications</h2>
-      <p>
-        Finalized request decisions with proof links.
-      </p>
-      <VerificationRequestsTable requests={finalizedRequests} />
-    </section>
+    <div className={styles.page}>
+      <section className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Previous Verifications</h1>
+      </section>
+
+      <div className={styles.tableWrapper}>
+        <div className={styles.tableHeaderSection}>
+          <h2 className={styles.tableHeading}>
+            Finalized Requests
+          </h2>
+          <p className={styles.tableDescription}>
+            Verified and rejected request decisions with proof links.
+          </p>
+        </div>
+        <VerificationRequestsTable requests={finalizedRequests} showProofLinks={true} />
+      </div>
+    </div>
   );
 }
 

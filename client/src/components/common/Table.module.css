@@ -1,44 +1,49 @@
-/* Table styles */
+/* Table styles - matching TrainingPoints */
 .tableContainer {
-  width: 100%;
   overflow-x: auto;
-  margin-top: 2rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
 }
 
 .table {
   width: 100%;
-  min-width: 760px;
+  min-width: 960px;
   border-collapse: collapse;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
-  overflow: hidden;
+}
+
+.table th,
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #9c96A6;
+  text-align: left;
+  font-size: 0.875rem;
+  vertical-align: middle;
 }
 
 .table th {
-  background: #f5f6fa;
-  padding: 0.55rem 0.75rem;
-  text-align: left;
+  background: #fafafa;
   font-weight: 600;
-  color: #333;
-  font-size: 0.82rem;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  border-bottom: 2px solid #eaeaea;
+  color: #374151;
+  font-size: 0.8rem;
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.table td {
-  padding: 0.52rem 0.75rem;
-  font-size: 0.86rem;
-  color: #444;
-  border-bottom: 1px solid #f0f0f0;
+.table tbody tr {
+  transition: background-color 0.15s ease;
 }
 
-.table tr:hover {
-  background: #f0f4ff;
-  transition: background 0.2s;
+.table tbody tr:hover {
+  background-color: #fafafa;
 }
 
+.table tbody tr:last-child td {
+  border-bottom: 1px solid #eaeaea;
+}
+
+/* Status badges */
 .status {
   display: inline-block;
   padding: 0.25rem 0.75rem;
@@ -57,55 +62,58 @@
   color: #155724;
 }
 
-.verifyBtn {
-  background: #27ae60;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 6px 16px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  box-shadow: 0 2px 6px rgba(39, 174, 96, 0.08);
-  transition: background 0.2s;
-}
-
-.verifyBtn:hover {
-  background: #219150;
-}
-
-.verifyBtn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
 .status.rejected {
   background: #f8d7da;
   color: #721c24;
 }
 
-.rejectBtn {
-  background: #e74c3c;
-  color: white;
+/* Button styles */
+.verifyBtn {
+  padding: 12px 20px;
+  color: #ffffff;
+  background-color: #596373;
   border: none;
-  border-radius: 6px;
-  padding: 6px 16px;
-  cursor: pointer;
+  border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 500;
-  box-shadow: 0 2px 6px rgba(231, 76, 60, 0.08);
-  transition: background 0.2s;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.rejectBtn:hover {
-  background: #c0392b;
+.verifyBtn:hover {
+  background-color: #374151;
 }
 
-.rejectBtn:disabled {
-  background: #ccc;
+.verifyBtn:disabled {
+  background-color: #9ca3af;
   cursor: not-allowed;
 }
 
+.rejectBtn {
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.rejectBtn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.rejectBtn:disabled {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  color: #d1d5db;
+}
+
+/* Links */
 .link {
   color: #2563eb;
   text-decoration: none;

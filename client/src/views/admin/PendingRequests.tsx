@@ -1,18 +1,36 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "../../contexts/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import VerificationRequestsTable from "../../components/common/VerificationRequestsTable";
 import styles from "./PendingRequests.module.css";
-import type { VerificationRequest, Record as RecordType, TrainingCategory } from "@/shared/types";
+import type {
+  VerificationRequest,
+  Record as RecordType,
+  TrainingCategory,
+} from "@/shared/types";
 
 function PendingRequests() {
   const { token } = useAuth();
-  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
+  const [verificationRequests, setVerificationRequests] = useState<
+    VerificationRequest[]
+  >([]);
   const [records, setRecords] = useState<RecordType[]>([]);
   const [categories, setCategories] = useState<TrainingCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [proofRequestId, setProofRequestId] = useState<number | null>(null);
-  const [decisionRequestId, setDecisionRequestId] = useState<number | null>(null);
+  const [decisionRequestId, setDecisionRequestId] = useState<number | null>(
+    null,
+  );
   const [rejectRequestId, setRejectRequestId] = useState<number | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [awardedPointsInput, setAwardedPointsInput] = useState("");
@@ -35,7 +53,9 @@ function PendingRequests() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch verification requests: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch verification requests: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -106,19 +126,23 @@ function PendingRequests() {
 
   const handleVerifyRequest = async (requestId: number, points: number) => {
     try {
-      const response = await fetch(`/api/verification-requests/${requestId}/verify`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/verification-requests/${requestId}/verify`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ points }),
         },
-        body: JSON.stringify({ points }),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(
-          errorData?.message || `Failed to verify request: ${response.statusText}`,
+          errorData?.message ||
+            `Failed to verify request: ${response.statusText}`,
         );
       }
 
@@ -130,16 +154,22 @@ function PendingRequests() {
     }
   };
 
-  const handleRejectRequest = async (requestId: number, rejectionReason: string) => {
+  const handleRejectRequest = async (
+    requestId: number,
+    rejectionReason: string,
+  ) => {
     try {
-      const response = await fetch(`/api/verification-requests/${requestId}/reject`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `/api/verification-requests/${requestId}/reject`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ rejection_reason: rejectionReason }),
         },
-        body: JSON.stringify({ rejection_reason: rejectionReason }),
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to reject request: ${response.statusText}`);
@@ -183,7 +213,10 @@ function PendingRequests() {
         .reduce((sum, record) => sum + (record.points || 0), 0)
     : 0;
 
-  const decisionRemaining = Math.max(0, decisionCategoryMax - decisionCurrentTotal);
+  const decisionRemaining = Math.max(
+    0,
+    decisionCategoryMax - decisionCurrentTotal,
+  );
 
   const handleOpenReview = async (requestId: number) => {
     setProofRequestId(requestId);
@@ -202,13 +235,19 @@ function PendingRequests() {
     const normalized = awardedPointsInput.trim();
     const parsedPoints = Number(normalized);
 
-    if (normalized.length === 0 || !Number.isInteger(parsedPoints) || parsedPoints < 0) {
+    if (
+      normalized.length === 0 ||
+      !Number.isInteger(parsedPoints) ||
+      parsedPoints < 0
+    ) {
       setDecisionError("Points must be a non-negative integer.");
       return;
     }
 
     if (parsedPoints > decisionRemaining) {
-      setDecisionError(`Points exceed allowed limit. Allowed range: 0-${decisionRemaining}.`);
+      setDecisionError(
+        `Points exceed allowed limit. Allowed range: 0-${decisionRemaining}.`,
+      );
       return;
     }
 
@@ -246,23 +285,41 @@ function PendingRequests() {
   };
 
   return (
-    <section className={styles.container}>
-      <h2>Pending Requests</h2>
-      <p>Student submissions waiting for TU review.</p>
-      <VerificationRequestsTable
-        requests={pendingRequests}
-        handleVerify={handleOpenReview}
-        handleReject={handleOpenRejectModal}
-        isLoading={isSubmittingAction}
-      />
+    <div className={styles.page}>
+      <section className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Pending Requests</h1>
+      </section>
+
+      <div className={styles.tableWrapper}>
+        <div className={styles.tableHeaderSection}>
+          <h2 className={styles.tableHeading}>
+            Student Submissions
+          </h2>
+          <p className={styles.tableDescription}>
+            Submissions waiting for Training Unit review and decision.
+          </p>
+        </div>
+        <VerificationRequestsTable
+          requests={pendingRequests}
+          handleVerify={handleOpenReview}
+          isLoading={isSubmittingAction}
+          hideStatus={true}
+        />
+      </div>
 
       {proofRequest && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h3>Proof Review</h3>
-            <p>
-              Open the submitted proof link and review before making a decision.
-            </p>
+        <Dialog
+          open={!!proofRequest}
+          onOpenChange={() => setProofRequestId(null)}
+        >
+          <DialogContent className={styles.dialogContent}>
+            <DialogHeader>
+              <DialogTitle>Proof Review</DialogTitle>
+              <DialogDescription>
+                Open the submitted proof link and review before making a
+                decision.
+              </DialogDescription>
+            </DialogHeader>
             {proofRequest.proof_links[0] ? (
               <a
                 href={proofRequest.proof_links[0]}
@@ -275,41 +332,60 @@ function PendingRequests() {
             ) : (
               <p>No proof link provided.</p>
             )}
-            <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                id="proofCloseBtn"
+                className={styles.proofCloseBtn}
+                data-button-type="proof-close"
                 onClick={() => setProofRequestId(null)}
+                style={{
+                  backgroundColor: "#ffffff",
+                  color: "#6b7280",
+                  border: "1px solid #d1d5db",
+                }}
               >
                 Close
-              </button>
-              <button
-                type="button"
-                className={styles.primaryBtn}
+              </Button>
+              <Button
+                id="continueDecisionBtn"
+                className={styles.continueDecisionBtn}
+                data-button-type="continue-decision"
                 onClick={() => {
                   setDecisionRequestId(proofRequest.request_id);
                   setProofRequestId(null);
                   setAwardedPointsInput("");
                   setDecisionError("");
                 }}
+                style={{
+                  backgroundColor: "#596373",
+                  color: "#ffffff",
+                  border: "none",
+                }}
               >
                 Continue to Decision
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {decisionRequest && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h3>Verification Decision</h3>
-            <p>Choose whether to accept or reject this verification request.</p>
+        <Dialog
+          open={!!decisionRequest}
+          onOpenChange={() => setDecisionRequestId(null)}
+        >
+          <DialogContent className={styles.dialogContent}>
+            <DialogHeader>
+              <DialogTitle>Verification Decision</DialogTitle>
+              <DialogDescription>
+                Choose whether to accept or reject this verification request.
+              </DialogDescription>
+            </DialogHeader>
             <div className={styles.fieldGroup}>
               <label htmlFor="awarded_points">Points to Assign</label>
-              <input
+              <Input
                 id="awarded_points"
-                className={styles.numberInput}
                 type="number"
                 min={0}
                 max={decisionRemaining}
@@ -318,53 +394,84 @@ function PendingRequests() {
                 onChange={(event) => setAwardedPointsInput(event.target.value)}
                 placeholder="Enter integer points"
                 disabled={isSubmittingAction}
+                className={styles.numberInput}
               />
               <p className={styles.limitHint}>
-                Allowed range: 0-{decisionRemaining} (Category max {decisionCategoryMax}, already awarded {decisionCurrentTotal})
+                Allowed range: 0-{decisionRemaining} (Category max{" "}
+                {decisionCategoryMax}, already awarded {decisionCurrentTotal})
               </p>
             </div>
 
-            {decisionError && <p className={styles.errorText}>{decisionError}</p>}
+            {decisionError && (
+              <p className={styles.errorText}>{decisionError}</p>
+            )}
 
-            <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
+            <DialogFooter>
+              <Button
+                variant="outline"
+                id="decisionCancelBtn"
+                className={styles.decisionCancelBtn}
+                data-button-type="decision-cancel"
                 onClick={() => {
                   setDecisionRequestId(null);
                   setDecisionError("");
                   setAwardedPointsInput("");
                 }}
                 disabled={isSubmittingAction}
+                style={{
+                  backgroundColor: "#ffffff",
+                  color: "#6b7280",
+                  border: "1px solid #d1d5db",
+                }}
               >
                 Cancel
-              </button>
-              <button
-                type="button"
-                className={styles.rejectBtn}
+              </Button>
+              <Button
+                variant="outline"
+                id="decisionRejectBtn"
+                className={styles.decisionRejectBtn}
+                data-button-type="decision-reject"
                 onClick={() => setRejectRequestId(decisionRequest.request_id)}
                 disabled={isSubmittingAction}
+                style={{
+                  backgroundColor: "#fee2e2",
+                  color: "#991b1b",
+                  border: "none",
+                }}
               >
                 Reject
-              </button>
-              <button
-                type="button"
-                className={styles.primaryBtn}
+              </Button>
+              <Button
+                id="decisionAcceptBtn"
+                className={styles.decisionAcceptBtn}
+                data-button-type="decision-accept"
                 onClick={handleAccept}
                 disabled={isSubmittingAction}
+                style={{
+                  backgroundColor: "#d1fae5",
+                  color: "#065f46",
+                  border: "none",
+                }}
               >
                 Accept
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {rejectRequestId && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h3>Reject Request</h3>
-            <p>Provide a rejection reason visible to the student.</p>
+        <Dialog
+          open={!!rejectRequestId}
+          onOpenChange={() => setRejectRequestId(null)}
+        >
+          <DialogContent className={styles.dialogContent}>
+            <DialogHeader>
+              <DialogTitle>Reject Request</DialogTitle>
+              <DialogDescription>
+                Provide a rejection reason visible to the student.
+              </DialogDescription>
+            </DialogHeader>
             <textarea
               className={styles.textarea}
               value={rejectionReason}
@@ -372,10 +479,9 @@ function PendingRequests() {
               placeholder="Enter reason for rejection"
               rows={4}
             />
-            <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
+            <DialogFooter>
+              <Button
+                variant="outline"
                 onClick={() => {
                   setRejectRequestId(null);
                   setRejectionReason("");
@@ -383,20 +489,20 @@ function PendingRequests() {
                 disabled={isSubmittingAction}
               >
                 Cancel
-              </button>
-              <button
-                type="button"
-                className={styles.rejectBtn}
+              </Button>
+              <Button
+                variant="outline"
+                className={styles.decisionRejectBtn}
                 onClick={handleSubmitReject}
                 disabled={isSubmittingAction || !rejectionReason.trim()}
               >
                 Submit Rejection
-              </button>
-            </div>
-          </div>
-        </div>
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
-    </section>
+    </div>
   );
 }
 

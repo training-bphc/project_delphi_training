@@ -79,7 +79,7 @@ function Sidebar() {
                 isActive ? "nav-link active" : "nav-link"
               }
             >
-              Add Verification
+              Verification Requests
             </NavLink>
             <NavLink
               to="/student/resources"

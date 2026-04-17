@@ -113,6 +113,10 @@ function TrainingPoints({ studentId, studentEmail }: TrainingPointsProps) {
 
   return (
     <div className={styles.page}>
+      <section className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Training Points</h1>
+      </section>
+
       <section className={styles.summaryRow}>
         <div className={styles.summaryLeft}>
           <div className={styles.pointsCard}>

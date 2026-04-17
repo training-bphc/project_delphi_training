@@ -1,3 +1,12 @@
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import "../../views/admin/TrainingPoints.css";
 import styles from './Table.module.css';
 
 interface VerificationRequest {
@@ -16,36 +25,47 @@ interface VerificationRequest {
 interface VerificationRequestsTableProps {
   requests: VerificationRequest[];
   handleVerify?: (requestId: number) => Promise<void>;
-  handleReject?: (requestId: number) => Promise<void>;
   isLoading?: boolean;
+  hideStatus?: boolean;
+  showProofLinks?: boolean;
 }
 
 function VerificationRequestsTable({
   requests,
   handleVerify,
-  handleReject,
   isLoading = false,
+  hideStatus = false,
+  showProofLinks = false,
 }: VerificationRequestsTableProps) {
   return (
-    <div className={styles.tableContainer}>
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Email</th>
-            <th>Date</th>
-            <th>Category</th>
-            <th>Proof Links</th>
-            <th>Status</th>
-            {(handleVerify || handleReject) && <th>Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {requests.map((request) => (
-            <tr key={request.request_id}>
-              <td>{request.student_email || `Student #${request.student_id}`}</td>
-              <td>{new Date(request.created_at).toLocaleDateString()}</td>
-              <td>{request.category}</td>
-              <td>
+    <Table className="studentTrainingPointsTable">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Student</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Date</TableHead>
+          <TableHead>Category</TableHead>
+          {showProofLinks && <TableHead>Proof Links</TableHead>}
+          {!hideStatus && <TableHead>Status</TableHead>}
+          {handleVerify && <TableHead>Actions</TableHead>}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {requests.map((request) => (
+          <TableRow key={request.request_id}>
+            <TableCell>
+              {(
+                (request as any).student_name || (request as any).name ||
+                (((request as any).student_first_name || (request as any).student_last_name) && `${(request as any).student_first_name || ''} ${(request as any).student_last_name || ''}`.trim()) ||
+                request.student_email ||
+                `Student #${request.student_id}`
+              )}
+            </TableCell>
+            <TableCell>{request.student_email || '-'}</TableCell>
+            <TableCell>{new Date(request.created_at).toLocaleDateString()}</TableCell>
+            <TableCell>{request.category}</TableCell>
+            {showProofLinks && (
+              <TableCell>
                 {request.proof_links.length > 0 ? (
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     {request.proof_links.map((link, index) => (
@@ -56,52 +76,41 @@ function VerificationRequestsTable({
                         rel="noopener noreferrer"
                         className={styles.link}
                       >
-                        Link {index + 1}
+                        Link
                       </a>
                     ))}
                   </div>
                 ) : (
                   '-'
                 )}
-              </td>
-              <td>
+              </TableCell>
+            )}
+            {!hideStatus && (
+              <TableCell>
                 <span
                   className={`${styles.status} ${styles[request.status.toLowerCase()]}`}
                 >
                   {request.status}
                 </span>
-              </td>
-              {(handleVerify || handleReject) && (
-                <td>
-                  {request.status === 'Pending' && (
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      {handleVerify && (
-                        <button
-                          onClick={() => handleVerify(request.request_id)}
-                          className={`${styles.verifyBtn}`}
-                          disabled={isLoading}
-                        >
-                          Verify
-                        </button>
-                      )}
-                      {handleReject && (
-                        <button
-                          onClick={() => handleReject(request.request_id)}
-                          className={`${styles.rejectBtn}`}
-                          disabled={isLoading}
-                        >
-                          Reject
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+              </TableCell>
+            )}
+            {handleVerify && (
+              <TableCell>
+                {request.status === 'Pending' && (
+                  <button
+                    onClick={() => handleVerify(request.request_id)}
+                    className={`${styles.verifyBtn}`}
+                    disabled={isLoading}
+                  >
+                    Review Request
+                  </button>
+                )}
+              </TableCell>
+            )}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 

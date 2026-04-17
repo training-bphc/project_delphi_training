@@ -1,5 +1,16 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/auth";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import styles from "./addVerification.module.css";
 import type { FormEvent } from "react";
 import type { VerificationRequest, CreateVerificationRequestPayload } from "@/shared/types";
@@ -11,6 +22,7 @@ function AddVerification() {
   const [proofLink, setProofLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
 
   // Fetch data on mount
   useEffect(() => {
@@ -77,32 +89,8 @@ function AddVerification() {
   const studentName = user?.name || "";
   const studentEmail = user?.email || "";
 
-  const rejectedRequests = useMemo(
-    () =>
-      verificationRequests.filter(
-        (request) => request.status === "Rejected",
-      ),
-    [verificationRequests],
-  );
-
-  const pendingRequests = useMemo(
-    () =>
-      verificationRequests.filter(
-        (request) => request.status === "Pending",
-      ),
-    [verificationRequests],
-  );
-
-  const verifiedRequests = useMemo(
-    () =>
-      verificationRequests.filter(
-        (request) => request.status === "Verified",
-      ),
-    [verificationRequests],
-  );
-
   if (isLoading || !user) {
-    return <div>Loading...</div>;
+    return <div className={styles.loading}>Loading...</div>;
   }
 
   const handleSubmit = async (event: FormEvent) => {
@@ -111,6 +99,7 @@ function AddVerification() {
 
     if (!proofLink.trim()) {
       setMessage("Please enter a Google Drive proof link.");
+      setMessageType("error");
       return;
     }
 
@@ -124,214 +113,150 @@ function AddVerification() {
 
       setProofLink("");
       setMessage("Verification request submitted successfully.");
+      setMessageType("success");
     } catch (error) {
       setMessage(
         error instanceof Error
           ? error.message
           : "Failed to submit verification request",
       );
+      setMessageType("error");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const pendingRequests = verificationRequests.filter((r) => r.status === "Pending");
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Verified":
+        return styles.verified;
+      case "Pending":
+        return styles.pending;
+      case "Rejected":
+        return styles.rejected;
+      default:
+        return "";
+    }
+  };
+
   return (
-    <section className={styles.container}>
-      <h2 className={styles.title}>Add Verification</h2>
-      <p className={styles.subtitle}>
-        Submit hackathon proof for admin verification.
-      </p>
+    <div className={styles.page}>
+      <section className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Verification Requests</h1>
+      </section>
 
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.field}>
-          <label htmlFor="student_name">Name</label>
-          <input
-            id="student_name"
-            name="student_name"
-            value={studentName}
-            readOnly
-          />
+      <Card className={styles.formCard}>
+        <div className={styles.cardHeader}>
+          <h2 className={styles.title}>Submit Verification Request</h2>
+          <p className={styles.subtitle}>Submit proof for admin verification</p>
         </div>
 
-        <div className={styles.field}>
-          <label htmlFor="student_email">Mail ID</label>
-          <input
-            id="student_email"
-            name="student_email"
-            value={studentEmail}
-            readOnly
-          />
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.field}>
+            <label htmlFor="student_name">Name</label>
+            <Input id="student_name" value={studentName} readOnly disabled />
+          </div>
+
+          <div className={styles.field}>
+            <label htmlFor="student_email">Email</label>
+            <Input id="student_email" value={studentEmail} readOnly disabled />
+          </div>
+
+          <div className={`${styles.field} ${styles.fullRow}`}>
+            <label htmlFor="proof_link">
+              Proof Link (Google Drive / Certificate)
+            </label>
+            <Input
+              id="proof_link"
+              type="url"
+              placeholder="https://drive.google.com/..."
+              value={proofLink}
+              onChange={(event) => setProofLink(event.target.value)}
+              required
+            />
+          </div>
+
+          <div className={styles.formActions}>
+            <Button type="submit" disabled={isSubmitting} className={styles.submitBtn}>
+              {isSubmitting ? "Submitting..." : "Submit Request"}
+            </Button>
+          </div>
+        </form>
+
+        {message && (
+          <p className={`${styles.message} ${styles[messageType]}`}>{message}</p>
+        )}
+      </Card>
+
+      <Card className={styles.tableCard}>
+        <div className={styles.tableHeader}>
+          <h3 className={styles.tableTitle}>
+            Your Pending Requests
+          </h3>
         </div>
 
-        <div className={`${styles.field} ${styles.fullRow}`}>
-          <label htmlFor="proof_link">
-            Hackathon Proof (Certificate/Proof of Work)
-          </label>
-          <input
-            id="proof_link"
-            name="proof_link"
-            type="url"
-            placeholder="https://drive.google.com/..."
-            value={proofLink}
-            onChange={(event) => setProofLink(event.target.value)}
-            required
-          />
+        <div className={styles.tableWrapper}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Proof</TableHead>
+                <TableHead>Points</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className={styles.reasonCol}>Rejection Reason</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pendingRequests.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className={styles.emptyState}>
+                    No pending verification requests. Submit one to get started.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                pendingRequests.map((request) => (
+                  <TableRow key={request.request_id}>
+                    <TableCell>
+                      {new Date(request.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {request.proof_links && request.proof_links[0] ? (
+                        <a
+                          className={styles.link}
+                          href={request.proof_links[0]}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          View
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>{request.awarded_points ?? "-"}</TableCell>
+                    <TableCell>
+                      <span className={`${styles.status} ${getStatusColor(request.status || "")}`}>
+                        {request.status
+                          ? request.status.charAt(0).toUpperCase() +
+                            request.status.slice(1).toLowerCase()
+                          : ""}
+                      </span>
+                    </TableCell>
+                    <TableCell className={styles.reasonCol}>
+                      {request.status === "Rejected"
+                        ? request.rejection_reason || "No reason provided"
+                        : "-"}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
-
-        <button
-          className={styles.submitBtn}
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Submitting..." : "Request Verification"}
-        </button>
-      </form>
-
-      {message && <p className={styles.message}>{message}</p>}
-
-      <h3 className={styles.sectionTitle}>Pending Verifications</h3>
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Proof Link</th>
-              <th>Points</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pendingRequests.length === 0 ? (
-              <tr>
-                <td colSpan={4}>No pending verification requests.</td>
-              </tr>
-            ) : (
-              pendingRequests.map((request) => (
-                <tr key={request.request_id}>
-                  <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                  <td>
-                    {request.proof_links[0] ? (
-                      <a
-                        className={styles.link}
-                        href={request.proof_links[0]}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View Proof
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td>-</td>
-                  <td>
-                    <span className={`${styles.status} ${styles.pending}`}>
-                      Pending
-                    </span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <h3 className={styles.sectionTitle}>Verified Request</h3>
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Proof Link</th>
-              <th>Points</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {verifiedRequests.length === 0 ? (
-              <tr>
-                <td colSpan={4}>No verified requests yet.</td>
-              </tr>
-            ) : (
-              verifiedRequests.map((request) => (
-                <tr key={request.request_id}>
-                  <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                  <td>
-                    {request.proof_links[0] ? (
-                      <a
-                        className={styles.link}
-                        href={request.proof_links[0]}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View Proof
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td>{request.awarded_points ?? 0}</td>
-                  <td>
-                    <span className={`${styles.status} ${styles.verified}`}>
-                      Verified
-                    </span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <h3 className={styles.sectionTitle}>Rejected Verifications</h3>
-      <div className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Proof Link</th>
-              <th>Points</th>
-              <th>Status</th>
-              <th>Reason</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rejectedRequests.length === 0 ? (
-              <tr>
-                <td colSpan={5}>No rejected verification requests.</td>
-              </tr>
-            ) : (
-              rejectedRequests.map((request) => (
-                <tr key={request.request_id}>
-                  <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                  <td>
-                    {request.proof_links[0] ? (
-                      <a
-                        className={styles.link}
-                        href={request.proof_links[0]}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View Proof
-                      </a>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td>{request.awarded_points ?? 0}</td>
-                  <td>
-                    <span className={`${styles.status} ${styles.rejected}`}>
-                      Rejected
-                    </span>
-                  </td>
-                  <td>{request.rejection_reason || "No reason provided"}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </section>
+      </Card>
+    </div>
   );
 }
 

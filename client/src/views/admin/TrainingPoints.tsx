@@ -1,8 +1,8 @@
-import './TrainingPoints.css';
-import { useNavigate } from 'react-router-dom';
-import { useMemo, useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/auth';
-import { Button } from '@/components/ui/button';
+import "./TrainingPoints.css";
+import { useNavigate } from "react-router-dom";
+import { useMemo, useState, useEffect } from "react";
+import { useAuth } from "../../contexts/auth";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,9 +10,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import type { Record, VerificationRequest, TrainingCategory } from '@/shared/types';
-import StudentCategoryPopup from '@/components/training-points/StudentCategoryPopup';
+} from "@/components/ui/table";
+import type {
+  Record,
+  VerificationRequest,
+  TrainingCategory,
+} from "@/shared/types";
+import StudentCategoryPopup from "@/components/training-points/StudentCategoryPopup";
 
 interface StudentTrainingPointsRow {
   bitsId: string;
@@ -27,7 +31,9 @@ interface StudentTrainingPointsRow {
 function TrainingPoints() {
   const { token } = useAuth();
   const [records, setRecords] = useState<Record[]>([]);
-  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
+  const [verificationRequests, setVerificationRequests] = useState<
+    VerificationRequest[]
+  >([]);
   const [categories, setCategories] = useState<TrainingCategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -42,7 +48,7 @@ function TrainingPoints() {
   const fetchRecords = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/records', {
+      const response = await fetch("/api/records", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -61,7 +67,7 @@ function TrainingPoints() {
 
       setRecords(recordsPayload);
     } catch (error) {
-      console.error('Failed to fetch records:', error);
+      console.error("Failed to fetch records:", error);
       setRecords([]);
     } finally {
       setIsLoading(false);
@@ -70,14 +76,16 @@ function TrainingPoints() {
 
   const fetchVerificationRequests = async () => {
     try {
-      const response = await fetch('/api/verification-requests', {
+      const response = await fetch("/api/verification-requests", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch verification requests: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch verification requests: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -89,14 +97,14 @@ function TrainingPoints() {
 
       setVerificationRequests(requestsPayload);
     } catch (error) {
-      console.error('Failed to fetch verification requests:', error);
+      console.error("Failed to fetch verification requests:", error);
       setVerificationRequests([]);
     }
   };
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories', {
+      const response = await fetch("/api/categories", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -115,7 +123,7 @@ function TrainingPoints() {
 
       setCategories(categoriesPayload);
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      console.error("Failed to fetch categories:", error);
       setCategories([]);
     }
   };
@@ -123,7 +131,7 @@ function TrainingPoints() {
   const studentRows = useMemo<StudentTrainingPointsRow[]>(() => {
     const pendingByEmail = new Map<string, number>();
     verificationRequests.forEach((request: VerificationRequest) => {
-      if (request.status === 'Pending' && request.student_email) {
+      if (request.status === "Pending" && request.student_email) {
         const key = request.student_email.toLowerCase();
         pendingByEmail.set(key, (pendingByEmail.get(key) || 0) + 1);
       }
@@ -149,22 +157,29 @@ function TrainingPoints() {
         existing.lastUpdated = record.date;
       }
 
-      if (record.verification_status === 'Verified') {
+      if (record.verification_status === "Verified") {
         existing.totalPoints += record.points || 0;
-        const categoryItem = existing.categoryPoints.find((cat) => cat.category === record.category);
+        const categoryItem = existing.categoryPoints.find(
+          (cat) => cat.category === record.category,
+        );
         if (categoryItem) {
           categoryItem.points += record.points || 0;
         } else {
-          existing.categoryPoints.push({ category: record.category, points: record.points || 0 });
+          existing.categoryPoints.push({
+            category: record.category,
+            points: record.points || 0,
+          });
         }
       }
 
-      existing.pendingCount = pendingByEmail.get(record.email_id.toLowerCase()) || 0;
+      existing.pendingCount =
+        pendingByEmail.get(record.email_id.toLowerCase()) || 0;
       grouped.set(key, existing);
     });
 
     return [...grouped.values()].sort(
-      (a, b) => b.pendingCount - a.pendingCount || b.totalPoints - a.totalPoints,
+      (a, b) =>
+        b.pendingCount - a.pendingCount || b.totalPoints - a.totalPoints,
     );
   }, [verificationRequests, records]);
 
@@ -174,9 +189,19 @@ function TrainingPoints() {
 
   return (
     <main className="trainingPointsContent">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "24px",
+        }}
+      >
         <h1 className="trainingPointsHeading">Training Points</h1>
-        <Button className='addTrainingPointsButton' onClick={() => navigate('/admin/add-training-points')}>
+        <Button
+          className="addTrainingPointsButton"
+          onClick={() => navigate("/admin/add-training-points")}
+        >
           + Add Training Points
         </Button>
       </div>
@@ -187,7 +212,7 @@ function TrainingPoints() {
           <span>{studentRows.length} students</span>
         </div>
 
-        <Table className='studentTrainingPointsTable'>
+        <Table className="studentTrainingPointsTable">
           <TableHeader>
             <TableRow>
               <TableHead>Student</TableHead>
@@ -209,9 +234,13 @@ function TrainingPoints() {
                 <TableCell>{student.pendingCount}</TableCell>
                 <TableCell>{student.lastUpdated}</TableCell>
                 <TableCell>
-                  <StudentCategoryPopup studentName={student.name} categoryPoints={student.categoryPoints} allCategories={categories}/> 
+                  <StudentCategoryPopup
+                    studentName={student.name}
+                    categoryPoints={student.categoryPoints}
+                    allCategories={categories}
+                  />
                 </TableCell>
-                </TableRow>
+              </TableRow>
             ))}
           </TableBody>
         </Table>

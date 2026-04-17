@@ -1,16 +1,46 @@
-.container {
-  padding: 1rem;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
 }
 
-.container h2 {
+.pageHeader {
+  padding: 0 0 16px 0;
+  border-bottom: none;
+}
+
+.pageTitle {
+  text-align: left;
+  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+  margin: 30px 0 0 0;
+  padding: 0;
   color: #1f2937;
-  margin: 0 0 0.35rem;
+  font-weight: 600;
 }
 
-.container p {
-  color: #4b5563;
+.tableWrapper {
+  background: transparent;
+}
+
+.tableHeaderSection {
+  margin-bottom: 16px;
+}
+
+.tableHeading {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.requestCount {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.tableDescription {
   margin: 0;
+  font-size: 14px;
+  color: #6b7280;
 }
