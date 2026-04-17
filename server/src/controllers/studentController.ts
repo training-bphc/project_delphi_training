@@ -82,3 +82,29 @@ export const bulkUploadStudentsHandler = asyncHandler(
     }
   },
 );
+
+/**
+ * Handler to fetch students grouped by graduating batch
+ * Admin-only endpoint
+ */
+export const getStudentsByBatchHandler = asyncHandler(
+  async (_req: Request, res: Response): Promise<void> => {
+    try {
+      const { getStudentsByGraduatingBatch } = await import(
+        "../repositories/studentRepository"
+      );
+      const studentsByBatch = await getStudentsByGraduatingBatch();
+
+      res.status(200).json({
+        success: true,
+        data: studentsByBatch,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch students by batch",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+);

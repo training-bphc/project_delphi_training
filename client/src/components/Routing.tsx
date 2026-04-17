@@ -12,6 +12,8 @@ import AdminResources from "@/views/admin/Resources";
 import StudentTrainingPoints from "@/views/student/TrainingPoints";
 import AddVerification from "@/views/student/AddVerification";
 import StudentResources from "@/views/student/Resources";
+import OverviewDashboard from "@/views/admin/Overview";
+
 
 function RoutingContent() {
   const { user, token, isLoading: authLoading } = useAuth();
@@ -64,6 +66,9 @@ function RoutingContent() {
               path="*"
               element={<Navigate to="/admin/training-points" replace />}
             />
+            <Route 
+              path="/admin/overview" 
+              element={<OverviewDashboard />} />
           </Route>
         </>
       ) : (

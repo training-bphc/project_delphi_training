@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import type { TrainingCategory } from '@/shared/types';
+import type { TrainingCategory } from '@/shared/types/index';
 import './AddPointsCSV.css';
 
 interface AddPointsCSVFormData {

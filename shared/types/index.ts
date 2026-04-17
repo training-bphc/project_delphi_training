@@ -71,3 +71,41 @@ export interface RecordsContextType {
   handleUndoDelete: (sNo: number) => Promise<void>;
   handleRefreshRecords: () => Promise<void>;
 }
+
+export type SectorType = "IT" | "ET" | "Core" | "FinTech";
+
+export interface Student {
+  student_id: number;
+  roll_number: string;
+  student_name: string;
+  email: string;
+  start_year: number;
+  end_year: number;
+  cgpa: number;
+  sector: SectorType;
+}
+
+export interface VerificationRequest {
+  request_id: number;
+  student_id: number;
+  student_name?: string;
+  student_email?: string;
+  student_bits_id?: string;
+  category_id: number;
+  category: string;
+  description?: string;
+  proof_links: string[];
+  status: "Pending" | "Verified" | "Rejected";
+  awarded_points?: number | null;
+  rejection_reason?: string | null;
+  awarded_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrainingCategory {
+  category_id: number;
+  category_name: string;
+  description?: string | null;
+  max_points: number;
+}
