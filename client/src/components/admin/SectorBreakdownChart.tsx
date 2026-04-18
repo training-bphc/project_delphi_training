@@ -99,7 +99,7 @@ export default function SectorBreakdownChart({
   const totalStudents = students.length;
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Donut Chart and Table Side by Side */}
       <Card>
         <CardHeader>
@@ -183,7 +183,8 @@ export default function SectorBreakdownChart({
                   </ResponsiveContainer>
 
                   {/* Floating Legend inside Chart Area */}
-                  <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-lg p-4 max-w-xs">
+                  {/* 
+                  <div className="absolute top-1/2 left-4 -translate-y-1/2 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-lg p-4 max-w-xs">
                     <div className="space-y-3">
                       <div>
                         <h5 className="font-semibold text-xs text-gray-700 mb-2">
@@ -246,6 +247,7 @@ export default function SectorBreakdownChart({
                       </div>
                     </div>
                   </div>
+                  */}
                 </>
               )}
             </div>
@@ -387,6 +389,6 @@ export default function SectorBreakdownChart({
           </div>
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }

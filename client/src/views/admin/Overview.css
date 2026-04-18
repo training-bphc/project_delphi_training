@@ -1,0 +1,112 @@
+/* Admin overview layout */
+
+.addStudentsButton {
+	padding: 12px 20px;
+	color: #ffffff;
+	height: auto;
+	width: auto;
+	background-color: #596373;
+	border: none;
+	border-radius: 6px;
+	font-size: 0.95rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.addStudentsButton:hover {
+	background-color: #374151;
+}
+
+/* Select dropdown styling for batch/sector dropdowns */
+.batch-sector-select {
+	font-size: 0.875rem !important;
+	padding: 0.5rem 0.75rem !important;
+	height: 2rem !important;
+}
+
+.batch-sector-content {
+	min-width: 12rem !important;
+}
+
+.batch-sector-content [data-slot="select-item"] {
+	padding: 0.5rem 1rem !important;
+	margin-bottom: 0.25rem !important;
+	font-size: 0.8rem !important;
+}
+
+.batch-sector-content [data-slot="select-item"][data-state="checked"] {
+	background-color: #e5e7eb !important;
+	border: 1px solid #6b7280 !important;
+}
+
+/* Batch/Sector selector labels */
+.batchSectorLabels label {
+	color: #9ca3af !important;
+}
+/* Force visible spacing and styling for nested cards container */
+div.space-y-6 div.space-y-6 {
+	display: flex !important;
+	flex-direction: column !important;
+	gap: 24px !important;
+}
+
+/* Add margin between card components using data-slot selector */
+[data-slot="card"] + [data-slot="card"] {
+	margin-top: 24px !important;
+}
+
+/* Increase card padding */
+[data-slot="card"] {
+	padding-left: 24px !important;
+	padding-right: 24px !important;
+	padding-top: 24px !important;
+	padding-bottom: 24px !important;
+	min-height: 200px !important;
+	overflow: visible !important;
+}
+
+/* Vertically center card content (not header) */
+[data-slot="card-content"],
+.pt-6 {
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: center !important;
+	min-height: 150px !important;
+}
+
+/* Ensure card content allows overflow for legends */
+[data-slot="card-content"] {
+	overflow: visible !important;
+}
+
+/* Allow relative positioned chart containers to show absolute legends */
+.relative {
+	overflow: visible !important;
+}
+
+/* Empty state styling - visible grey-500 text */
+.text-gray-400 {
+	color: #6b7280 !important;
+}
+
+.py-12.text-gray-400 {
+	color: #6b7280 !important;
+	opacity: 0.6 !important;
+	padding-top: 12px !important;
+}
+
+/* Minimum height for empty card state */
+.pt-6 {
+	min-height: 200px !important;
+}
+
+/* Training Points Analysis card body text - make it grey-500 */
+[data-slot="card"] h3,
+[data-slot="card"] p {
+	color: #6b7280 !important;
+}
+

@@ -11,6 +11,8 @@ import TrainingPointsChart from "./TrainingPointsChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Student } from "@/shared/types/index";
 import SectorBreakdownChart from "./SectorBreakdownChart";
+import { InputSelect, InputSelectTrigger } from "@/components/common/InputSelect";
+import type { SelectOption } from "@/types";
 
 interface BatchStudentsListProps {
   studentsByBatch: { [batch: number]: Student[] };
@@ -42,6 +44,20 @@ export default function BatchStudentsList({
 
   const [selectedBatch, setSelectedBatch] = useState<string>("2027");
   const [selectedSector, setSelectedSector] = useState<string>("IT");
+
+  const batchOptions: SelectOption[] = useMemo(() => {
+    return allBatches.map((batch) => ({
+      value: batch.toString(),
+      label: `Batch ${batch}`,
+    }));
+  }, [allBatches]);
+
+  const sectorOptions: SelectOption[] = [
+    { value: "IT", label: "IT" },
+    { value: "ET", label: "ET" },
+    { value: "Core", label: "Core" },
+    { value: "FinTech", label: "FinTech" },
+  ];
 
   const students = selectedBatch
     ? studentsByBatch[parseInt(selectedBatch)]
@@ -84,47 +100,48 @@ export default function BatchStudentsList({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top section with batch selector and count */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">
+    <div className="space-y-6 text-gray-500">
+      {/* Top section with batch selector and sector selector */}
+      <div className="flex justify-around items-center gap-4 batchSelectorLabels">
+        <div className="flex justify-center" style={{ flex: "1" }}>
+          <label className="text-sm font-medium text-gray-600">
             <h3>Select Batch:</h3>
           </label>
-          <select
-            value={selectedBatch}
-            onChange={(e) => setSelectedBatch(e.target.value)}
-            className="w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            {allBatches.map((batch) => (
-              <option key={batch} value={batch.toString()}>
-                Batch {batch}
-              </option>
-            ))}
-          </select>
         </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">
+        <div style={{ flex: "2", marginLeft: "-8px", marginRight: "16px" }}>
+          <InputSelect
+            options={batchOptions}
+            value={selectedBatch}
+            onValueChange={setSelectedBatch}
+            placeholder="Select a batch..."
+          >
+            {(provided) => <InputSelectTrigger {...provided} />}
+          </InputSelect>
+        </div>
+        <div className="flex justify-center" style={{ flex: "1" }}>
+          <label className="text-sm font-medium text-gray-600">
             <h3>Select Sector:</h3>
           </label>
-          <select
-            value={selectedSector}
-            onChange={(e) => setSelectedSector(e.target.value)}
-            className="w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="IT">IT</option>
-            <option value="ET">ET</option>
-            <option value="Core">Core</option>
-            <option value="FinTech">FinTech</option>
-          </select>
         </div>
-        <div className="text-xl font-bold text-indigo-600">
-          <h3>Total number of students: {students?.length || 0}</h3>
+        <div style={{ flex: "2", marginLeft: "-8px", marginRight: "16px" }}>
+          <InputSelect
+            options={sectorOptions}
+            value={selectedSector}
+            onValueChange={setSelectedSector}
+            placeholder="Select a sector..."
+          >
+            {(provided) => <InputSelectTrigger {...provided} />}
+          </InputSelect>
         </div>
       </div>
 
+      {/* Total number of students */}
+      <div className="font-bold text-gray-500" style={{ fontSize: "0.8rem", marginTop: "24px" }}>
+        <h3>Total number of students: {students?.length || 0}</h3>
+      </div>
+
       {/* Table section with scrolling */}
-      <Card>
+      <div className="space-y-6">
         {students && students.length > 0 && (
           <TrainingPointsChart
             students={students}
@@ -132,118 +149,120 @@ export default function BatchStudentsList({
           />
         )}
         <SectorBreakdownChart
-        students={students}
-        trainingPointsMap={trainingPointsMap}
-      />
-        <CardContent className="pt-6">
-          {!students || students.length === 0 ? (
-            <div className="flex items-center justify-center py-12 text-gray-500">
-              No students found for Batch {selectedBatch}
-            </div>
-          ) : (
-            <div
-              style={{
-                maxHeight: "500px",
-                overflowY: "auto",
-                border: "1px solid #e5e7eb",
-                borderRadius: "0.5rem",
-              }}
-            >
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    backgroundColor: "white",
-                    zIndex: 10,
-                  }}
-                >
-                  <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                    <th
-                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
-                    >
-                      Name
-                    </th>
-                    <th
-                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
-                    >
-                      Roll Number
-                    </th>
-                    <th
-                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
-                    >
-                      Email
-                    </th>
-                    <th
-                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
-                    >
-                      Sector
-                    </th>
-                    <th
-                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
-                    >
-                      CGPA
-                    </th>
-                    <th
-                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
-                    >
-                      Start Year
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {students.map((student) => (
-                    <tr
-                      key={student.student_id}
-                      style={{ borderBottom: "1px solid #e5e7eb" }}
-                    >
-                      <td style={{ padding: "12px", fontWeight: "500" }}>
-                        {student.student_name}
-                      </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          fontFamily: "monospace",
-                          fontSize: "0.875rem",
-                        }}
+          students={students}
+          trainingPointsMap={trainingPointsMap}
+        />
+        <Card style={{ minHeight: "150px" }}>
+          <CardContent className="text-gray-400 pt-6">
+            {!students || students.length === 0 ? (
+              <div className="flex items-center justify-center py-12 text-gray-400" style={{ opacity: "0.6" }}>
+                No students found for Batch {selectedBatch}
+              </div>
+            ) : (
+              <div
+                style={{
+                  maxHeight: "500px",
+                  overflowY: "auto",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "0.5rem",
+                }}
+              >
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead
+                    style={{
+                      position: "sticky",
+                      top: 0,
+                      backgroundColor: "white",
+                      zIndex: 10,
+                    }}
+                  >
+                    <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+                      <th
+                        style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
                       >
-                        {student.roll_number}
-                      </td>
-                      <td
-                        style={{
-                          padding: "12px",
-                          fontSize: "0.875rem",
-                          color: "#4b5563",
-                        }}
+                        Name
+                      </th>
+                      <th
+                        style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
                       >
-                        {student.email}
-                      </td>
-                      <td style={{ padding: "12px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            padding: "4px 8px",
-                            borderRadius: "9999px",
-                            fontSize: "0.75rem",
-                            fontWeight: "600",
-                          }}
-                          className={getSectorColor(student.sector)}
-                        >
-                          {student.sector}
-                        </span>
-                      </td>
-                      <td style={{ padding: "12px" }}>
-                        {student.cgpa ? Number(student.cgpa).toFixed(2) : "N/A"}
-                      </td>
-                      <td style={{ padding: "12px" }}>{student.start_year}</td>
+                        Roll Number
+                      </th>
+                      <th
+                        style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                      >
+                        Email
+                      </th>
+                      <th
+                        style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                      >
+                        Sector
+                      </th>
+                      <th
+                        style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                      >
+                        CGPA
+                      </th>
+                      <th
+                        style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                      >
+                        Start Year
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </thead>
+                  <tbody>
+                    {students.map((student) => (
+                      <tr
+                        key={student.student_id}
+                        style={{ borderBottom: "1px solid #e5e7eb" }}
+                      >
+                        <td style={{ padding: "12px", fontWeight: "500" }}>
+                          {student.student_name}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px",
+                            fontFamily: "monospace",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          {student.roll_number}
+                        </td>
+                        <td
+                          style={{
+                            padding: "12px",
+                            fontSize: "0.875rem",
+                            color: "#4b5563",
+                          }}
+                        >
+                          {student.email}
+                        </td>
+                        <td style={{ padding: "12px" }}>
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "4px 8px",
+                              borderRadius: "9999px",
+                              fontSize: "0.75rem",
+                              fontWeight: "600",
+                            }}
+                            className={getSectorColor(student.sector)}
+                          >
+                            {student.sector}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px" }}>
+                          {student.cgpa ? Number(student.cgpa).toFixed(2) : "N/A"}
+                        </td>
+                        <td style={{ padding: "12px" }}>{student.start_year}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
