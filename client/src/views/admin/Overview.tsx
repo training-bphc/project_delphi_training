@@ -5,6 +5,7 @@ import BulkUploadStudents from "@/components/admin/BulkUploadStudents";
 import BatchStudentsList from "@/components/admin/BatchStudentsList";
 import { fetchStudentsByBatch } from "@/lib/api/studentApi";
 import type { StudentsByBatch } from "@/lib/api/studentApi";
+import "./Overview.css";
 
 function Overview() {
   const { token } = useAuth();

@@ -1,16 +1,14 @@
 import { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { bulkUploadStudents } from "@/lib/api/studentApi";
 import type { BulkUploadResult } from "@/lib/api/studentApi";
-import { Upload, CheckCircle, AlertCircle, X } from "lucide-react";
+import { Upload, CheckCircle, AlertCircle } from "lucide-react";
+import "./BulkUploadStudents.css";
 
 interface BulkUploadStudentsProps {
   token: string;
@@ -113,33 +111,28 @@ export default function BulkUploadStudents({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2" size="lg">
+        <button className="addStudentsButton addTrainingPointsButton" style={{ margin: "0", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
           <Upload className="h-4 w-4" />
           Add Students
-        </Button>
+        </button>
       </DialogTrigger>
-      <DialogContent className="w-[70vw] max-w-2xl shadow-2xl" showCloseButton={true} >
-        <div className="flex items-center justify-evenly mb-4">
-          <h2 className="text-lg font-semibold">Bulk Upload Students</h2>
-        </div>
+      <DialogContent className="bg-transparent shadow-none border-0 p-0 w-auto max-w-2xl !left-1/2 !-translate-x-1/2 !top-1/2 !-translate-y-1/2 !ring-0 !gap-0" showCloseButton={true}>
+        <div className="bulkUploadModal">
+          <h2>Bulk Upload Students</h2>
 
-        <div className="space-y-4">
+          <div className="bulkUploadForm">
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-gray-50 hover:border-gray-400"
-            }`}
+            className={`fileUploadArea ${isDragging ? "dragging" : ""}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">
+            <div>
+              <p className="primary">
                 Drag and drop your CSV file here
               </p>
-              <p className="text-xs text-gray-500">or</p>
-              <label className="inline-block">
+              <p className="secondary">or</p>
+              <label>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -148,7 +141,7 @@ export default function BulkUploadStudents({
                   disabled={isLoading}
                   className="hidden"
                 />
-                <span className="inline-block px-4 py-2 bg-gray-1000 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-red-400">
+                <span>
                   Click here to select the file
                 </span>
                 {/* <Button className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-indigo-700 disabled:bg-gray-400">
@@ -159,47 +152,45 @@ export default function BulkUploadStudents({
           </div>
 
           {file && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-              <p className="text-sm font-medium text-green-900">
-                Selected: {file.name}
-              </p>
-              <p className="text-xs text-green-700">
+            <div className="fileInfo">
+              <p className="name">Selected: {file.name}</p>
+              <p className="size">
                 {(file.size / 1024).toFixed(2)} KB
               </p>
             </div>
           )}
 
-          <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 text-center">
-            <p className="font-semibold text-amber-900 mb-3 flex items-center justify-center gap-2">
-              ⚠️ Important to Note : Ensure your CSV file follows the exact format above with these columns in order.</p>
-             <p> email, student_name, roll_number, start_year, end_year, cgpa
+          <div className="formatRequirements">
+            <p className="header">⚠️ Important to Note:</p>
+            <p className="details">
+              Ensure your CSV file follows the exact format with these columns in order:
+            </p>
+            <p className="details" style={{ marginTop: "8px", fontFamily: "monospace" }}>
+              email, student_name, roll_number, start_year, end_year, cgpa
             </p>
           </div>
 
-          <Button
+          <button
             onClick={handleUpload}
             disabled={!file || isLoading}
-            className="w-full h-"
-            size="lg"
+            className="uploadButton"
           >
             {isLoading ? "Uploading..." : "Upload CSV"}
-          </Button>
+          </button>
 
           {result && (
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                <h4 className="font-semibold text-blue-900 mb-2">Upload Result</h4>
-                <div className="space-y-1 text-sm">
-                  <p className="text-blue-800">
-                    <strong>Total Processed:</strong> {result.data.summary.total_processed}
-                  </p>
-                  <p className="text-green-700">
-                    <strong>✓ Successful:</strong> {result.data.summary.successful}
-                  </p>
-                  <p className="text-red-700">
-                    <strong>✗ Failed:</strong> {result.data.summary.failed}
-                  </p>
-                </div>
+            <div className="uploadResult">
+              <h4>Upload Result</h4>
+              <div className="stats">
+                <p>
+                  <strong>Total Processed:</strong> {result.data.summary.total_processed}
+                </p>
+                <p className="success">
+                  <strong>✓ Successful:</strong> {result.data.summary.successful}
+                </p>
+                <p className="error">
+                  <strong>✗ Failed:</strong> {result.data.summary.failed}
+                </p>
               </div>
 
               {result.data.errors.length > 0 && (
@@ -254,6 +245,7 @@ export default function BulkUploadStudents({
               )}
             </div>
           )}
+        </div>
         </div>
       </DialogContent>
     </Dialog>
