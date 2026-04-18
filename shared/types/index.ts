@@ -83,6 +83,7 @@ export interface Student {
   end_year: number;
   cgpa: number;
   sector: SectorType;
+  trainingPoints: number;
 }
 
 export interface VerificationRequest {

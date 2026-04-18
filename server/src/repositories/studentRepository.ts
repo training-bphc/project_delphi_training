@@ -126,14 +126,35 @@ export const insertBulkStudents = async (
 /**
  * Get all students grouped by graduating batch (end_year)
  */
+/**
+ * Get all students grouped by graduating batch (end_year) with their total training points
+ */
+/**
+ * Get all students grouped by graduating batch (end_year) with their total training points
+ */
 export const getStudentsByGraduatingBatch = async (): Promise<{
   [batch: number]: Student[];
 }> => {
-  const result = await pool.query<Student & { end_year: number }>(
+  const result = await pool.query<
+    Student & { end_year: number; trainingPoints?: number }
+  >(
     `
-      SELECT student_id, email, student_name, roll_number, start_year, end_year, cgpa, sector
-      FROM students
-      ORDER BY end_year DESC, student_name ASC
+      SELECT 
+        s.student_id, 
+        s.email, 
+        s.student_name, 
+        s.roll_number, 
+        s.start_year, 
+        s.end_year, 
+        s.cgpa, 
+        s.sector,
+        COALESCE(SUM(tp.points), 0)::int AS "trainingPoints"
+      FROM students s
+      LEFT JOIN training_points tp ON s.roll_number = tp.bits_id 
+        AND tp.deleted_at IS NULL 
+        AND tp.verification_status = 'Verified'
+      GROUP BY s.student_id, s.email, s.student_name, s.roll_number, s.start_year, s.end_year, s.cgpa, s.sector
+      ORDER BY s.end_year DESC, s.student_name ASC
     `,
   );
 
@@ -153,7 +174,8 @@ export const getStudentsByGraduatingBatch = async (): Promise<{
       end_year: student.end_year,
       cgpa: student.cgpa,
       sector: student.sector,
-    });
+      trainingPoints: student.trainingPoints || 0,
+    } as Student);
   }
 
   return grouped;

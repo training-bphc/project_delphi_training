@@ -338,3 +338,43 @@ export const getCGPABreakdownHandler = asyncHandler(
     }
   },
 );
+
+export const getCGPABreakdown = async (req: Request, res: Response) => {
+  try {
+    const batch = req.query.batch ? Number(req.query.batch) : undefined;
+    const result = await getCGPABreakdownData(batch);
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching CGPA breakdown:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch data" });
+  }
+};
+
+export const getStudentTrainingPoints = async (req: Request, res: Response) => {
+  try {
+    const { studentIds } = req.body;
+    if (!Array.isArray(studentIds)) {
+      return res.status(400).json({ success: false, message: "Invalid input" });
+    }
+
+    const result = await pool.query(
+      `
+        SELECT student_id, COALESCE(SUM(points), 0) as total_points
+        FROM training_points
+        WHERE student_id = ANY($1) AND deleted_at IS NULL AND verification_status = 'Verified'
+        GROUP BY student_id
+      `,
+      [studentIds]
+    );
+
+    const pointsMap: { [id: number]: number } = {};
+    result.rows.forEach((row) => {
+      pointsMap[row.student_id] = row.total_points;
+    });
+
+    res.json(pointsMap);
+  } catch (error) {
+    console.error("Error fetching training points:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch data" });
+  }
+};

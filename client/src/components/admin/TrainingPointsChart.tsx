@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -17,48 +17,72 @@ interface TrainingPointsChartProps {
   selectedSector: string;
 }
 
+interface ChartDataPoint {
+  bracket: string;
+  "Avg Training Points": number;
+  studentCount: number;
+}
+
 export default function TrainingPointsChart({
   students,
   selectedSector,
 }: TrainingPointsChartProps) {
-  const chartData = useMemo(() => {
-    // Define CGPA brackets
-    const brackets = [
-      { min: 0, max: 4, label: "0-4" },
-      { min: 4, max: 5, label: "4-5" },
-      { min: 5, max: 6, label: "5-6" },
-      { min: 6, max: 7, label: "6-7" },
-      { min: 7, max: 8, label: "7-8" },
-      { min: 8, max: 9, label: "8-9" },
-      { min: 9, max: 10, label: "9-10" },
-    ];
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-    // Filter students by sector
-    const sectorStudents = students.filter(
-      (s) => s.sector === selectedSector
-    );
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Define CGPA brackets
+        const brackets = [
+          { min: 0, max: 4, label: "0-4" },
+          { min: 4, max: 5, label: "4-5" },
+          { min: 5, max: 6, label: "5-6" },
+          { min: 6, max: 7, label: "6-7" },
+          { min: 7, max: 8, label: "7-8" },
+          { min: 8, max: 9, label: "8-9" },
+          { min: 9, max: 10, label: "9-10" },
+        ];
 
-    // Calculate average training points per bracket
-    const data = brackets.map((bracket) => {
-      const studentsInBracket = sectorStudents.filter(
-        (s) => {
-          const cgpa = Number(s.cgpa) || 0;
-          return cgpa >= bracket.min && cgpa < bracket.max;
-        }
-      );
+        // Filter students by sector
+        const sectorStudents = students.filter(
+          (s) => s.sector === selectedSector
+        );
 
-      // For now, we'll use a placeholder calculation
-      // In a real scenario, you'd fetch training points from the database
-      const avgTrainingPoints = studentsInBracket.length * 5; // Placeholder
+        // Calculate average training points per bracket
+        const data = brackets.map((bracket) => {
+          const studentsInBracket = sectorStudents.filter((s) => {
+            const cgpa = Number(s.cgpa) || 0;
+            return cgpa >= bracket.min && cgpa < bracket.max;
+          });
 
-      return {
-        bracket: bracket.label,
-        "Avg Training Points": avgTrainingPoints,
-        studentCount: studentsInBracket.length,
-      };
-    });
+          // Calculate actual average training points
+          const totalPoints = studentsInBracket.reduce(
+            (sum, s) => sum + (Number(s.trainingPoints) || 0),
+            0
+          );
 
-    return data;
+          const avgTrainingPoints =
+            studentsInBracket.length > 0
+              ? totalPoints / studentsInBracket.length
+              : 0;
+
+          return {
+            bracket: bracket.label,
+            "Avg Training Points": Math.round(avgTrainingPoints * 100) / 100,
+            studentCount: studentsInBracket.length,
+          };
+        });
+
+        setChartData(data);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, [students, selectedSector]);
 
   return (
@@ -67,7 +91,11 @@ export default function TrainingPointsChart({
         <CardTitle>Training Points by CGPA Bracket - {selectedSector}</CardTitle>
       </CardHeader>
       <CardContent>
-        {chartData.every((d) => d.studentCount === 0) ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12 text-gray-500">
+            Loading chart data...
+          </div>
+        ) : chartData.every((d) => d.studentCount === 0) ? (
           <div className="flex items-center justify-center py-12 text-gray-500">
             No students found for this sector
           </div>

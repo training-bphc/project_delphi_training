@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -21,6 +21,10 @@ export default function BatchStudentsList({
   studentsByBatch,
   isLoading,
 }: BatchStudentsListProps) {
+  const [trainingPointsMap, setTrainingPointsMap] = useState<{
+    [email: string]: number;
+  }>({});
+
   const batches = useMemo(() => {
     return Object.keys(studentsByBatch)
       .map(Number)
@@ -42,6 +46,20 @@ export default function BatchStudentsList({
   const students = selectedBatch
     ? studentsByBatch[parseInt(selectedBatch)]
     : [];
+
+  // Build training points map from students' trainingPoints field
+  useEffect(() => {
+    if (!students || students.length === 0) {
+      setTrainingPointsMap({});
+      return;
+    }
+
+    const pointsMap: { [email: string]: number } = {};
+    students.forEach((student) => {
+      pointsMap[student.email] = Number(student.trainingPoints) || 0;
+    });
+    setTrainingPointsMap(pointsMap);
+  }, [students]);
 
   const getSectorColor = (sector: string) => {
     const colors: { [key: string]: string } = {
@@ -85,21 +103,21 @@ export default function BatchStudentsList({
             ))}
           </select>
         </div>
-         <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">
-              Select Sector:
-            </label>
-            <select
-              value={selectedSector}
-              onChange={(e) => setSelectedSector(e.target.value)}
-              className="w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="IT">IT</option>
-              <option value="ET">ET</option>
-              <option value="Core">Core</option>
-              <option value="FinTech">FinTech</option>
-            </select>
-          </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">
+            Select Sector:
+          </label>
+          <select
+            value={selectedSector}
+            onChange={(e) => setSelectedSector(e.target.value)}
+            className="w-48 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="IT">IT</option>
+            <option value="ET">ET</option>
+            <option value="Core">Core</option>
+            <option value="FinTech">FinTech</option>
+          </select>
+        </div>
         <div className="text-xl font-bold text-indigo-600">
           {students?.length || 0} students
         </div>
@@ -108,8 +126,8 @@ export default function BatchStudentsList({
       {/* Table section with scrolling */}
       <Card>
         {students && students.length > 0 && (
-          <TrainingPointsChart 
-            students={students} 
+          <TrainingPointsChart
+            students={students}
             selectedSector={selectedSector}
           />
         )}
@@ -119,28 +137,81 @@ export default function BatchStudentsList({
               No students found for Batch {selectedBatch}
             </div>
           ) : (
-            <div style={{ maxHeight: "500px", overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
+            <div
+              style={{
+                maxHeight: "500px",
+                overflowY: "auto",
+                border: "1px solid #e5e7eb",
+                borderRadius: "0.5rem",
+              }}
+            >
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead style={{ position: "sticky", top: 0, backgroundColor: "white", zIndex: 10 }}>
+                <thead
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    backgroundColor: "white",
+                    zIndex: 10,
+                  }}
+                >
                   <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Name</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Roll Number</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Email</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Sector</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>CGPA</th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}>Start Year</th>
+                    <th
+                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                    >
+                      Roll Number
+                    </th>
+                    <th
+                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                    >
+                      Email
+                    </th>
+                    <th
+                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                    >
+                      Sector
+                    </th>
+                    <th
+                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                    >
+                      CGPA
+                    </th>
+                    <th
+                      style={{ padding: "12px", textAlign: "left", fontWeight: "600" }}
+                    >
+                      Start Year
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {students.map((student) => (
-                    <tr key={student.student_id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                    <tr
+                      key={student.student_id}
+                      style={{ borderBottom: "1px solid #e5e7eb" }}
+                    >
                       <td style={{ padding: "12px", fontWeight: "500" }}>
                         {student.student_name}
                       </td>
-                      <td style={{ padding: "12px", fontFamily: "monospace", fontSize: "0.875rem" }}>
+                      <td
+                        style={{
+                          padding: "12px",
+                          fontFamily: "monospace",
+                          fontSize: "0.875rem",
+                        }}
+                      >
                         {student.roll_number}
                       </td>
-                      <td style={{ padding: "12px", fontSize: "0.875rem", color: "#4b5563" }}>
+                      <td
+                        style={{
+                          padding: "12px",
+                          fontSize: "0.875rem",
+                          color: "#4b5563",
+                        }}
+                      >
                         {student.email}
                       </td>
                       <td style={{ padding: "12px" }}>
@@ -169,9 +240,9 @@ export default function BatchStudentsList({
           )}
         </CardContent>
       </Card>
-      <SectorBreakdownChart 
-        students={students} 
-        trainingPointsMap={{}}
+      <SectorBreakdownChart
+        students={students}
+        trainingPointsMap={trainingPointsMap}
       />
     </div>
   );
