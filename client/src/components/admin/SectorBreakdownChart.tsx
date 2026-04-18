@@ -37,17 +37,17 @@ export default function SectorBreakdownChart({
     if (!students || students.length === 0) return [];
 
     const sectors = ["IT", "ET", "Core", "FinTech"];
-    
+
     return sectors
       .map((sector) => {
         const sectorStudents = students.filter((s) => s.sector === sector);
         const totalInSector = sectorStudents.length;
-        
+
         const studentsWithHighPoints = sectorStudents.filter(
           (s) => (trainingPointsMap[s.email] || 0) > 20
         ).length;
 
-        const percentage = students.length > 0 
+        const percentage = students.length > 0
           ? ((totalInSector / students.length) * 100).toFixed(1)
           : "0";
 
@@ -104,7 +104,7 @@ export default function SectorBreakdownChart({
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-bold">
-            Sector-wise Breakdown with Training Points Distribution
+            <h2>Sector-wise Breakdown with Training Points Distribution</h2>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -121,26 +121,26 @@ export default function SectorBreakdownChart({
                     <PieChart>
                       {/* Outer Ring - Sectors */}
                       <Pie
-                          data={outerData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(entry: any) => 
-                              `${entry.name}: ${entry.percentage}%`
-                          }
-                          outerRadius={100}
-                          innerRadius={60}
-                          fill="#8884d8"
-                          dataKey="value"
-                          paddingAngle={2}
-                          >
-                          {outerData.map((entry) => (
-                              <Cell 
-                              key={`outer-${entry.name}`} 
-                              fill={SECTOR_COLORS[entry.name]}
-                              />
-                          ))}
-                          </Pie>
+                        data={outerData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry: any) =>
+                          `${entry.name}: ${entry.percentage}%`
+                        }
+                        outerRadius={100}
+                        innerRadius={60}
+                        fill="#8884d8"
+                        dataKey="value"
+                        paddingAngle={2}
+                      >
+                        {outerData.map((entry) => (
+                          <Cell
+                            key={`outer-${entry.name}`}
+                            fill={SECTOR_COLORS[entry.name]}
+                          />
+                        ))}
+                      </Pie>
 
                       {/* Inner Ring - High Points vs Others */}
                       <Pie
@@ -148,7 +148,7 @@ export default function SectorBreakdownChart({
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ value }) => value > 0 ? value : ""}
+                        label={({ value }) => (value > 0 ? value : "")}
                         innerRadius={20}
                         outerRadius={55}
                         fill="#8884d8"
@@ -156,13 +156,14 @@ export default function SectorBreakdownChart({
                         paddingAngle={1}
                       >
                         {innerData.map((entry) => {
-                          const color = entry.type === "high" 
-                            ? HIGH_POINTS_COLORS[entry.sector]
-                            : SECTOR_COLORS[entry.sector];
+                          const color =
+                            entry.type === "high"
+                              ? HIGH_POINTS_COLORS[entry.sector]
+                              : SECTOR_COLORS[entry.sector];
                           const opacity = entry.type === "high" ? 1 : 0.5;
                           return (
-                            <Cell 
-                              key={`inner-${entry.name}`} 
+                            <Cell
+                              key={`inner-${entry.name}`}
                               fill={color}
                               fillOpacity={opacity}
                             />
@@ -170,7 +171,7 @@ export default function SectorBreakdownChart({
                         })}
                       </Pie>
 
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value) => `${value} students`}
                         contentStyle={{
                           backgroundColor: "#fff",
@@ -185,26 +186,34 @@ export default function SectorBreakdownChart({
                   <div className="absolute bottom-4 left-4 bg-white bg-opacity-95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-lg p-4 max-w-xs">
                     <div className="space-y-3">
                       <div>
-                        <h5 className="font-semibold text-xs text-gray-700 mb-2">Sectors (Outer)</h5>
+                        <h5 className="font-semibold text-xs text-gray-700 mb-2">
+                          Sectors (Outer)
+                        </h5>
                         <div className="flex flex-wrap gap-3">
-                          {Object.entries(SECTOR_COLORS).map(([sector, color]) => (
-                            <div key={sector} className="flex items-center gap-1.5">
-                              <div
-                                style={{
-                                  width: "10px",
-                                  height: "10px",
-                                  backgroundColor: color,
-                                  borderRadius: "2px",
-                                }}
-                              />
-                              <span className="text-xs text-gray-600">{sector}</span>
-                            </div>
-                          ))}
+                          {Object.entries(SECTOR_COLORS).map(
+                            ([sector, color]) => (
+                              <div key={sector} className="flex items-center gap-1.5">
+                                <div
+                                  style={{
+                                    width: "10px",
+                                    height: "10px",
+                                    backgroundColor: color,
+                                    borderRadius: "2px",
+                                  }}
+                                />
+                                <span className="text-xs text-gray-600">
+                                  {sector}
+                                </span>
+                              </div>
+                            )
+                          )}
                         </div>
                       </div>
-                      
+
                       <div className="border-t border-gray-200 pt-3">
-                        <h5 className="font-semibold text-xs text-gray-700 mb-2">Training Points (Inner)</h5>
+                        <h5 className="font-semibold text-xs text-gray-700 mb-2">
+                          Training Points (Inner)
+                        </h5>
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
                             <div
@@ -215,7 +224,9 @@ export default function SectorBreakdownChart({
                                 borderRadius: "2px",
                               }}
                             />
-                            <span className="text-xs text-gray-600">&gt; 60 Points</span>
+                            <span className="text-xs text-gray-600">
+                              &gt; 60 Points
+                            </span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div
@@ -227,7 +238,9 @@ export default function SectorBreakdownChart({
                                 opacity: 0.5,
                               }}
                             />
-                            <span className="text-xs text-gray-600">≤ 60 Points</span>
+                            <span className="text-xs text-gray-600">
+                              ≤ 60 Points
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -237,31 +250,81 @@ export default function SectorBreakdownChart({
               )}
             </div>
 
-            {/* Right side - Table */}
-            <div className="overflow-x-auto">
+            {/* Right side - Table with Full Height */}
+            <div style={{ height: "400px", overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead style={{ backgroundColor: "#f3f4f6" }}>
+                <thead
+                  style={{
+                    backgroundColor: "#f3f4f6",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 10,
+                  }}
+                >
                   <tr>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", borderBottom: "2px solid #e5e7eb", fontSize: "0.875rem" }}>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: "600",
+                        borderBottom: "2px solid #e5e7eb",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       Sector
                     </th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", borderBottom: "2px solid #e5e7eb", fontSize: "0.875rem" }}>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: "600",
+                        borderBottom: "2px solid #e5e7eb",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       Total
                     </th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", borderBottom: "2px solid #e5e7eb", fontSize: "0.875rem" }}>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: "600",
+                        borderBottom: "2px solid #e5e7eb",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       %
                     </th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", borderBottom: "2px solid #e5e7eb", fontSize: "0.875rem" }}>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: "600",
+                        borderBottom: "2px solid #e5e7eb",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       &gt; 60
                     </th>
-                    <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", borderBottom: "2px solid #e5e7eb", fontSize: "0.875rem" }}>
+                    <th
+                      style={{
+                        padding: "12px",
+                        textAlign: "left",
+                        fontWeight: "600",
+                        borderBottom: "2px solid #e5e7eb",
+                        fontSize: "0.875rem",
+                      }}
+                    >
                       High %
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {outerData.map((sector) => (
-                    <tr key={sector.name} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                    <tr
+                      key={sector.name}
+                      style={{ borderBottom: "1px solid #e5e7eb" }}
+                    >
                       <td style={{ padding: "12px", fontWeight: "500" }}>
                         <span
                           style={{
@@ -292,16 +355,30 @@ export default function SectorBreakdownChart({
                     </tr>
                   ))}
                   <tr style={{ backgroundColor: "#f9fafb", fontWeight: "600" }}>
-                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>Total</td>
-                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>{totalStudents}</td>
-                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>100%</td>
+                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>
+                      Total
+                    </td>
+                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>
+                      {totalStudents}
+                    </td>
+                    <td style={{ padding: "12px", fontSize: "0.875rem" }}>
+                      100%
+                    </td>
                     <td style={{ padding: "12px", fontSize: "0.875rem" }}>
                       {outerData.reduce((sum, s) => sum + s.studentsWithHighPoints, 0)}
                     </td>
                     <td style={{ padding: "12px", fontSize: "0.875rem" }}>
-                      {totalStudents > 0 
-                        ? ((outerData.reduce((sum, s) => sum + s.studentsWithHighPoints, 0) / totalStudents) * 100).toFixed(1)
-                        : "0"}%
+                      {totalStudents > 0
+                        ? (
+                            (outerData.reduce(
+                              (sum, s) => sum + s.studentsWithHighPoints,
+                              0
+                            ) /
+                              totalStudents) *
+                            100
+                          ).toFixed(1)
+                        : "0"}
+                      %
                     </td>
                   </tr>
                 </tbody>
@@ -312,4 +389,4 @@ export default function SectorBreakdownChart({
       </Card>
     </div>
   );
-} 
+}

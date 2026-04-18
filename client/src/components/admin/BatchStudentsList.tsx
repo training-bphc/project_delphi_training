@@ -89,7 +89,7 @@ export default function BatchStudentsList({
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700">
-            Select Batch:
+            <h3>Select Batch:</h3>
           </label>
           <select
             value={selectedBatch}
@@ -105,7 +105,7 @@ export default function BatchStudentsList({
         </div>
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700">
-            Select Sector:
+            <h3>Select Sector:</h3>
           </label>
           <select
             value={selectedSector}
@@ -119,7 +119,7 @@ export default function BatchStudentsList({
           </select>
         </div>
         <div className="text-xl font-bold text-indigo-600">
-          {students?.length || 0} students
+          <h3>Total number of students: {students?.length || 0}</h3>
         </div>
       </div>
 
@@ -131,6 +131,10 @@ export default function BatchStudentsList({
             selectedSector={selectedSector}
           />
         )}
+        <SectorBreakdownChart
+        students={students}
+        trainingPointsMap={trainingPointsMap}
+      />
         <CardContent className="pt-6">
           {!students || students.length === 0 ? (
             <div className="flex items-center justify-center py-12 text-gray-500">
@@ -240,10 +244,6 @@ export default function BatchStudentsList({
           )}
         </CardContent>
       </Card>
-      <SectorBreakdownChart
-        students={students}
-        trainingPointsMap={trainingPointsMap}
-      />
     </div>
   );
 }
